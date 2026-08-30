@@ -1,4 +1,5 @@
 const NOTE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
+const ROUNDS = 10;
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
 const BOTTOM_LINE_Y = TOP_LINE_Y + 4 * LINE_GAP;
@@ -19,6 +20,8 @@ const state = {
   score: 0,
   attempted: 0,
   streak: 0,
+  round: 0,
+  lastResult: null,
   roundTimer: null,
   nextTimer: null,
 };
@@ -32,6 +35,13 @@ const solutionBody = document.getElementById("solutionBody");
 const scoreEl = document.getElementById("score");
 const streakEl = document.getElementById("streak");
 const accuracyEl = document.getElementById("accuracy");
+const progressEl = document.getElementById("progress");
+const startOverlay = document.getElementById("startOverlay");
+const idlePanel = document.getElementById("idlePanel");
+const resultPanel = document.getElementById("resultPanel");
+const resultGrade = document.getElementById("resultGrade");
+const resultLabel = document.getElementById("resultLabel");
+const resultSummary = document.getElementById("resultSummary");
 
 function noteFromStep(step) {
   const index = ((step % 7) + 7) % 7;
@@ -212,9 +222,17 @@ function resetButtons() {
   });
 }
 
+function formatMessage(key, vars) {
+  return Object.entries(vars).reduce(
+    (text, [name, value]) => text.split(`{${name}}`).join(String(value)),
+    t(key)
+  );
+}
+
 function updateStats() {
   scoreEl.textContent = String(state.score);
   streakEl.textContent = String(state.streak);
+  progressEl.textContent = `${state.round} / ${ROUNDS}`;
   accuracyEl.textContent = state.attempted
     ? `${Math.round((state.score / state.attempted) * 100)}%`
     : "—";
@@ -264,7 +282,12 @@ function reveal() {
   );
   updateStats();
 
-  if (state.running) state.nextTimer = setTimeout(nextRound, 1800);
+  if (!state.running) return;
+  if (state.round >= ROUNDS) {
+    state.nextTimer = setTimeout(finishSession, 1800);
+    return;
+  }
+  state.nextTimer = setTimeout(nextRound, 1800);
 }
 
 function startTimer() {
@@ -283,6 +306,7 @@ function nextRound() {
   if (!state.running) return;
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
+  state.round += 1;
   state.guessed = null;
   state.locked = false;
   resetButtons();
@@ -290,7 +314,64 @@ function nextRound() {
   const clef = pickClef();
   state.current = pickNote(clef);
   drawStaff(clef, state.current);
+  updateStats();
   startTimer();
+  notifyUi();
+}
+
+function showIdleOverlay() {
+  idlePanel.classList.remove("is-hidden");
+  resultPanel.classList.add("is-hidden");
+  startOverlay.classList.remove("is-hidden");
+}
+
+function renderResults() {
+  const result = state.lastResult;
+  if (!result) return;
+  const accuracy = result.attempted
+    ? Math.round((result.score / result.attempted) * 100)
+    : 0;
+  resultGrade.textContent = String(result.grade);
+  resultLabel.textContent = t(`grade${result.grade}`);
+  resultSummary.textContent = formatMessage("resultSummary", {
+    score: result.score,
+    total: result.attempted,
+    accuracy,
+  });
+}
+
+function showResultOverlay() {
+  renderResults();
+  idlePanel.classList.add("is-hidden");
+  resultPanel.classList.remove("is-hidden");
+  startOverlay.classList.remove("is-hidden");
+}
+
+function finishSession() {
+  clearTimeout(state.roundTimer);
+  clearTimeout(state.nextTimer);
+  state.running = false;
+  state.current = null;
+  state.guessed = null;
+  state.locked = false;
+  timerFill.style.transition = "none";
+  timerFill.style.transform = "scaleX(1)";
+  document.querySelectorAll(".note-btn").forEach((btn) => {
+    btn.disabled = true;
+    btn.classList.remove("is-picked");
+  });
+  const grade = state.attempted
+    ? Math.round((state.score / state.attempted) * 10)
+    : 0;
+  state.lastResult = {
+    grade,
+    score: state.score,
+    attempted: state.attempted,
+  };
+  drawStaff(previewClef(), null);
+  setSolution(t("solutionWait"), "wait");
+  showResultOverlay();
+  syncPlayButton();
   notifyUi();
 }
 
@@ -311,7 +392,15 @@ function notifyUi() {
 function startGame() {
   if (state.running) return;
   state.running = true;
-  document.getElementById("startOverlay").classList.add("is-hidden");
+  state.score = 0;
+  state.attempted = 0;
+  state.streak = 0;
+  state.round = 0;
+  state.lastResult = null;
+  startOverlay.classList.add("is-hidden");
+  idlePanel.classList.remove("is-hidden");
+  resultPanel.classList.add("is-hidden");
+  updateStats();
   syncPlayButton();
   nextRound();
 }
@@ -331,7 +420,7 @@ function stopGame() {
     btn.classList.remove("is-picked", "is-correct", "is-wrong");
   });
   setSolution(t("solutionWait"), "wait");
-  document.getElementById("startOverlay").classList.remove("is-hidden");
+  showIdleOverlay();
   syncPlayButton();
   notifyUi();
 }
@@ -390,6 +479,7 @@ document.querySelectorAll(".note-btn").forEach((btn) => {
 });
 
 document.getElementById("startBtn").addEventListener("click", startGame);
+document.getElementById("replayBtn").addEventListener("click", startGame);
 document.getElementById("playBtn").addEventListener("click", toggleGame);
 
 document.addEventListener("keydown", (event) => {
@@ -406,6 +496,7 @@ function refreshLabels() {
   if (!solutionEl.classList.contains("is-revealed")) {
     setSolution(t("solutionWait"), "wait");
   }
+  if (!resultPanel.classList.contains("is-hidden")) renderResults();
 }
 
 document.querySelectorAll("[data-lang]").forEach((btn) => {
@@ -423,7 +514,9 @@ window.GuessTheNote = {
   startGame,
   stopGame,
   toggleGame,
+  finishSession,
   getState: () => state,
+  showingResults: () => !resultPanel.classList.contains("is-hidden"),
   refreshLabels,
 };
 
@@ -433,3 +526,4 @@ document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.disabled = true;
 });
 refreshLabels();
+updateStats();

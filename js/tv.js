@@ -30,7 +30,12 @@
       document.getElementById("tempoUp"),
       document.getElementById("playBtn"),
     ];
-    if (overlayOpen) items.push(document.getElementById("startBtn"));
+    if (overlayOpen) {
+      const replay = document.getElementById("replayBtn");
+      const start = document.getElementById("startBtn");
+      if (replay && !replay.closest(".overlay-panel.is-hidden")) items.push(replay);
+      else items.push(start);
+    }
     return items.filter(Boolean);
   }
 
@@ -137,6 +142,7 @@
       event.preventDefault();
       const game = api();
       if (game && game.getState().running) game.stopGame();
+      else if (game && game.showingResults()) game.stopGame();
       else exitApp();
       return;
     }
@@ -156,6 +162,7 @@
     if (items.includes(document.activeElement)) return;
     const preferred =
       items.find((el) => el.classList.contains("note-btn")) ||
+      items.find((el) => el.id === "replayBtn") ||
       items.find((el) => el.id === "startBtn") ||
       items[0];
     focusEl(preferred);

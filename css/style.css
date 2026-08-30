@@ -321,10 +321,46 @@ input[type="range"] {
   display: none;
 }
 
+.overlay-panel {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 8px 20px;
+}
+
+.overlay-panel.is-hidden {
+  display: none;
+}
+
 .start-overlay p {
   margin: 0;
   font-family: "Cormorant Garamond", serif;
   font-size: 1.35rem;
+}
+
+.result-kicker {
+  font-family: Outfit, sans-serif !important;
+  font-size: 0.78rem !important;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+
+.result-grade {
+  font-size: clamp(4.2rem, 12vw, 7rem);
+  line-height: 0.9;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.result-label {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+}
+
+.result-summary {
+  font-family: Outfit, sans-serif !important;
+  font-size: 1.05rem !important;
+  color: var(--ink-soft);
 }
 
 .start-btn {
@@ -539,6 +575,14 @@ html.is-tv h1 {
   font-size: 2rem;
 }
 
+html.is-tv .stats {
+  gap: 14px;
+}
+
+html.is-tv .stat {
+  min-width: 64px;
+}
+
 html.is-tv .stat-value {
   font-size: 1.6rem;
 }
@@ -641,6 +685,22 @@ html.is-tv .solution-kicker {
 html.is-tv .solution-body {
   font-size: 1rem;
   line-height: 1.2;
+}
+
+html.is-tv .result-kicker {
+  font-size: 1rem !important;
+}
+
+html.is-tv .result-grade {
+  font-size: 7.5rem;
+}
+
+html.is-tv .result-label {
+  font-size: 2.4rem;
+}
+
+html.is-tv .result-summary {
+  font-size: 1.35rem !important;
 }
 
 html.is-tv button:focus,
