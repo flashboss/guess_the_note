@@ -6,8 +6,9 @@ A small web app for practicing music-note reading on a staff. Notes appear at ra
 
 The presentation homepage and the game are published from `main`:
 
-- Homepage: https://flashboss.github.io/guess_the_note/
-- Play: https://flashboss.github.io/guess_the_note/play.html
+- Homepage: https://guessthenote.vige.it/
+- Play: https://guessthenote.vige.it/play.html
+- GitHub Pages fallback: https://flashboss.github.io/guess_the_note/
 
 Enable **GitHub Pages** on the repository with source **GitHub Actions**. The workflow in `.github/workflows/pages.yml` deploys the static site on every push to `main`.
 
