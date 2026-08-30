@@ -64,25 +64,33 @@
           </div>
         </fieldset>
 
-        <label class="tempo-field">
+        <div class="tempo-field">
           <span class="tempo-heading">
             Tempo tra le note
             <strong id="tempoLabel">4.0 s</strong>
           </span>
-          <input
-            id="tempo"
-            type="range"
-            min="1.5"
-            max="8"
-            step="0.5"
-            value="4"
-            tabindex="0"
-          />
+          <div class="tempo-stepper">
+            <button type="button" id="tempoDown" aria-label="Riduci il tempo">
+              −
+            </button>
+            <input
+              id="tempo"
+              type="range"
+              min="1.5"
+              max="8"
+              step="0.5"
+              value="4"
+              tabindex="-1"
+            />
+            <button type="button" id="tempoUp" aria-label="Aumenta il tempo">
+              +
+            </button>
+          </div>
           <span class="tempo-hints">
             <span>Più difficile</span>
             <span>Più facile</span>
           </span>
-        </label>
+        </div>
 
         <button
           type="button"

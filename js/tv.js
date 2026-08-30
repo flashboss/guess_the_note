@@ -9,26 +9,30 @@
     return window.GuessTheNote;
   }
 
+  function noteButtons() {
+    return [...document.querySelectorAll(".note-btn")];
+  }
+
   function visibleFocusables() {
-    const overlay = document.getElementById("startOverlay");
-    const overlayOpen = overlay && !overlay.classList.contains("is-hidden");
-    if (overlayOpen) {
-      return [document.getElementById("startBtn")].filter(Boolean);
-    }
-
-    const items = [
-      ...document.querySelectorAll("[data-clef]"),
-      document.getElementById("tempo"),
-      document.getElementById("playBtn"),
-    ];
-
     const game = api();
     const running = game && game.getState().running;
     if (running) {
-      document.querySelectorAll(".note-btn:not(:disabled)").forEach((btn) => {
-        items.push(btn);
-      });
+      const notes = noteButtons().filter((btn) => !btn.disabled);
+      return [
+        document.getElementById("playBtn"),
+        ...(notes.length ? notes : noteButtons()),
+      ].filter(Boolean);
     }
+
+    const overlay = document.getElementById("startOverlay");
+    const overlayOpen = overlay && !overlay.classList.contains("is-hidden");
+    const items = [
+      ...document.querySelectorAll("[data-clef]"),
+      document.getElementById("tempoDown"),
+      document.getElementById("tempoUp"),
+      document.getElementById("playBtn"),
+    ];
+    if (overlayOpen) items.push(document.getElementById("startBtn"));
     return items.filter(Boolean);
   }
 
@@ -48,16 +52,6 @@
     if (!items.length) return;
 
     const active = document.activeElement;
-    if (active && active.id === "tempo" && dx !== 0) {
-      const step = Number(active.step) || 0.5;
-      const next = Number(active.value) + dx * step;
-      active.value = String(
-        Math.min(Number(active.max), Math.max(Number(active.min), next))
-      );
-      active.dispatchEvent(new Event("input", { bubbles: true }));
-      return;
-    }
-
     if (dy !== 0) {
       const rows = [];
       items.forEach((el) => {
@@ -75,6 +69,13 @@
       const target = rows[Math.max(0, Math.min(rows.length - 1, from + dy))];
       const col = rowIndex >= 0 ? rows[from].els.indexOf(active) : 0;
       focusEl(target.els[Math.min(col, target.els.length - 1)]);
+      return;
+    }
+
+    const notes = items.filter((el) => el.classList.contains("note-btn"));
+    if (active && active.classList.contains("note-btn") && notes.length) {
+      const noteIndex = notes.indexOf(active);
+      focusEl(notes[(noteIndex + dx + notes.length) % notes.length]);
       return;
     }
 
@@ -161,6 +162,7 @@
 
   window.addEventListener("gtn:ui", () => {
     const items = visibleFocusables();
+    if (items.includes(document.activeElement)) return;
     const preferred =
       items.find((el) => el.classList.contains("note-btn")) ||
       items.find((el) => el.id === "startBtn") ||
@@ -170,6 +172,11 @@
 
   registerTvKeys();
   window.addEventListener("load", () => {
+    const game = api();
+    if (document.documentElement.classList.contains("is-tv") && game) {
+      game.startGame();
+      return;
+    }
     window.dispatchEvent(new Event("gtn:ui"));
   });
 })();

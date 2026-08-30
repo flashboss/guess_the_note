@@ -44,8 +44,22 @@ if [[ -z "${TV_IP:-}" ]]; then
   exit 0
 fi
 
-echo "Connecting to $TV_IP"
-"$SDB" connect "$TV_IP"
+HOST_IP="$(ipconfig getifaddr en0 2>/dev/null || ipconfig getifaddr en1 2>/dev/null || true)"
+echo "Connecting to $TV_IP:26101"
+if [[ -n "$HOST_IP" ]]; then
+  echo "This Mac is $HOST_IP — on the TV, Developer Mode Host PC IP must match."
+fi
+
+"$SDB" kill-server >/dev/null 2>&1 || true
+"$SDB" start-server
+if ! "$SDB" connect "${TV_IP}:26101"; then
+  echo
+  echo "SDB could not connect. On the TV:"
+  echo "  1. Apps → type 12345 → Developer mode On"
+  echo "  2. Host PC IP = ${HOST_IP:-the Mac LAN IP}"
+  echo "  3. Reboot the TV, wait until the home screen is up, then retry"
+  exit 1
+fi
 "$SDB" devices
 "$TIZEN" install -n "$(basename "$WGT")" -- "$BUILD"
 echo "Installed. Open Indovina la nota from the TV apps list."

@@ -353,9 +353,25 @@ document.querySelectorAll("[data-clef]").forEach((btn) => {
   });
 });
 
+function setTempo(seconds) {
+  const min = Number(tempo.min);
+  const max = Number(tempo.max);
+  const next = Math.min(max, Math.max(min, seconds));
+  tempo.value = String(next);
+  state.seconds = next;
+  tempoLabel.textContent = `${next.toFixed(1)} s`;
+}
+
 tempo.addEventListener("input", () => {
-  state.seconds = Number(tempo.value);
-  tempoLabel.textContent = `${state.seconds.toFixed(1)} s`;
+  setTempo(Number(tempo.value));
+});
+
+document.getElementById("tempoDown").addEventListener("click", () => {
+  setTempo(Number(tempo.value) - Number(tempo.step));
+});
+
+document.getElementById("tempoUp").addEventListener("click", () => {
+  setTempo(Number(tempo.value) + Number(tempo.step));
 });
 
 document.querySelectorAll(".note-btn").forEach((btn) => {

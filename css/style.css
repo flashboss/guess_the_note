@@ -221,6 +221,29 @@ legend,
   display: block;
 }
 
+.tempo-stepper {
+  display: grid;
+  grid-template-columns: 48px 1fr 48px;
+  gap: 8px;
+  align-items: center;
+}
+
+.tempo-stepper button {
+  font: inherit;
+  cursor: pointer;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: rgba(20, 15, 12, 0.4);
+  color: var(--paper);
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.tempo-stepper button:hover {
+  border-color: var(--gold);
+}
+
 input[type="range"] {
   width: 100%;
   accent-color: var(--gold);
@@ -501,6 +524,12 @@ html.is-tv input:focus {
 
 html.is-tv .tempo-field input {
   height: 28px;
+  pointer-events: none;
+}
+
+html.is-tv .tempo-stepper button {
+  height: 64px;
+  font-size: 1.8rem;
 }
 
 @media (prefers-reduced-motion: reduce) {
