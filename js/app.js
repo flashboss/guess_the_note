@@ -182,8 +182,16 @@ function drawStaff(clef, note) {
   staff.appendChild(head);
 }
 
+function t(key) {
+  return window.I18n ? window.I18n.t(key) : key;
+}
+
+function noteLabel(name) {
+  return t(`note${name}`);
+}
+
 function clefLabel(clef) {
-  return clef === "treble" ? "chiave di violino" : "chiave di basso";
+  return clef === "treble" ? t("clefTrebleFull") : t("clefBassFull");
 }
 
 function pickClef() {
@@ -248,14 +256,10 @@ function reveal() {
     }
   });
 
-  const prefix = correct
-    ? "Esatto"
-    : guessed
-      ? "La nota era"
-      : "Tempo scaduto";
+  const prefix = correct ? t("exact") : guessed ? t("theNoteWas") : t("timeUp");
   const letter = "CDEFGAB"[NOTE_NAMES.indexOf(name)];
   setSolution(
-    `${prefix}: ${name} (${letter}${octave})  ·  ${clefLabel(clef)}`,
+    `${prefix}: ${noteLabel(name)} (${letter}${octave})  ·  ${clefLabel(clef)}`,
     correct ? "correct" : "missed"
   );
   updateStats();
@@ -282,7 +286,7 @@ function nextRound() {
   state.guessed = null;
   state.locked = false;
   resetButtons();
-  setSolution("Comparirà qui allo scadere del tempo", "wait");
+  setSolution(t("solutionWait"), "wait");
   const clef = pickClef();
   state.current = pickNote(clef);
   drawStaff(clef, state.current);
@@ -296,7 +300,7 @@ function syncPlayButton() {
   const playIcon = document.getElementById("playIcon");
   playBtn.classList.toggle("is-running", state.running);
   playBtn.setAttribute("aria-pressed", String(state.running));
-  playLabel.textContent = state.running ? "Stop" : "Start";
+  playLabel.textContent = state.running ? t("stop") : t("start");
   playIcon.textContent = state.running ? "■" : "▶";
 }
 
@@ -326,7 +330,7 @@ function stopGame() {
     btn.disabled = true;
     btn.classList.remove("is-picked", "is-correct", "is-wrong");
   });
-  setSolution("Comparirà qui allo scadere del tempo", "wait");
+  setSolution(t("solutionWait"), "wait");
   document.getElementById("startOverlay").classList.remove("is-hidden");
   syncPlayButton();
   notifyUi();
@@ -359,7 +363,7 @@ function setTempo(seconds) {
   const next = Math.min(max, Math.max(min, seconds));
   tempo.value = String(next);
   state.seconds = next;
-  tempoLabel.textContent = `${next.toFixed(1)} s`;
+  tempoLabel.textContent = `${next.toFixed(1)} ${t("tempoUnit")}`;
 }
 
 tempo.addEventListener("input", () => {
@@ -396,14 +400,36 @@ document.addEventListener("keydown", (event) => {
   }
 });
 
+function refreshLabels() {
+  syncPlayButton();
+  setTempo(state.seconds);
+  if (!solutionEl.classList.contains("is-revealed")) {
+    setSolution(t("solutionWait"), "wait");
+  }
+}
+
+document.querySelectorAll("[data-lang]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    window.I18n.setLocale(btn.dataset.lang);
+    window.I18n.apply();
+    refreshLabels();
+    notifyUi();
+  });
+});
+
+window.addEventListener("gtn:i18n", refreshLabels);
+
 window.GuessTheNote = {
   startGame,
   stopGame,
   toggleGame,
   getState: () => state,
+  refreshLabels,
 };
 
+if (window.I18n) window.I18n.apply();
 drawStaff(previewClef(), null);
 document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.disabled = true;
 });
+refreshLabels();

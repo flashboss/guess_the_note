@@ -24,6 +24,7 @@
     const overlay = document.getElementById("startOverlay");
     const overlayOpen = overlay && !overlay.classList.contains("is-hidden");
     const items = [
+      ...document.querySelectorAll("[data-lang]"),
       ...document.querySelectorAll("[data-clef]"),
       document.getElementById("tempoDown"),
       document.getElementById("tempoUp"),

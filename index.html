@@ -1,9 +1,9 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Indovina la nota</title>
+    <title>Guess the Note</title>
     <link rel="icon" href="favicon.ico" sizes="any" />
     <link rel="icon" href="icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="icon.png" />
@@ -25,52 +25,63 @@
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">𝄞</span>
           <div>
-            <h1>Indovina la nota</h1>
-            <p class="tagline">Lettura a prima vista sul pentagramma</p>
+            <h1 data-i18n="title">Guess the Note</h1>
+            <p class="tagline" data-i18n="tagline">Sight-reading on the staff</p>
           </div>
         </div>
         <div class="stats" aria-live="polite">
           <div class="stat">
             <span class="stat-value" id="score">0</span>
-            <span class="stat-label">Corrette</span>
+            <span class="stat-label" data-i18n="score">Correct</span>
           </div>
           <div class="stat">
             <span class="stat-value" id="streak">0</span>
-            <span class="stat-label">Serie</span>
+            <span class="stat-label" data-i18n="streak">Streak</span>
           </div>
           <div class="stat">
             <span class="stat-value" id="accuracy">—</span>
-            <span class="stat-label">Precisione</span>
+            <span class="stat-label" data-i18n="accuracy">Accuracy</span>
           </div>
         </div>
       </header>
 
-      <section class="controls" aria-label="Impostazioni">
+      <section class="lang-bar" data-i18n-aria="language" aria-label="Language">
+        <button type="button" data-lang="en" aria-pressed="false">EN</button>
+        <button type="button" data-lang="it" aria-pressed="false">IT</button>
+        <button type="button" data-lang="es" aria-pressed="false">ES</button>
+        <button type="button" data-lang="pt" aria-pressed="false">PT</button>
+        <button type="button" data-lang="de" aria-pressed="false">DE</button>
+        <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+        <button type="button" data-lang="zh" aria-pressed="false">中文</button>
+        <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
+      </section>
+
+      <section class="controls" data-i18n-aria="settings" aria-label="Settings">
         <fieldset class="clef-field">
-          <legend>Chiave</legend>
-          <div class="segmented" role="radiogroup" aria-label="Chiave musicale">
+          <legend data-i18n="clef">Clef</legend>
+          <div class="segmented" role="radiogroup" data-i18n-aria="clefGroup" aria-label="Musical clef">
             <button type="button" class="seg-btn is-active" data-clef="treble" aria-pressed="true">
               <span class="seg-glyph">𝄞</span>
-              Violino
+              <span data-i18n="clefTreble">Treble</span>
             </button>
             <button type="button" class="seg-btn" data-clef="bass" aria-pressed="false">
               <span class="seg-glyph">𝄢</span>
-              Basso
+              <span data-i18n="clefBass">Bass</span>
             </button>
             <button type="button" class="seg-btn" data-clef="both" aria-pressed="false">
               <span class="seg-glyph">𝄞𝄢</span>
-              Entrambe
+              <span data-i18n="clefBoth">Both</span>
             </button>
           </div>
         </fieldset>
 
         <div class="tempo-field">
           <span class="tempo-heading">
-            Tempo tra le note
+            <span data-i18n="tempo">Time between notes</span>
             <strong id="tempoLabel">4.0 s</strong>
           </span>
           <div class="tempo-stepper">
-            <button type="button" id="tempoDown" aria-label="Riduci il tempo">
+            <button type="button" id="tempoDown" data-i18n-aria="tempoDown" aria-label="Decrease time">
               −
             </button>
             <input
@@ -82,13 +93,13 @@
               value="4"
               tabindex="-1"
             />
-            <button type="button" id="tempoUp" aria-label="Aumenta il tempo">
+            <button type="button" id="tempoUp" data-i18n-aria="tempoUp" aria-label="Increase time">
               +
             </button>
           </div>
           <span class="tempo-hints">
-            <span>Più difficile</span>
-            <span>Più facile</span>
+            <span data-i18n="harder">Harder</span>
+            <span data-i18n="easier">Easier</span>
           </span>
         </div>
 
@@ -110,7 +121,8 @@
             class="staff"
             viewBox="0 0 820 280"
             role="img"
-            aria-label="Pentagramma con la nota da indovinare"
+            data-i18n-aria="staffAria"
+            aria-label="Staff with the note to guess"
           ></svg>
           <div class="timer" aria-hidden="true">
             <div class="timer-track">
@@ -118,12 +130,12 @@
             </div>
           </div>
           <div class="start-overlay" id="startOverlay">
-            <p>Scegli la chiave e il tempo, poi inizia.</p>
-            <button type="button" class="start-btn" id="startBtn">Inizia</button>
+            <p data-i18n="overlayHint">Choose the clef and the time, then start.</p>
+            <button type="button" class="start-btn" id="startBtn" data-i18n="startNow">Start</button>
           </div>
         </div>
 
-        <div class="guesses" role="group" aria-label="Scegli la nota">
+        <div class="guesses" role="group" data-i18n-aria="pickNote" aria-label="Choose the note">
           <button type="button" class="note-btn" data-note="Do">Do</button>
           <button type="button" class="note-btn" data-note="Re">Re</button>
           <button type="button" class="note-btn" data-note="Mi">Mi</button>
@@ -134,14 +146,15 @@
         </div>
 
         <section class="solution" aria-live="polite" aria-atomic="true">
-          <p class="solution-kicker">Soluzione</p>
+          <p class="solution-kicker" data-i18n="solution">Solution</p>
           <p class="solution-body" id="solutionBody">
-            Comparirà qui allo scadere del tempo
+            It will appear here when time runs out
           </p>
         </section>
       </main>
     </div>
 
+    <script src="js/i18n.js"></script>
     <script src="js/app.js"></script>
     <script src="js/tv.js"></script>
   </body>

@@ -8,8 +8,9 @@ Open `index.html` in a browser (or serve the folder with any static file server)
 
 1. Choose the clef: treble, bass, or both at random.
 2. Set **time between notes** — a shorter interval is harder.
-3. Name the note with the buttons (`Do`–`Si`). Keys `1`–`7` work as shortcuts.
-4. When the time is up, the solution appears at the bottom, then the next note is shown.
+3. Name the note with the buttons. Keys `1`–`7` work as shortcuts.
+4. The UI is available in English, Italian, Spanish, Portuguese, German, French, Chinese, and Japanese. It follows the browser language and can be changed from the language bar.
+5. When the time is up, the solution appears at the bottom, then the next note is shown.
 
 ## Note ranges
 
