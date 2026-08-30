@@ -6,6 +6,17 @@
   padding: 28px 8px 36px;
 }
 
+.home-share {
+  display: block;
+  width: 100%;
+  max-width: 748px;
+  height: auto;
+  margin: 0 0 28px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
 .home-lead {
   margin: 0 0 28px;
   max-width: 36em;

@@ -4,9 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Guess the Note</title>
-    <link rel="icon" href="favicon.ico" sizes="any" />
-    <link rel="icon" href="icon.svg" type="image/svg+xml" />
-    <link rel="apple-touch-icon" href="icon.png" />
+    <link rel="icon" href="img/favicon.ico" sizes="any" />
+    <link rel="icon" href="img/icon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="img/icon.png" />
     <meta
       name="description"
       content="Allena la lettura delle note sul pentagramma in chiave di violino e di basso."
@@ -65,7 +65,7 @@
         <fieldset class="clef-field">
           <legend data-i18n="clef">Clef</legend>
           <div class="segmented" role="radiogroup" data-i18n-aria="clefGroup" aria-label="Musical clef">
-            <button type="button" class="seg-btn is-active" data-clef="treble" aria-pressed="true">
+            <button type="button" class="seg-btn" data-clef="treble" aria-pressed="false">
               <span class="seg-glyph">𝄞</span>
               <span data-i18n="clefTreble">Treble</span>
             </button>
@@ -73,7 +73,7 @@
               <span class="seg-glyph">𝄢</span>
               <span data-i18n="clefBass">Bass</span>
             </button>
-            <button type="button" class="seg-btn" data-clef="both" aria-pressed="false">
+            <button type="button" class="seg-btn is-active" data-clef="both" aria-pressed="true">
               <span class="seg-glyph">𝄞𝄢</span>
               <span data-i18n="clefBoth">Both</span>
             </button>

@@ -12,7 +12,7 @@ const CLEF_RANGES = {
 
 const state = {
   running: false,
-  clefMode: "treble",
+  clefMode: "both",
   seconds: 4,
   current: null,
   guessed: null,

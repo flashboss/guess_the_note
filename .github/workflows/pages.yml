@@ -25,8 +25,8 @@ jobs:
       - name: Collect site files
         run: |
           mkdir -p _site
-          cp index.html play.html icon.png icon.svg favicon.ico .nojekyll CNAME _site/
-          cp -R css js _site/
+          cp index.html play.html .nojekyll CNAME _site/
+          cp -R css js img _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3
         with:

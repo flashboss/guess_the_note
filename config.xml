@@ -3,7 +3,7 @@
     <tizen:application id="FBossGTN01.GuessTheNote" package="FBossGTN01" required_version="2.3"/>
     <content src="index.html"/>
     <feature name="http://tizen.org/feature/screen.size.normal.1080.1920"/>
-    <icon src="icon.png"/>
+    <icon src="img/icon.png"/>
     <name>Indovina la nota</name>
     <description>Practice reading notes on a treble or bass staff.</description>
     <author href="https://github.com/flashboss/guess_the_note">flashboss</author>
