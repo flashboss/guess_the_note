@@ -17,11 +17,8 @@
     const game = api();
     const running = game && game.getState().running;
     if (running) {
-      const notes = noteButtons().filter((btn) => !btn.disabled);
-      return [
-        document.getElementById("playBtn"),
-        ...(notes.length ? notes : noteButtons()),
-      ].filter(Boolean);
+      const enabled = noteButtons().filter((btn) => !btn.disabled);
+      return enabled.length ? enabled : noteButtons();
     }
 
     const overlay = document.getElementById("startOverlay");
@@ -69,13 +66,6 @@
       const target = rows[Math.max(0, Math.min(rows.length - 1, from + dy))];
       const col = rowIndex >= 0 ? rows[from].els.indexOf(active) : 0;
       focusEl(target.els[Math.min(col, target.els.length - 1)]);
-      return;
-    }
-
-    const notes = items.filter((el) => el.classList.contains("note-btn"));
-    if (active && active.classList.contains("note-btn") && notes.length) {
-      const noteIndex = notes.indexOf(active);
-      focusEl(notes[(noteIndex + dx + notes.length) % notes.length]);
       return;
     }
 
