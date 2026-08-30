@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:tizen="http://tizen.org/ns/widgets" id="http://flashboss.github.io/GuessTheNote" version="1.0.0" viewmodes="maximized">
+    <tizen:application id="FBossGTN01.GuessTheNote" package="FBossGTN01" required_version="2.3"/>
+    <content src="index.html"/>
+    <feature name="http://tizen.org/feature/screen.size.normal.1080.1920"/>
+    <icon src="icon.png"/>
+    <name>Indovina la nota</name>
+    <description>Practice reading notes on a treble or bass staff.</description>
+    <author href="https://github.com/flashboss/guess_the_note">flashboss</author>
+    <access origin="*" subdomains="true"/>
+    <tizen:privilege name="http://tizen.org/privilege/tv.inputdevice"/>
+    <tizen:privilege name="http://tizen.org/privilege/internet"/>
+    <tizen:profile name="tv-samsung"/>
+    <tizen:setting screen-orientation="landscape" context-menu="disable" background-support="disable" encryption="disable" install-location="auto" hwkey-event="enable"/>
+    <tizen:metadata key="http://samsung.com/tv/metadata/use.network" value="true"/>
+</widget>

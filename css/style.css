@@ -301,19 +301,15 @@ input[type="range"] {
 }
 
 .note-head {
-  transform-box: fill-box;
-  transform-origin: center;
   animation: note-in 0.35s ease;
 }
 
 @keyframes note-in {
   from {
     opacity: 0;
-    transform: scale(0.4);
   }
   to {
     opacity: 1;
-    transform: scale(1);
   }
 }
 
@@ -452,6 +448,59 @@ input[type="range"] {
     font-size: 1.05rem;
     padding: 0 2px;
   }
+}
+
+html.is-tv,
+html.is-tv body {
+  width: 1920px;
+  height: 1080px;
+  overflow: hidden;
+}
+
+html.is-tv body {
+  cursor: none;
+}
+
+html.is-tv .app {
+  width: 1760px;
+  padding: 32px 0 20px;
+}
+
+html.is-tv h1 {
+  font-size: 3rem;
+}
+
+html.is-tv .stat-value {
+  font-size: 2.2rem;
+}
+
+html.is-tv .seg-btn {
+  min-height: 64px;
+  padding: 14px 22px;
+  font-size: 1.15rem;
+}
+
+html.is-tv .play-btn,
+html.is-tv .start-btn {
+  min-height: 64px;
+  min-width: 180px;
+  font-size: 1.2rem;
+}
+
+html.is-tv .note-btn {
+  min-height: 92px;
+  font-size: 2rem;
+}
+
+html.is-tv button:focus,
+html.is-tv input:focus {
+  outline: 4px solid var(--gold-bright);
+  outline-offset: 6px;
+  box-shadow: 0 0 0 8px rgba(230, 199, 120, 0.2);
+}
+
+html.is-tv .tempo-field input {
+  height: 28px;
 }
 
 @media (prefers-reduced-motion: reduce) {

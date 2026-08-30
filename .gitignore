@@ -1,0 +1,28 @@
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*~
+
+# Editors / local tooling
+.cursor/
+.idea/
+.vscode/
+*.iml
+
+# Tizen Studio / local IDE metadata
+.project
+.tproject
+.settings/
+.sign/
+.tizen-cli.log
+
+# Build and packages
+.buildResult/
+*.wgt
+
+# Logs and certs
+*.log
+*.p12
+*.pem
+*.crt

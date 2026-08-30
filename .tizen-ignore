@@ -1,0 +1,8 @@
+.git
+.gitignore
+.cursor
+scripts
+*.md
+LICENSE
+.buildResult
+*.wgt

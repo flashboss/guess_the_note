@@ -287,6 +287,7 @@ function nextRound() {
   state.current = pickNote(clef);
   drawStaff(clef, state.current);
   startTimer();
+  notifyUi();
 }
 
 function syncPlayButton() {
@@ -297,6 +298,10 @@ function syncPlayButton() {
   playBtn.setAttribute("aria-pressed", String(state.running));
   playLabel.textContent = state.running ? "Stop" : "Start";
   playIcon.textContent = state.running ? "■" : "▶";
+}
+
+function notifyUi() {
+  window.dispatchEvent(new Event("gtn:ui"));
 }
 
 function startGame() {
@@ -324,6 +329,7 @@ function stopGame() {
   setSolution("Comparirà qui allo scadere del tempo", "wait");
   document.getElementById("startOverlay").classList.remove("is-hidden");
   syncPlayButton();
+  notifyUi();
 }
 
 function toggleGame() {
@@ -367,16 +373,19 @@ document.getElementById("startBtn").addEventListener("click", startGame);
 document.getElementById("playBtn").addEventListener("click", toggleGame);
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && !state.running) {
-    startGame();
-    return;
-  }
   const index = Number(event.key) - 1;
   if (index >= 0 && index < NOTE_NAMES.length) {
     const btn = document.querySelector(`[data-note="${NOTE_NAMES[index]}"]`);
     btn?.click();
   }
 });
+
+window.GuessTheNote = {
+  startGame,
+  stopGame,
+  toggleGame,
+  getState: () => state,
+};
 
 drawStaff(previewClef(), null);
 document.querySelectorAll(".note-btn").forEach((btn) => {
