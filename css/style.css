@@ -623,9 +623,9 @@ html.is-tv .timer-track {
 }
 
 html.is-tv .note-btn {
-  min-height: 32px;
-  font-size: 0.95rem;
-  border-radius: 8px;
+  min-height: 64px;
+  font-size: 2rem;
+  border-radius: 10px;
 }
 
 html.is-tv .solution {
