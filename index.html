@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="it">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Indovina la nota</title>
+    <meta
+      name="description"
+      content="Allena la lettura delle note sul pentagramma in chiave di violino e di basso."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Outfit:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="app">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true">𝄞</span>
+          <div>
+            <h1>Indovina la nota</h1>
+            <p class="tagline">Lettura a prima vista sul pentagramma</p>
+          </div>
+        </div>
+        <div class="stats" aria-live="polite">
+          <div class="stat">
+            <span class="stat-value" id="score">0</span>
+            <span class="stat-label">Corrette</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="streak">0</span>
+            <span class="stat-label">Serie</span>
+          </div>
+          <div class="stat">
+            <span class="stat-value" id="accuracy">—</span>
+            <span class="stat-label">Precisione</span>
+          </div>
+        </div>
+      </header>
+
+      <section class="controls" aria-label="Impostazioni">
+        <fieldset class="clef-field">
+          <legend>Chiave</legend>
+          <div class="segmented" role="radiogroup" aria-label="Chiave musicale">
+            <button type="button" class="seg-btn is-active" data-clef="treble" aria-pressed="true">
+              <span class="seg-glyph">𝄞</span>
+              Violino
+            </button>
+            <button type="button" class="seg-btn" data-clef="bass" aria-pressed="false">
+              <span class="seg-glyph">𝄢</span>
+              Basso
+            </button>
+            <button type="button" class="seg-btn" data-clef="both" aria-pressed="false">
+              <span class="seg-glyph">𝄞𝄢</span>
+              Entrambe
+            </button>
+          </div>
+        </fieldset>
+
+        <label class="tempo-field">
+          <span class="tempo-heading">
+            Tempo tra le note
+            <strong id="tempoLabel">4.0 s</strong>
+          </span>
+          <input
+            id="tempo"
+            type="range"
+            min="1.5"
+            max="8"
+            step="0.5"
+            value="4"
+          />
+          <span class="tempo-hints">
+            <span>Più difficile</span>
+            <span>Più facile</span>
+          </span>
+        </label>
+      </section>
+
+      <main class="stage">
+        <div class="manuscript">
+          <svg
+            id="staff"
+            class="staff"
+            viewBox="0 0 820 280"
+            role="img"
+            aria-label="Pentagramma con la nota da indovinare"
+          ></svg>
+          <div class="timer" aria-hidden="true">
+            <div class="timer-track">
+              <div class="timer-fill" id="timerFill"></div>
+            </div>
+          </div>
+          <div class="start-overlay" id="startOverlay">
+            <p>Scegli la chiave e il tempo, poi inizia.</p>
+            <button type="button" class="start-btn" id="startBtn">Inizia</button>
+          </div>
+        </div>
+
+        <div class="guesses" role="group" aria-label="Scegli la nota">
+          <button type="button" class="note-btn" data-note="Do">Do</button>
+          <button type="button" class="note-btn" data-note="Re">Re</button>
+          <button type="button" class="note-btn" data-note="Mi">Mi</button>
+          <button type="button" class="note-btn" data-note="Fa">Fa</button>
+          <button type="button" class="note-btn" data-note="Sol">Sol</button>
+          <button type="button" class="note-btn" data-note="La">La</button>
+          <button type="button" class="note-btn" data-note="Si">Si</button>
+        </div>
+
+        <section class="solution" aria-live="polite" aria-atomic="true">
+          <p class="solution-kicker">Soluzione</p>
+          <p class="solution-body" id="solutionBody">
+            Comparirà qui allo scadere del tempo
+          </p>
+        </section>
+      </main>
+    </div>
+
+    <script src="js/app.js"></script>
+  </body>
+</html>
