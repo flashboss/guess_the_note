@@ -10,6 +10,7 @@ const CLEF_RANGES = {
 };
 
 const state = {
+  running: false,
   clefMode: "treble",
   seconds: 4,
   current: null,
@@ -219,7 +220,7 @@ function setSolution(text, mode) {
 }
 
 function reveal() {
-  if (!state.current || state.locked) return;
+  if (!state.running || !state.current || state.locked) return;
   state.locked = true;
   clearTimeout(state.roundTimer);
 
@@ -259,7 +260,7 @@ function reveal() {
   );
   updateStats();
 
-  state.nextTimer = setTimeout(nextRound, 1800);
+  if (state.running) state.nextTimer = setTimeout(nextRound, 1800);
 }
 
 function startTimer() {
@@ -275,6 +276,7 @@ function startTimer() {
 }
 
 function nextRound() {
+  if (!state.running) return;
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
   state.guessed = null;
@@ -285,6 +287,48 @@ function nextRound() {
   state.current = pickNote(clef);
   drawStaff(clef, state.current);
   startTimer();
+}
+
+function syncPlayButton() {
+  const playBtn = document.getElementById("playBtn");
+  const playLabel = document.getElementById("playLabel");
+  const playIcon = document.getElementById("playIcon");
+  playBtn.classList.toggle("is-running", state.running);
+  playBtn.setAttribute("aria-pressed", String(state.running));
+  playLabel.textContent = state.running ? "Stop" : "Start";
+  playIcon.textContent = state.running ? "■" : "▶";
+}
+
+function startGame() {
+  if (state.running) return;
+  state.running = true;
+  document.getElementById("startOverlay").classList.add("is-hidden");
+  syncPlayButton();
+  nextRound();
+}
+
+function stopGame() {
+  state.running = false;
+  clearTimeout(state.roundTimer);
+  clearTimeout(state.nextTimer);
+  state.current = null;
+  state.guessed = null;
+  state.locked = false;
+  timerFill.style.transition = "none";
+  timerFill.style.transform = "scaleX(1)";
+  drawStaff(previewClef(), null);
+  document.querySelectorAll(".note-btn").forEach((btn) => {
+    btn.disabled = true;
+    btn.classList.remove("is-picked", "is-correct", "is-wrong");
+  });
+  setSolution("Comparirà qui allo scadere del tempo", "wait");
+  document.getElementById("startOverlay").classList.remove("is-hidden");
+  syncPlayButton();
+}
+
+function toggleGame() {
+  if (state.running) stopGame();
+  else startGame();
 }
 
 function previewClef() {
@@ -299,7 +343,7 @@ document.querySelectorAll("[data-clef]").forEach((btn) => {
       other.classList.toggle("is-active", active);
       other.setAttribute("aria-pressed", String(active));
     });
-    if (!state.current) drawStaff(previewClef(), null);
+    if (!state.running) drawStaff(previewClef(), null);
   });
 });
 
@@ -310,7 +354,7 @@ tempo.addEventListener("input", () => {
 
 document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    if (state.locked || state.guessed) return;
+    if (!state.running || state.locked || state.guessed) return;
     state.guessed = btn.dataset.note;
     btn.classList.add("is-picked");
     document.querySelectorAll(".note-btn").forEach((other) => {
@@ -319,16 +363,11 @@ document.querySelectorAll(".note-btn").forEach((btn) => {
   });
 });
 
-function startGame() {
-  if (state.current) return;
-  document.getElementById("startOverlay").classList.add("is-hidden");
-  nextRound();
-}
-
 document.getElementById("startBtn").addEventListener("click", startGame);
+document.getElementById("playBtn").addEventListener("click", toggleGame);
 
 document.addEventListener("keydown", (event) => {
-  if (event.key === "Enter" && !state.current) {
+  if (event.key === "Enter" && !state.running) {
     startGame();
     return;
   }
@@ -343,14 +382,3 @@ drawStaff(previewClef(), null);
 document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.disabled = true;
 });
-
-const demo = new URLSearchParams(location.search).get("demo");
-if (demo === "treble") {
-  document.getElementById("startOverlay").classList.add("is-hidden");
-  state.current = { ...noteFromStep(4), clef: "treble" };
-  drawStaff("treble", state.current);
-} else if (demo === "bass") {
-  document.getElementById("startOverlay").classList.add("is-hidden");
-  state.current = { ...noteFromStep(-4), clef: "bass" };
-  drawStaff("bass", state.current);
-}

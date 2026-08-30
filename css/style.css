@@ -106,13 +106,50 @@ h1 {
 
 .controls {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
+  grid-template-columns: 1.2fr 0.8fr auto;
   gap: 20px 28px;
+  align-items: end;
   padding: 18px 20px;
   border: 1px solid rgba(196, 163, 90, 0.22);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.03);
   margin-bottom: 22px;
+}
+
+.play-btn {
+  font: inherit;
+  cursor: pointer;
+  min-width: 132px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 0;
+  border-radius: 999px;
+  padding: 0 22px;
+  background: var(--gold);
+  color: var(--ink);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.play-btn:hover {
+  background: var(--gold-bright);
+}
+
+.play-btn.is-running {
+  background: #7d2a2a;
+  color: #fff5f5;
+}
+
+.play-btn.is-running:hover {
+  background: #9a2f2f;
+}
+
+.play-icon {
+  font-size: 0.78rem;
+  line-height: 1;
 }
 
 fieldset {
@@ -387,6 +424,10 @@ input[type="range"] {
   .controls {
     grid-template-columns: 1fr;
     display: grid;
+  }
+
+  .play-btn {
+    width: 100%;
   }
 
   .topbar {
