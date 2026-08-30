@@ -9,8 +9,14 @@
     <link rel="apple-touch-icon" href="icon.png" />
     <meta
       name="description"
-      content="Allena la lettura delle note sul pentagramma in chiave di violino e di basso."
+      content="Practice reading notes on treble and bass staves."
     />
+    <meta property="og:title" content="Guess the Note" />
+    <meta
+      property="og:description"
+      content="A 10-note sight-reading drill for the browser and Samsung TV."
+    />
+    <meta property="og:image" content="icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -18,33 +24,16 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/style.css" />
+    <link rel="stylesheet" href="css/home.css" />
   </head>
   <body>
-    <div class="app">
-      <header class="topbar">
+    <div class="app home">
+      <header class="topbar home-topbar">
         <div class="brand">
           <span class="brand-mark" aria-hidden="true">𝄞</span>
           <div>
             <h1 data-i18n="title">Guess the Note</h1>
             <p class="tagline" data-i18n="tagline">Sight-reading on the staff</p>
-          </div>
-        </div>
-        <div class="stats" aria-live="polite">
-          <div class="stat">
-            <span class="stat-value" id="progress">0/10</span>
-            <span class="stat-label" data-i18n="rounds">Round</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="score">0</span>
-            <span class="stat-label" data-i18n="score">Correct</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="streak">0</span>
-            <span class="stat-label" data-i18n="streak">Streak</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" id="accuracy">—</span>
-            <span class="stat-label" data-i18n="accuracy">Accuracy</span>
           </div>
         </div>
       </header>
@@ -60,115 +49,48 @@
         <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
       </section>
 
-      <section class="controls" data-i18n-aria="settings" aria-label="Settings">
-        <fieldset class="clef-field">
-          <legend data-i18n="clef">Clef</legend>
-          <div class="segmented" role="radiogroup" data-i18n-aria="clefGroup" aria-label="Musical clef">
-            <button type="button" class="seg-btn is-active" data-clef="treble" aria-pressed="true">
-              <span class="seg-glyph">𝄞</span>
-              <span data-i18n="clefTreble">Treble</span>
-            </button>
-            <button type="button" class="seg-btn" data-clef="bass" aria-pressed="false">
-              <span class="seg-glyph">𝄢</span>
-              <span data-i18n="clefBass">Bass</span>
-            </button>
-            <button type="button" class="seg-btn" data-clef="both" aria-pressed="false">
-              <span class="seg-glyph">𝄞𝄢</span>
-              <span data-i18n="clefBoth">Both</span>
-            </button>
-          </div>
-        </fieldset>
-
-        <div class="tempo-field">
-          <span class="tempo-heading">
-            <span data-i18n="tempo">Time between notes</span>
-            <strong id="tempoLabel">4.0 s</strong>
-          </span>
-          <div class="tempo-stepper">
-            <button type="button" id="tempoDown" data-i18n-aria="tempoDown" aria-label="Decrease time">
-              −
-            </button>
-            <input
-              id="tempo"
-              type="range"
-              min="1.5"
-              max="8"
-              step="0.5"
-              value="4"
-              tabindex="-1"
-            />
-            <button type="button" id="tempoUp" data-i18n-aria="tempoUp" aria-label="Increase time">
-              +
-            </button>
-          </div>
-          <span class="tempo-hints">
-            <span data-i18n="harder">Harder</span>
-            <span data-i18n="easier">Easier</span>
-          </span>
-        </div>
-
-        <button
-          type="button"
-          class="play-btn"
-          id="playBtn"
-          aria-pressed="false"
-        >
-          <span class="play-icon" id="playIcon" aria-hidden="true">▶</span>
-          <span id="playLabel">Start</span>
-        </button>
-      </section>
-
-      <main class="stage">
-        <div class="manuscript">
-          <svg
-            id="staff"
-            class="staff"
-            viewBox="0 0 820 280"
-            role="img"
-            data-i18n-aria="staffAria"
-            aria-label="Staff with the note to guess"
-          ></svg>
-          <div class="timer" aria-hidden="true">
-            <div class="timer-track">
-              <div class="timer-fill" id="timerFill"></div>
-            </div>
-          </div>
-          <div class="start-overlay" id="startOverlay">
-            <div class="overlay-panel" id="idlePanel">
-              <p data-i18n="overlayHint">10 notes. Choose the clef and the time, then start.</p>
-              <button type="button" class="start-btn" id="startBtn" data-i18n="startNow">Start</button>
-            </div>
-            <div class="overlay-panel is-hidden" id="resultPanel">
-              <p class="result-kicker" data-i18n="finalGrade">Final grade</p>
-              <p class="result-grade" id="resultGrade">—</p>
-              <p class="result-label" id="resultLabel"></p>
-              <p class="result-summary" id="resultSummary"></p>
-              <button type="button" class="start-btn" id="replayBtn" data-i18n="playAgain">Play again</button>
-            </div>
-          </div>
-        </div>
-
-        <div class="guesses" role="group" data-i18n-aria="pickNote" aria-label="Choose the note">
-          <button type="button" class="note-btn" data-note="Do">Do</button>
-          <button type="button" class="note-btn" data-note="Re">Re</button>
-          <button type="button" class="note-btn" data-note="Mi">Mi</button>
-          <button type="button" class="note-btn" data-note="Fa">Fa</button>
-          <button type="button" class="note-btn" data-note="Sol">Sol</button>
-          <button type="button" class="note-btn" data-note="La">La</button>
-          <button type="button" class="note-btn" data-note="Si">Si</button>
-        </div>
-
-        <section class="solution" aria-live="polite" aria-atomic="true">
-          <p class="solution-kicker" data-i18n="solution">Solution</p>
-          <p class="solution-body" id="solutionBody">
-            It will appear here when time runs out
+      <main>
+        <section class="home-hero">
+          <p class="home-lead" data-i18n="homeLead">
+            A 10-note sight-reading drill. Name the note before the timer ends, then get a grade from 0 to 10.
           </p>
+          <a class="play-btn home-cta" href="play.html">
+            <span class="play-icon" aria-hidden="true">▶</span>
+            <span data-i18n="homePlay">Play in the browser</span>
+          </a>
+        </section>
+
+        <section class="home-features">
+          <article class="home-card">
+            <h2 data-i18n="homeFeatureClefTitle">Treble, bass, or both</h2>
+            <p data-i18n="homeFeatureClefBody">Practice G clef, F clef, or switch at random.</p>
+          </article>
+          <article class="home-card">
+            <h2 data-i18n="homeFeatureGradeTitle">A grade at the end</h2>
+            <p data-i18n="homeFeatureGradeBody">Ten notes, then a score out of ten.</p>
+          </article>
+          <article class="home-card">
+            <h2 data-i18n="homeFeatureLangTitle">Eight languages</h2>
+            <p data-i18n="homeFeatureLangBody">
+              English, Italian, Spanish, Portuguese, German, French, Chinese, and Japanese.
+            </p>
+          </article>
+          <article class="home-card">
+            <h2 data-i18n="homeFeatureTvTitle">Browser and TV</h2>
+            <p data-i18n="homeFeatureTvBody">
+              Play here, or sideload the same app on a Samsung Tizen TV.
+            </p>
+          </article>
         </section>
       </main>
+
+      <footer class="home-footer">
+        <a href="https://github.com/flashboss/guess_the_note" data-i18n="homeRepo">Source on GitHub</a>
+        <span>Apache-2.0</span>
+      </footer>
     </div>
 
     <script src="js/i18n.js"></script>
-    <script src="js/app.js"></script>
-    <script src="js/tv.js"></script>
+    <script src="js/home.js"></script>
   </body>
 </html>

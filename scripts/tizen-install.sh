@@ -15,7 +15,8 @@ fi
 
 rm -rf "$BUILD"
 mkdir -p "$BUILD"
-cp "$ROOT/index.html" "$ROOT/config.xml" "$ROOT/icon.png" "$BUILD/"
+cp "$ROOT/play.html" "$BUILD/index.html"
+cp "$ROOT/config.xml" "$ROOT/icon.png" "$BUILD/"
 cp -R "$ROOT/css" "$ROOT/js" "$BUILD/"
 
 echo "Packaging with certificate profile: $PROFILE"
