@@ -1,5 +1,8 @@
 const NOTE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
 const ROUNDS = 10;
+const CLEF_MODES = ["treble", "bass", "both"];
+const SETTINGS_CLEF = "gtn-clef";
+const SETTINGS_TEMPO = "gtn-tempo";
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
 const BOTTOM_LINE_Y = TOP_LINE_Y + 4 * LINE_GAP;
@@ -190,6 +193,22 @@ function drawStaff(clef, note) {
     transform: `rotate(-18 ${NOTE_X} ${y})`,
   });
   staff.appendChild(head);
+}
+
+function storageGet(key) {
+  try {
+    return localStorage.getItem(key);
+  } catch (error) {
+    return null;
+  }
+}
+
+function storageSet(key, value) {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    /* private mode or TV storage may be unavailable */
+  }
 }
 
 function t(key) {
@@ -434,15 +453,25 @@ function previewClef() {
   return state.clefMode === "bass" ? "bass" : "treble";
 }
 
+function syncClefButtons() {
+  document.querySelectorAll("[data-clef]").forEach((btn) => {
+    const active = btn.dataset.clef === state.clefMode;
+    btn.classList.toggle("is-active", active);
+    btn.setAttribute("aria-pressed", String(active));
+  });
+}
+
+function setClef(mode) {
+  if (!CLEF_MODES.includes(mode)) return;
+  state.clefMode = mode;
+  storageSet(SETTINGS_CLEF, mode);
+  syncClefButtons();
+  if (!state.running) drawStaff(previewClef(), null);
+}
+
 document.querySelectorAll("[data-clef]").forEach((btn) => {
   btn.addEventListener("click", () => {
-    state.clefMode = btn.dataset.clef;
-    document.querySelectorAll("[data-clef]").forEach((other) => {
-      const active = other === btn;
-      other.classList.toggle("is-active", active);
-      other.setAttribute("aria-pressed", String(active));
-    });
-    if (!state.running) drawStaff(previewClef(), null);
+    setClef(btn.dataset.clef);
   });
 });
 
@@ -453,6 +482,15 @@ function setTempo(seconds) {
   tempo.value = String(next);
   state.seconds = next;
   tempoLabel.textContent = `${next.toFixed(1)} ${t("tempoUnit")}`;
+  storageSet(SETTINGS_TEMPO, String(next));
+}
+
+function loadSettings() {
+  const clef = storageGet(SETTINGS_CLEF);
+  if (CLEF_MODES.includes(clef)) state.clefMode = clef;
+  syncClefButtons();
+  const savedTempo = Number(storageGet(SETTINGS_TEMPO));
+  if (Number.isFinite(savedTempo)) setTempo(savedTempo);
 }
 
 tempo.addEventListener("input", () => {
@@ -521,6 +559,7 @@ window.GuessTheNote = {
 };
 
 if (window.I18n) window.I18n.apply();
+loadSettings();
 drawStaff(previewClef(), null);
 document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.disabled = true;
