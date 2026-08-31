@@ -236,7 +236,9 @@ h1 {
   gap: 20px;
 }
 
-.choices-only.is-hidden {
+.choices-only.is-hidden,
+.choices-only[hidden],
+body[data-answer-mode="notes"] .choices-only {
   display: none;
 }
 
@@ -626,7 +628,7 @@ input[type="range"] {
 
 .guesses {
   display: grid;
-  grid-template-columns: repeat(5, 1fr);
+  grid-template-columns: repeat(7, 1fr);
   gap: 8px;
 }
 
@@ -698,7 +700,6 @@ input[type="range"] {
   }
 
   .guesses {
-    grid-template-columns: repeat(5, 1fr);
     gap: 6px;
   }
 

@@ -42,7 +42,7 @@
         document.getElementById("tempo"),
         document.getElementById("soundBtn"),
         document.getElementById("settingsClose"),
-      ].filter((el) => el && !el.closest(".is-hidden"));
+      ].filter((el) => el && !el.closest(".is-hidden") && !el.closest("[hidden]"));
     }
 
     if (game && game.showingResults()) {

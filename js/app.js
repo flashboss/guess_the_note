@@ -895,6 +895,7 @@ function ensureChoiceButtons() {
   const box = document.getElementById("choices");
   if (!box) return;
   const count = desiredButtonCount();
+  box.dataset.mode = isNotesMode() ? "notes" : "choices";
   box.style.gridTemplateColumns = `repeat(${count}, 1fr)`;
   while (box.children.length > count) box.removeChild(box.lastChild);
   while (box.children.length < count) {
@@ -983,6 +984,18 @@ function idleChoices() {
   }
   paintChoices(true);
   syncChoicesAria();
+}
+
+function applyChoiceLayout() {
+  if (!state.running) {
+    idleChoices();
+    return;
+  }
+  if (state.locked || !state.current) return;
+  state.selected = [];
+  state.answerElapsed = null;
+  state.choices = buildChoices(state.current);
+  renderChoices();
 }
 
 function resetButtons() {
@@ -1449,8 +1462,13 @@ function syncExclusiveButtons(selector, attr, value) {
 
 function syncAnswerModeButtons() {
   syncExclusiveButtons("[data-answer-mode]", "data-answer-mode", state.answerMode);
+  document.body.dataset.answerMode = state.answerMode;
   const box = document.getElementById("choiceOptions");
-  if (box) box.classList.toggle("is-hidden", state.answerMode !== "choices");
+  if (!box) return;
+  const hide = state.answerMode !== "choices";
+  box.classList.toggle("is-hidden", hide);
+  box.hidden = hide;
+  box.setAttribute("aria-hidden", String(hide));
 }
 
 function syncChoiceKindButtons() {
@@ -1485,7 +1503,7 @@ function setAnswerMode(mode) {
   syncAnswerModeButtons();
   syncChoicesAria();
   syncQualityHint();
-  if (!state.running) idleChoices();
+  applyChoiceLayout();
   notifyUi();
 }
 
@@ -1494,7 +1512,7 @@ function setChoiceKind(kind) {
   storageSet(SETTINGS_CHOICE_KIND, state.choiceKind);
   syncChoiceKindButtons();
   syncChoicesAria();
-  if (!state.running) idleChoices();
+  applyChoiceLayout();
   notifyUi();
 }
 
@@ -1507,7 +1525,7 @@ function setChoiceCount(count) {
   state.choiceCount = next;
   if (choiceCountLabel) choiceCountLabel.textContent = String(next);
   storageSet(SETTINGS_CHOICE_COUNT, String(next));
-  if (!state.running) idleChoices();
+  if (!isNotesMode()) applyChoiceLayout();
   notifyUi();
 }
 
