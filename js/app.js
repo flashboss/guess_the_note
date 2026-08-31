@@ -1,8 +1,10 @@
 const NOTE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
-const ROUNDS = 10;
 const CLEF_MODES = ["treble", "bass", "both"];
 const SETTINGS_CLEF = "gtn-clef";
 const SETTINGS_TEMPO = "gtn-tempo";
+const SETTINGS_ROUNDS = "gtn-rounds";
+const SETTINGS_SOUND = "gtn-sound";
+const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
 const BOTTOM_LINE_Y = TOP_LINE_Y + 4 * LINE_GAP;
@@ -16,6 +18,7 @@ const CLEF_RANGES = {
 const state = {
   running: false,
   clefMode: "both",
+  rounds: 10,
   seconds: 4,
   current: null,
   guessed: null,
@@ -27,14 +30,22 @@ const state = {
   lastResult: null,
   roundTimer: null,
   nextTimer: null,
+  sound: true,
+  paused: false,
+  pauseKind: null,
+  pauseRemaining: 0,
+  timerStartedAt: 0,
+  timerDuration: 0,
+  nextDueAt: 0,
 };
 
 const staff = document.getElementById("staff");
 const tempo = document.getElementById("tempo");
 const tempoLabel = document.getElementById("tempoLabel");
+const roundsInput = document.getElementById("rounds");
+const roundsLabel = document.getElementById("roundsLabel");
+const overlayHint = document.getElementById("overlayHint");
 const timerFill = document.getElementById("timerFill");
-const solutionEl = document.querySelector(".solution");
-const solutionBody = document.getElementById("solutionBody");
 const scoreEl = document.getElementById("score");
 const streakEl = document.getElementById("streak");
 const accuracyEl = document.getElementById("accuracy");
@@ -45,6 +56,9 @@ const resultPanel = document.getElementById("resultPanel");
 const resultGrade = document.getElementById("resultGrade");
 const resultLabel = document.getElementById("resultLabel");
 const resultSummary = document.getElementById("resultSummary");
+const pauseOverlay = document.getElementById("pauseOverlay");
+const settingsOverlay = document.getElementById("settingsOverlay");
+const settingsBtn = document.getElementById("settingsBtn");
 
 function noteFromStep(step) {
   const index = ((step % 7) + 7) % 7;
@@ -211,16 +225,103 @@ function storageSet(key, value) {
   }
 }
 
+let audioCtx = null;
+let activeOsc = null;
+
+function unlockAudio() {
+  const Ctx = window.AudioContext || window.webkitAudioContext;
+  if (!Ctx) return null;
+  if (!audioCtx) audioCtx = new Ctx();
+  if (audioCtx.state === "suspended") audioCtx.resume();
+  return audioCtx;
+}
+
+function stopTone() {
+  if (!activeOsc) return;
+  try {
+    activeOsc.stop();
+  } catch (error) {
+    /* already stopped */
+  }
+  activeOsc = null;
+}
+
+function playNoteSound(note) {
+  if (!state.sound || !note) return;
+  const ctx = unlockAudio();
+  if (!ctx) return;
+  const start = () => startTone(note, ctx);
+  if (ctx.state === "suspended") {
+    ctx.resume().then(start).catch(() => {});
+    return;
+  }
+  start();
+}
+
+function startTone(note, ctx) {
+  stopTone();
+  const index = NOTE_NAMES.indexOf(note.name);
+  if (index < 0) return;
+  const midi = 12 * (note.octave + 1) + SEMITONES[index];
+  const freq = 440 * Math.pow(2, (midi - 69) / 12);
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = "triangle";
+  osc.frequency.setValueAtTime(freq, ctx.currentTime);
+  const now = ctx.currentTime;
+  gain.gain.setValueAtTime(0.0001, now);
+  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(now);
+  osc.stop(now + 1.15);
+  osc.onended = () => {
+    if (activeOsc === osc) activeOsc = null;
+  };
+  activeOsc = osc;
+}
+
+function playFeedback(correct) {
+  if (!state.sound) return;
+  const ctx = unlockAudio();
+  if (!ctx) return;
+  const start = () => startFeedback(correct, ctx);
+  if (ctx.state === "suspended") {
+    ctx.resume().then(start).catch(() => {});
+    return;
+  }
+  start();
+}
+
+function beep(ctx, freq, when, duration, type, volume) {
+  const osc = ctx.createOscillator();
+  const gain = ctx.createGain();
+  osc.type = type;
+  osc.frequency.setValueAtTime(freq, when);
+  gain.gain.setValueAtTime(0.0001, when);
+  gain.gain.exponentialRampToValueAtTime(volume, when + 0.012);
+  gain.gain.exponentialRampToValueAtTime(0.0001, when + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(when);
+  osc.stop(when + duration + 0.02);
+}
+
+function startFeedback(correct, ctx) {
+  stopTone();
+  const now = ctx.currentTime;
+  if (correct) {
+    beep(ctx, 659.25, now, 0.11, "sine", 0.16);
+    beep(ctx, 880, now + 0.11, 0.2, "sine", 0.14);
+    return;
+  }
+  beep(ctx, 220, now, 0.14, "triangle", 0.16);
+  beep(ctx, 164.81, now + 0.12, 0.22, "triangle", 0.16);
+}
+
 function t(key) {
   return window.I18n ? window.I18n.t(key) : key;
-}
-
-function noteLabel(name) {
-  return t(`note${name}`);
-}
-
-function clefLabel(clef) {
-  return clef === "treble" ? t("clefTrebleFull") : t("clefBassFull");
 }
 
 function pickClef() {
@@ -251,17 +352,10 @@ function formatMessage(key, vars) {
 function updateStats() {
   scoreEl.textContent = String(state.score);
   streakEl.textContent = String(state.streak);
-  progressEl.textContent = `${state.round} / ${ROUNDS}`;
+  progressEl.textContent = `${state.round} / ${state.rounds}`;
   accuracyEl.textContent = state.attempted
     ? `${Math.round((state.score / state.attempted) * 100)}%`
     : "—";
-}
-
-function setSolution(text, mode) {
-  solutionBody.textContent = text;
-  solutionEl.classList.toggle("is-revealed", mode !== "wait");
-  solutionEl.classList.toggle("is-correct", mode === "correct");
-  solutionEl.classList.toggle("is-missed", mode === "missed");
 }
 
 function reveal() {
@@ -269,7 +363,7 @@ function reveal() {
   state.locked = true;
   clearTimeout(state.roundTimer);
 
-  const { name, octave, clef } = state.current;
+  const { name } = state.current;
   const guessed = state.guessed;
   const correct = guessed === name;
   if (guessed) {
@@ -293,47 +387,54 @@ function reveal() {
     }
   });
 
-  const prefix = correct ? t("exact") : guessed ? t("theNoteWas") : t("timeUp");
-  const letter = "CDEFGAB"[NOTE_NAMES.indexOf(name)];
-  setSolution(
-    `${prefix}: ${noteLabel(name)} (${letter}${octave})  ·  ${clefLabel(clef)}`,
-    correct ? "correct" : "missed"
-  );
+  playFeedback(correct);
   updateStats();
 
-  if (!state.running) return;
-  if (state.round >= ROUNDS) {
+  if (!state.running || state.paused) return;
+  if (state.round >= state.rounds) {
+    state.nextDueAt = Date.now() + 1800;
     state.nextTimer = setTimeout(finishSession, 1800);
     return;
   }
+  state.nextDueAt = Date.now() + 1800;
   state.nextTimer = setTimeout(nextRound, 1800);
 }
 
-function startTimer() {
+function freezeTimerBar(remainingMs) {
+  const total = state.seconds * 1000;
+  const scale = total ? Math.max(0, Math.min(1, remainingMs / total)) : 0;
   timerFill.style.transition = "none";
-  timerFill.style.transform = "scaleX(1)";
+  timerFill.style.transform = `scaleX(${scale})`;
+}
+
+function startTimer(durationMs) {
+  const total = state.seconds * 1000;
+  const remaining = durationMs == null ? total : durationMs;
+  freezeTimerBar(remaining);
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      timerFill.style.transition = `transform ${state.seconds}s linear`;
+      timerFill.style.transition = `transform ${remaining / 1000}s linear`;
       timerFill.style.transform = "scaleX(0)";
     });
   });
-  state.roundTimer = setTimeout(reveal, state.seconds * 1000);
+  state.timerStartedAt = Date.now();
+  state.timerDuration = remaining;
+  state.roundTimer = setTimeout(reveal, remaining);
 }
 
 function nextRound() {
-  if (!state.running) return;
+  if (!state.running || state.paused) return;
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
   state.round += 1;
   state.guessed = null;
   state.locked = false;
   resetButtons();
-  setSolution(t("solutionWait"), "wait");
   const clef = pickClef();
   state.current = pickNote(clef);
   drawStaff(clef, state.current);
   updateStats();
+  playNoteSound(state.current);
   startTimer();
   notifyUi();
 }
@@ -369,7 +470,10 @@ function showResultOverlay() {
 function finishSession() {
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
+  stopTone();
   state.running = false;
+  state.paused = false;
+  hidePauseOverlay();
   state.current = null;
   state.guessed = null;
   state.locked = false;
@@ -388,10 +492,29 @@ function finishSession() {
     attempted: state.attempted,
   };
   drawStaff(previewClef(), null);
-  setSolution(t("solutionWait"), "wait");
   showResultOverlay();
   syncPlayButton();
   notifyUi();
+}
+
+function hidePauseOverlay() {
+  if (pauseOverlay) pauseOverlay.classList.add("is-hidden");
+}
+
+function showPauseOverlay() {
+  if (pauseOverlay) pauseOverlay.classList.remove("is-hidden");
+}
+
+function syncPauseButton() {
+  const pauseBtn = document.getElementById("pauseBtn");
+  const pauseLabel = document.getElementById("pauseLabel");
+  const pauseIcon = document.getElementById("pauseIcon");
+  if (!pauseBtn || !pauseLabel || !pauseIcon) return;
+  pauseBtn.classList.toggle("is-hidden", !state.running);
+  pauseBtn.classList.toggle("is-paused", state.paused);
+  pauseBtn.setAttribute("aria-pressed", String(state.paused));
+  pauseLabel.textContent = state.paused ? t("resume") : t("pause");
+  pauseIcon.textContent = state.paused ? "▶" : "⏸";
 }
 
 function syncPlayButton() {
@@ -402,6 +525,89 @@ function syncPlayButton() {
   playBtn.setAttribute("aria-pressed", String(state.running));
   playLabel.textContent = state.running ? t("stop") : t("start");
   playIcon.textContent = state.running ? "■" : "▶";
+  if (settingsBtn) settingsBtn.disabled = state.running && !state.paused;
+  syncPauseButton();
+}
+
+function pauseGame() {
+  if (!state.running || state.paused) return;
+  state.paused = true;
+  stopTone();
+  closeSettings();
+  if (state.locked) {
+    state.pauseKind = "next";
+    state.pauseRemaining = Math.max(0, state.nextDueAt - Date.now());
+    clearTimeout(state.nextTimer);
+  } else {
+    state.pauseKind = "round";
+    state.pauseRemaining = Math.max(
+      0,
+      state.timerStartedAt + state.timerDuration - Date.now()
+    );
+    clearTimeout(state.roundTimer);
+    freezeTimerBar(state.pauseRemaining);
+    document.querySelectorAll(".note-btn").forEach((btn) => {
+      btn.disabled = true;
+    });
+  }
+  showPauseOverlay();
+  syncPlayButton();
+  notifyUi();
+}
+
+function resumeGame() {
+  if (!state.running || !state.paused) return;
+  state.paused = false;
+  hidePauseOverlay();
+  closeSettings();
+  unlockAudio();
+  const remaining = state.pauseRemaining;
+  state.pauseKind = null;
+  if (state.locked) {
+    const delay = remaining || 0;
+    state.nextDueAt = Date.now() + delay;
+    const followUp = state.round >= state.rounds ? finishSession : nextRound;
+    state.nextTimer = setTimeout(followUp, delay);
+  } else {
+    if (!state.guessed) resetButtons();
+    else {
+      document.querySelectorAll(".note-btn").forEach((btn) => {
+        btn.disabled = true;
+      });
+    }
+    startTimer(remaining);
+  }
+  syncPlayButton();
+  notifyUi();
+}
+
+function togglePause() {
+  if (!state.running) return;
+  if (state.paused) resumeGame();
+  else pauseGame();
+}
+
+function settingsAreOpen() {
+  return settingsOverlay && !settingsOverlay.classList.contains("is-hidden");
+}
+
+function openSettings() {
+  if ((state.running && !state.paused) || !settingsOverlay) return;
+  settingsOverlay.classList.remove("is-hidden");
+  if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "true");
+  notifyUi();
+}
+
+function closeSettings() {
+  if (!settingsOverlay) return;
+  settingsOverlay.classList.add("is-hidden");
+  if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "false");
+  notifyUi();
+}
+
+function toggleSettings() {
+  if (settingsAreOpen()) closeSettings();
+  else openSettings();
 }
 
 function notifyUi() {
@@ -410,7 +616,11 @@ function notifyUi() {
 
 function startGame() {
   if (state.running) return;
+  closeSettings();
+  unlockAudio();
   state.running = true;
+  state.paused = false;
+  hidePauseOverlay();
   state.score = 0;
   state.attempted = 0;
   state.streak = 0;
@@ -426,6 +636,9 @@ function startGame() {
 
 function stopGame() {
   state.running = false;
+  state.paused = false;
+  hidePauseOverlay();
+  stopTone();
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
   state.current = null;
@@ -438,7 +651,6 @@ function stopGame() {
     btn.disabled = true;
     btn.classList.remove("is-picked", "is-correct", "is-wrong");
   });
-  setSolution(t("solutionWait"), "wait");
   showIdleOverlay();
   syncPlayButton();
   notifyUi();
@@ -485,12 +697,54 @@ function setTempo(seconds) {
   storageSet(SETTINGS_TEMPO, String(next));
 }
 
+function updateOverlayHint() {
+  if (!overlayHint) return;
+  overlayHint.textContent = formatMessage("overlayHint", { count: state.rounds });
+}
+
+function setRounds(count) {
+  if (!roundsInput) return;
+  const min = Number(roundsInput.min);
+  const max = Number(roundsInput.max);
+  const step = Number(roundsInput.step) || 5;
+  const snapped = Math.round(count / step) * step;
+  const next = Math.min(max, Math.max(min, snapped));
+  roundsInput.value = String(next);
+  state.rounds = next;
+  if (roundsLabel) roundsLabel.textContent = String(next);
+  storageSet(SETTINGS_ROUNDS, String(next));
+  updateStats();
+  updateOverlayHint();
+}
+
 function loadSettings() {
   const clef = storageGet(SETTINGS_CLEF);
   if (CLEF_MODES.includes(clef)) state.clefMode = clef;
   syncClefButtons();
   const savedTempo = Number(storageGet(SETTINGS_TEMPO));
   if (Number.isFinite(savedTempo)) setTempo(savedTempo);
+  const savedRounds = Number(storageGet(SETTINGS_ROUNDS));
+  if (Number.isFinite(savedRounds) && savedRounds > 0) setRounds(savedRounds);
+  else setRounds(state.rounds);
+  const savedSound = storageGet(SETTINGS_SOUND);
+  if (savedSound === "0" || savedSound === "1") setSound(savedSound === "1");
+  else syncSoundButton();
+}
+
+function syncSoundButton() {
+  const soundBtn = document.getElementById("soundBtn");
+  const soundLabel = document.getElementById("soundLabel");
+  if (!soundBtn || !soundLabel) return;
+  soundBtn.classList.toggle("is-active", state.sound);
+  soundBtn.setAttribute("aria-pressed", String(state.sound));
+  soundLabel.textContent = state.sound ? t("soundOn") : t("soundOff");
+}
+
+function setSound(on) {
+  state.sound = Boolean(on);
+  storageSet(SETTINGS_SOUND, state.sound ? "1" : "0");
+  syncSoundButton();
+  if (!state.sound) stopTone();
 }
 
 tempo.addEventListener("input", () => {
@@ -505,9 +759,26 @@ document.getElementById("tempoUp").addEventListener("click", () => {
   setTempo(Number(tempo.value) + Number(tempo.step));
 });
 
+roundsInput?.addEventListener("input", () => {
+  setRounds(Number(roundsInput.value));
+});
+
+document.getElementById("roundsDown")?.addEventListener("click", () => {
+  setRounds(Number(roundsInput.value) - Number(roundsInput.step));
+});
+
+document.getElementById("roundsUp")?.addEventListener("click", () => {
+  setRounds(Number(roundsInput.value) + Number(roundsInput.step));
+});
+
+document.getElementById("soundBtn").addEventListener("click", () => {
+  if (!state.sound) unlockAudio();
+  setSound(!state.sound);
+});
+
 document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
-    if (!state.running || state.locked || state.guessed) return;
+    if (!state.running || state.paused || state.locked || state.guessed) return;
     state.guessed = btn.dataset.note;
     btn.classList.add("is-picked");
     document.querySelectorAll(".note-btn").forEach((other) => {
@@ -516,9 +787,16 @@ document.querySelectorAll(".note-btn").forEach((btn) => {
   });
 });
 
-document.getElementById("startBtn").addEventListener("click", startGame);
-document.getElementById("replayBtn").addEventListener("click", startGame);
 document.getElementById("playBtn").addEventListener("click", toggleGame);
+document.getElementById("pauseBtn").addEventListener("click", togglePause);
+
+if (settingsBtn) {
+  settingsBtn.addEventListener("click", toggleSettings);
+}
+document.getElementById("settingsClose")?.addEventListener("click", closeSettings);
+settingsOverlay?.addEventListener("click", (event) => {
+  if (event.target === settingsOverlay) closeSettings();
+});
 
 document.addEventListener("keydown", (event) => {
   const index = Number(event.key) - 1;
@@ -530,10 +808,9 @@ document.addEventListener("keydown", (event) => {
 
 function refreshLabels() {
   syncPlayButton();
+  syncSoundButton();
   setTempo(state.seconds);
-  if (!solutionEl.classList.contains("is-revealed")) {
-    setSolution(t("solutionWait"), "wait");
-  }
+  setRounds(state.rounds);
   if (!resultPanel.classList.contains("is-hidden")) renderResults();
 }
 
@@ -552,14 +829,21 @@ window.GuessTheNote = {
   startGame,
   stopGame,
   toggleGame,
+  pauseGame,
+  resumeGame,
+  togglePause,
   finishSession,
+  unlockAudio,
+  openSettings,
+  closeSettings,
+  settingsAreOpen,
   getState: () => state,
   showingResults: () => !resultPanel.classList.contains("is-hidden"),
   refreshLabels,
 };
 
-if (window.I18n) window.I18n.apply();
 loadSettings();
+if (window.I18n) window.I18n.apply();
 drawStaff(previewClef(), null);
 document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.disabled = true;

@@ -43,7 +43,7 @@ body {
   display: flex;
   justify-content: space-between;
   gap: 24px;
-  align-items: flex-end;
+  align-items: center;
   margin-bottom: 28px;
 }
 
@@ -142,16 +142,99 @@ h1 {
   color: var(--ink);
 }
 
+.toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.settings-btn {
+  font: inherit;
+  cursor: pointer;
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: rgba(20, 15, 12, 0.4);
+  color: var(--gold-bright);
+  font-size: 1.35rem;
+  line-height: 1;
+}
+
+.settings-btn:hover:not(:disabled) {
+  border-color: var(--gold);
+}
+
+.settings-btn:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 6, 4, 0.72);
+}
+
+.settings-overlay.is-hidden {
+  display: none;
+}
+
+.settings-dialog {
+  width: min(640px, 100%);
+  max-height: calc(100% - 32px);
+  overflow: auto;
+  padding: 22px 24px 24px;
+  border-radius: 22px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: var(--walnut-mid);
+  box-shadow: var(--shadow);
+}
+
+.settings-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+
+.settings-head h2 {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.8rem;
+  font-weight: 600;
+}
+
+.settings-close {
+  font: inherit;
+  cursor: pointer;
+  min-height: 40px;
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: rgba(20, 15, 12, 0.4);
+  color: var(--paper);
+}
+
+.settings-close:hover {
+  border-color: var(--gold);
+}
+
 .controls {
   display: grid;
-  grid-template-columns: 1.2fr 0.8fr auto;
-  gap: 20px 28px;
-  align-items: end;
-  padding: 18px 20px;
-  border: 1px solid rgba(196, 163, 90, 0.22);
-  border-radius: 18px;
-  background: rgba(255, 255, 255, 0.03);
-  margin-bottom: 22px;
+  gap: 20px;
+}
+
+.sound-btn {
+  min-height: 44px;
+  justify-content: center;
+  width: fit-content;
 }
 
 .play-btn {
@@ -183,6 +266,34 @@ h1 {
 
 .play-btn.is-running:hover {
   background: #9a2f2f;
+}
+
+.pause-btn {
+  font: inherit;
+  cursor: pointer;
+  min-width: 132px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: 1px solid rgba(196, 163, 90, 0.45);
+  border-radius: 999px;
+  padding: 0 22px;
+  background: rgba(20, 15, 12, 0.4);
+  color: var(--paper);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+
+.pause-btn.is-paused {
+  background: var(--gold);
+  border-color: var(--gold);
+  color: var(--ink);
+}
+
+.pause-btn.is-hidden {
+  display: none;
 }
 
 .play-icon {
@@ -333,6 +444,29 @@ input[type="range"] {
   display: none;
 }
 
+.pause-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  align-content: center;
+  gap: 14px;
+  background: rgba(243, 230, 201, 0.72);
+  color: var(--ink);
+  text-align: center;
+  z-index: 2;
+}
+
+.pause-overlay.is-hidden {
+  display: none;
+}
+
+.pause-overlay p {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 1.8rem;
+}
+
 .overlay-panel {
   display: grid;
   justify-items: center;
@@ -471,47 +605,6 @@ input[type="range"] {
   color: #fff5f5;
 }
 
-.solution {
-  min-height: 96px;
-  padding: 16px 20px;
-  border-radius: 18px;
-  background: var(--walnut-mid);
-  border: 1px solid rgba(196, 163, 90, 0.16);
-}
-
-.solution.is-revealed {
-  border-color: rgba(196, 163, 90, 0.5);
-  background: #32271e;
-}
-
-.solution-kicker {
-  margin: 0 0 6px;
-  font-size: 0.72rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--muted);
-}
-
-.solution-body {
-  margin: 0;
-  font-family: "Cormorant Garamond", serif;
-  font-size: clamp(1.4rem, 3vw, 2rem);
-  font-weight: 600;
-  color: #d8c7a4;
-}
-
-.solution.is-revealed .solution-body {
-  color: var(--gold-bright);
-}
-
-.solution.is-correct {
-  border-color: rgba(47, 107, 69, 0.7);
-}
-
-.solution.is-missed {
-  border-color: rgba(154, 47, 47, 0.55);
-}
-
 @media (max-width: 720px) {
   .topbar,
   .controls {
@@ -519,8 +612,14 @@ input[type="range"] {
     display: grid;
   }
 
-  .play-btn {
+  .toolbar,
+  .play-btn,
+  .pause-btn {
     width: 100%;
+  }
+
+  .settings-btn {
+    width: 48px;
   }
 
   .topbar {
@@ -561,6 +660,7 @@ html.is-tv body {
 html.is-tv .app {
   display: flex;
   flex-direction: column;
+  position: relative;
   width: 1840px;
   height: 1080px;
   padding: 18px 40px 16px;
@@ -601,19 +701,43 @@ html.is-tv .stat-value {
 }
 
 html.is-tv .lang-bar {
-  margin-bottom: 10px;
+  margin-bottom: 16px;
 }
 
 html.is-tv .lang-bar button {
-  min-height: 40px;
-  padding: 4px 12px;
-  font-size: 0.9rem;
+  min-height: 48px;
+  padding: 4px 14px;
+  font-size: 1rem;
+}
+
+html.is-tv .settings-btn {
+  width: 56px;
+  height: 56px;
+  font-size: 1.6rem;
+}
+
+html.is-tv .settings-overlay {
+  position: absolute;
+}
+
+html.is-tv .settings-dialog {
+  width: 1100px;
+  max-height: 900px;
+  padding: 28px 32px;
+}
+
+html.is-tv .settings-head h2 {
+  font-size: 2.2rem;
+}
+
+html.is-tv .settings-close {
+  min-height: 48px;
+  padding: 8px 20px;
+  font-size: 1.05rem;
 }
 
 html.is-tv .controls {
-  margin-bottom: 10px;
-  padding: 10px 16px;
-  gap: 12px 20px;
+  gap: 18px;
 }
 
 html.is-tv legend,
@@ -627,7 +751,12 @@ html.is-tv .seg-btn {
   font-size: 1rem;
 }
 
+html.is-tv .sound-btn {
+  min-height: 48px;
+}
+
 html.is-tv .play-btn,
+html.is-tv .pause-btn,
 html.is-tv .start-btn {
   min-height: 48px;
   min-width: 160px;
@@ -667,7 +796,7 @@ html.is-tv .staff {
   flex: 1;
   min-height: 0;
   width: auto;
-  max-height: 520px;
+  max-height: 600px;
   margin: 0 auto;
 }
 
@@ -683,21 +812,6 @@ html.is-tv .note-btn {
   min-height: 64px;
   font-size: 2rem;
   border-radius: 10px;
-}
-
-html.is-tv .solution {
-  min-height: 0;
-  padding: 4px 12px;
-  border-radius: 10px;
-}
-
-html.is-tv .solution-kicker {
-  display: none;
-}
-
-html.is-tv .solution-body {
-  font-size: 1rem;
-  line-height: 1.2;
 }
 
 html.is-tv .result-kicker {

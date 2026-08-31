@@ -20,7 +20,7 @@ Open `index.html` for the homepage, or `play.html` for the game (or serve the fo
 2. Set **time between notes** — a shorter interval is harder.
 3. Name the note with the buttons. Keys `1`–`7` work as shortcuts.
 4. The UI is available in English, Italian, Spanish, Portuguese, German, French, Chinese, and Japanese. It follows the browser language and can be changed from the language bar.
-5. When the time is up, the solution appears at the bottom, then the next note is shown. After ten notes the session ends with a final grade.
+5. The correct note is highlighted on the buttons, then the next note is shown. After ten notes the session ends with a final grade.
 
 ## Note ranges
 

@@ -48,76 +48,150 @@
             <span class="stat-label" data-i18n="accuracy">Accuracy</span>
           </div>
         </div>
+        <div class="toolbar">
+          <button
+            type="button"
+            class="settings-btn"
+            id="settingsBtn"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            aria-controls="settingsOverlay"
+            data-i18n-aria="settings"
+            aria-label="Settings"
+          >
+            ⚙
+          </button>
+          <button
+            type="button"
+            class="pause-btn is-hidden"
+            id="pauseBtn"
+            aria-pressed="false"
+          >
+            <span class="play-icon" id="pauseIcon" aria-hidden="true">⏸</span>
+            <span id="pauseLabel">Pause</span>
+          </button>
+          <button
+            type="button"
+            class="play-btn"
+            id="playBtn"
+            aria-pressed="false"
+          >
+            <span class="play-icon" id="playIcon" aria-hidden="true">▶</span>
+            <span id="playLabel">Start</span>
+          </button>
+        </div>
       </header>
 
-      <section class="lang-bar" data-i18n-aria="language" aria-label="Language">
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
-        <button type="button" data-lang="it" aria-pressed="false">IT</button>
-        <button type="button" data-lang="es" aria-pressed="false">ES</button>
-        <button type="button" data-lang="pt" aria-pressed="false">PT</button>
-        <button type="button" data-lang="de" aria-pressed="false">DE</button>
-        <button type="button" data-lang="fr" aria-pressed="false">FR</button>
-        <button type="button" data-lang="zh" aria-pressed="false">中文</button>
-        <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
-      </section>
-
-      <section class="controls" data-i18n-aria="settings" aria-label="Settings">
-        <fieldset class="clef-field">
-          <legend data-i18n="clef">Clef</legend>
-          <div class="segmented" role="radiogroup" data-i18n-aria="clefGroup" aria-label="Musical clef">
-            <button type="button" class="seg-btn" data-clef="treble" aria-pressed="false">
-              <span class="seg-glyph">𝄞</span>
-              <span data-i18n="clefTreble">Treble</span>
-            </button>
-            <button type="button" class="seg-btn" data-clef="bass" aria-pressed="false">
-              <span class="seg-glyph">𝄢</span>
-              <span data-i18n="clefBass">Bass</span>
-            </button>
-            <button type="button" class="seg-btn is-active" data-clef="both" aria-pressed="true">
-              <span class="seg-glyph">𝄞𝄢</span>
-              <span data-i18n="clefBoth">Both</span>
-            </button>
-          </div>
-        </fieldset>
-
-        <div class="tempo-field">
-          <span class="tempo-heading">
-            <span data-i18n="tempo">Time between notes</span>
-            <strong id="tempoLabel">4.0 s</strong>
-          </span>
-          <div class="tempo-stepper">
-            <button type="button" id="tempoDown" data-i18n-aria="tempoDown" aria-label="Decrease time">
-              −
-            </button>
-            <input
-              id="tempo"
-              type="range"
-              min="1.5"
-              max="8"
-              step="0.5"
-              value="4"
-              tabindex="-1"
-            />
-            <button type="button" id="tempoUp" data-i18n-aria="tempoUp" aria-label="Increase time">
-              +
-            </button>
-          </div>
-          <span class="tempo-hints">
-            <span data-i18n="harder">Harder</span>
-            <span data-i18n="easier">Easier</span>
-          </span>
-        </div>
-
-        <button
-          type="button"
-          class="play-btn"
-          id="playBtn"
-          aria-pressed="false"
+      <div class="settings-overlay is-hidden" id="settingsOverlay">
+        <div
+          class="settings-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settingsTitle"
         >
-          <span class="play-icon" id="playIcon" aria-hidden="true">▶</span>
-          <span id="playLabel">Start</span>
-        </button>
-      </section>
+          <div class="settings-head">
+            <h2 id="settingsTitle" data-i18n="settings">Settings</h2>
+            <button type="button" class="settings-close" id="settingsClose" data-i18n="close">
+              Close
+            </button>
+          </div>
+
+          <section class="lang-bar" data-i18n-aria="language" aria-label="Language">
+            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+            <button type="button" data-lang="it" aria-pressed="false">IT</button>
+            <button type="button" data-lang="es" aria-pressed="false">ES</button>
+            <button type="button" data-lang="pt" aria-pressed="false">PT</button>
+            <button type="button" data-lang="de" aria-pressed="false">DE</button>
+            <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+            <button type="button" data-lang="zh" aria-pressed="false">中文</button>
+            <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
+          </section>
+
+          <section class="controls" data-i18n-aria="settings" aria-label="Settings">
+            <fieldset class="clef-field">
+              <legend data-i18n="clef">Clef</legend>
+              <div class="segmented" role="radiogroup" data-i18n-aria="clefGroup" aria-label="Musical clef">
+                <button type="button" class="seg-btn" data-clef="treble" aria-pressed="false">
+                  <span class="seg-glyph">𝄞</span>
+                  <span data-i18n="clefTreble">Treble</span>
+                </button>
+                <button type="button" class="seg-btn" data-clef="bass" aria-pressed="false">
+                  <span class="seg-glyph">𝄢</span>
+                  <span data-i18n="clefBass">Bass</span>
+                </button>
+                <button type="button" class="seg-btn is-active" data-clef="both" aria-pressed="true">
+                  <span class="seg-glyph">𝄞𝄢</span>
+                  <span data-i18n="clefBoth">Both</span>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="tempo-field">
+              <span class="tempo-heading">
+                <span data-i18n="roundsSetting">Number of notes</span>
+                <strong id="roundsLabel">10</strong>
+              </span>
+              <div class="tempo-stepper">
+                <button type="button" id="roundsDown" data-i18n-aria="roundsDown" aria-label="Fewer notes">
+                  −
+                </button>
+                <input
+                  id="rounds"
+                  type="range"
+                  min="5"
+                  max="30"
+                  step="5"
+                  value="10"
+                  tabindex="-1"
+                />
+                <button type="button" id="roundsUp" data-i18n-aria="roundsUp" aria-label="More notes">
+                  +
+                </button>
+              </div>
+            </div>
+
+            <div class="tempo-field">
+              <span class="tempo-heading">
+                <span data-i18n="tempo">Time between notes</span>
+                <strong id="tempoLabel">4.0 s</strong>
+              </span>
+              <div class="tempo-stepper">
+                <button type="button" id="tempoDown" data-i18n-aria="tempoDown" aria-label="Decrease time">
+                  −
+                </button>
+                <input
+                  id="tempo"
+                  type="range"
+                  min="1.5"
+                  max="8"
+                  step="0.5"
+                  value="4"
+                  tabindex="-1"
+                />
+                <button type="button" id="tempoUp" data-i18n-aria="tempoUp" aria-label="Increase time">
+                  +
+                </button>
+              </div>
+              <span class="tempo-hints">
+                <span data-i18n="harder">Harder</span>
+                <span data-i18n="easier">Easier</span>
+              </span>
+            </div>
+
+            <button
+              type="button"
+              class="seg-btn sound-btn"
+              id="soundBtn"
+              aria-pressed="true"
+              data-i18n-aria="soundAria"
+              aria-label="Play the pitched note when it appears"
+            >
+              <span class="seg-glyph" aria-hidden="true">♪</span>
+              <span id="soundLabel">On</span>
+            </button>
+          </section>
+        </div>
+      </div>
 
       <main class="stage">
         <div class="manuscript">
@@ -134,17 +208,18 @@
               <div class="timer-fill" id="timerFill"></div>
             </div>
           </div>
+          <div class="pause-overlay is-hidden" id="pauseOverlay">
+            <p data-i18n="paused">Paused</p>
+          </div>
           <div class="start-overlay" id="startOverlay">
             <div class="overlay-panel" id="idlePanel">
-              <p data-i18n="overlayHint">10 notes. Choose the clef and the time, then start.</p>
-              <button type="button" class="start-btn" id="startBtn" data-i18n="startNow">Start</button>
+              <p id="overlayHint">10 notes. Choose the clef and the time, then start.</p>
             </div>
             <div class="overlay-panel is-hidden" id="resultPanel">
               <p class="result-kicker" data-i18n="finalGrade">Final grade</p>
               <p class="result-grade" id="resultGrade">—</p>
               <p class="result-label" id="resultLabel"></p>
               <p class="result-summary" id="resultSummary"></p>
-              <button type="button" class="start-btn" id="replayBtn" data-i18n="playAgain">Play again</button>
             </div>
           </div>
         </div>
@@ -158,13 +233,6 @@
           <button type="button" class="note-btn" data-note="La">La</button>
           <button type="button" class="note-btn" data-note="Si">Si</button>
         </div>
-
-        <section class="solution" aria-live="polite" aria-atomic="true">
-          <p class="solution-kicker" data-i18n="solution">Solution</p>
-          <p class="solution-body" id="solutionBody">
-            It will appear here when time runs out
-          </p>
-        </section>
       </main>
     </div>
 

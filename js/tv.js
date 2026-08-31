@@ -16,26 +16,37 @@
   function visibleFocusables() {
     const game = api();
     const running = game && game.getState().running;
+    const paused = game && game.getState().paused;
+    if (running && paused) {
+      return [
+        document.getElementById("settingsBtn"),
+        document.getElementById("pauseBtn"),
+        document.getElementById("playBtn"),
+      ].filter(Boolean);
+    }
     if (running) {
       const enabled = noteButtons().filter((btn) => !btn.disabled);
       return enabled.length ? enabled : noteButtons();
     }
 
+    if (game && game.settingsAreOpen()) {
+      return [
+        ...document.querySelectorAll("[data-lang]"),
+        ...document.querySelectorAll("[data-clef]"),
+        document.getElementById("roundsDown"),
+        document.getElementById("roundsUp"),
+        document.getElementById("tempoDown"),
+        document.getElementById("tempoUp"),
+        document.getElementById("soundBtn"),
+        document.getElementById("settingsClose"),
+      ].filter(Boolean);
+    }
+
     const overlay = document.getElementById("startOverlay");
-    const overlayOpen = overlay && !overlay.classList.contains("is-hidden");
     const items = [
-      ...document.querySelectorAll("[data-lang]"),
-      ...document.querySelectorAll("[data-clef]"),
-      document.getElementById("tempoDown"),
-      document.getElementById("tempoUp"),
+      document.getElementById("settingsBtn"),
       document.getElementById("playBtn"),
     ];
-    if (overlayOpen) {
-      const replay = document.getElementById("replayBtn");
-      const start = document.getElementById("startBtn");
-      if (replay && !replay.closest(".overlay-panel.is-hidden")) items.push(replay);
-      else items.push(start);
-    }
     return items.filter(Boolean);
   }
 
@@ -110,6 +121,7 @@
   }
 
   document.addEventListener("keydown", (event) => {
+    api()?.unlockAudio?.();
     const key = event.key;
     const code = event.keyCode;
 
@@ -142,28 +154,52 @@
       event.preventDefault();
       const game = api();
       if (game && game.getState().running) game.stopGame();
+      else if (game && game.settingsAreOpen()) game.closeSettings();
       else if (game && game.showingResults()) game.stopGame();
       else exitApp();
       return;
     }
-    if (code === 10252 || code === 415 || key === "MediaPlayPause" || key === "MediaPlay") {
+    if (code === 10252 || key === "MediaPlayPause") {
       event.preventDefault();
-      api()?.toggleGame();
+      const game = api();
+      if (!game) return;
+      if (game.getState().running) game.togglePause();
+      else game.toggleGame();
       return;
     }
-    if (code === 19 || code === 413 || key === "MediaPause" || key === "MediaStop") {
+    if (code === 415 || key === "MediaPlay") {
+      event.preventDefault();
+      const game = api();
+      if (!game) return;
+      if (game.getState().paused) game.resumeGame();
+      else if (!game.getState().running) game.startGame();
+      return;
+    }
+    if (code === 19 || key === "MediaPause") {
+      event.preventDefault();
+      api()?.pauseGame();
+      return;
+    }
+    if (code === 413 || key === "MediaStop") {
       event.preventDefault();
       api()?.stopGame();
     }
   });
 
   window.addEventListener("gtn:ui", () => {
+    const game = api();
     const items = visibleFocusables();
+    if (game && game.showingResults()) {
+      focusEl(document.getElementById("playBtn"));
+      return;
+    }
     if (items.includes(document.activeElement)) return;
     const preferred =
       items.find((el) => el.classList.contains("note-btn")) ||
-      items.find((el) => el.id === "replayBtn") ||
-      items.find((el) => el.id === "startBtn") ||
+      items.find((el) => el.id === "pauseBtn") ||
+      items.find((el) => el.id === "playBtn") ||
+      items.find((el) => el.dataset.lang) ||
+      items.find((el) => el.id === "settingsBtn") ||
       items[0];
     focusEl(preferred);
   });
