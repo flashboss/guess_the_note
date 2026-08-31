@@ -4,8 +4,8 @@ const SETTINGS_CLEF = "gtn-clef";
 const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
-const GRADE_ACCURACY = 0.7;
-const GRADE_SPEED = 0.3;
+const GRADE_ACCURACY = 0.85;
+const GRADE_SPEED = 0.15;
 const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
@@ -28,6 +28,7 @@ const state = {
   score: 0,
   attempted: 0,
   streak: 0,
+  bestStreak: 0,
   round: 0,
   qualitySum: 0,
   timeSum: 0,
@@ -389,7 +390,9 @@ function reveal() {
   const elapsed =
     guessed && state.answerElapsed != null ? state.answerElapsed : total;
   const speed = total ? Math.max(0, Math.min(1, (total - elapsed) / total)) : 0;
-  const quality = correct ? GRADE_ACCURACY + GRADE_SPEED * speed : 0;
+  const quality = correct
+    ? GRADE_ACCURACY + GRADE_SPEED * Math.sqrt(speed)
+    : 0;
 
   state.attempted += 1;
   state.qualitySum += quality;
@@ -398,6 +401,7 @@ function reveal() {
     if (correct) {
       state.score += 1;
       state.streak += 1;
+      if (state.streak > state.bestStreak) state.bestStreak = state.streak;
     } else {
       state.streak = 0;
     }
@@ -481,6 +485,7 @@ function renderResults() {
     score: result.score,
     total: result.attempted,
     accuracy: result.percent,
+    streak: result.bestStreak,
   });
 }
 
@@ -515,6 +520,7 @@ function finishSession() {
     percent,
     score: state.score,
     attempted: state.attempted,
+    bestStreak: state.bestStreak,
   };
   drawStaff(previewClef(), null);
   showResultOverlay();
@@ -649,6 +655,7 @@ function startGame() {
   state.score = 0;
   state.attempted = 0;
   state.streak = 0;
+  state.bestStreak = 0;
   state.round = 0;
   state.qualitySum = 0;
   state.timeSum = 0;
