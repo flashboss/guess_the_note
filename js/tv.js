@@ -157,10 +157,28 @@
     if (code === 10009 || key === "XF86Back" || key === "Escape") {
       event.preventDefault();
       const game = api();
-      if (game && game.getState().running) game.stopGame();
-      else if (game && game.settingsAreOpen()) game.closeSettings();
-      else if (game && game.showingResults()) game.stopGame();
-      else exitApp();
+      if (!game) {
+        exitApp();
+        return;
+      }
+      if (game.settingsAreOpen()) {
+        game.closeSettings();
+        return;
+      }
+      const { running, paused } = game.getState();
+      if (running && !paused) {
+        game.pauseGame();
+        return;
+      }
+      if (running && paused) {
+        game.stopGame();
+        return;
+      }
+      if (game.showingResults()) {
+        game.stopGame();
+        return;
+      }
+      exitApp();
       return;
     }
     if (code === 10252 || key === "MediaPlayPause") {
