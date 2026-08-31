@@ -25,7 +25,7 @@ jobs:
       - name: Collect site files
         run: |
           mkdir -p _site
-          cp index.html play.html .nojekyll CNAME _site/
+          cp index.html play.html .nojekyll CNAME robots.txt sitemap.xml _site/
           cp -R css js img _site/
       - uses: actions/configure-pages@v5
       - uses: actions/upload-pages-artifact@v3

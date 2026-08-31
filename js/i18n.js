@@ -4,7 +4,8 @@ const I18N_STRINGS = {
   en: {
     title: "Guess the Note",
     tagline: "Sight-reading on the staff",
-    description: "Practice reading notes on treble and bass staves.",
+    seoTitle: "Guess the Note – Sight-reading practice",
+    description: "Free sight-reading game: name notes, dyads and chords on treble and bass staves. Play in the browser or on Samsung TV, in eight languages.",
     score: "Correct",
     streak: "Streak",
     avgTime: "Average time",
@@ -101,7 +102,8 @@ const I18N_STRINGS = {
   it: {
     title: "Indovina la nota",
     tagline: "Lettura a prima vista sul pentagramma",
-    description: "Allena la lettura delle note sul pentagramma in chiave di violino e di basso.",
+    seoTitle: "Indovina la nota – Lettura a prima vista",
+    description: "Gioco gratuito di lettura a prima vista: indovina note, bicordi e accordi in chiave di violino e di basso. Nel browser o su Smart TV Samsung, in otto lingue.",
     score: "Corrette",
     streak: "Serie",
     avgTime: "Tempo medio",
@@ -198,7 +200,8 @@ const I18N_STRINGS = {
   es: {
     title: "Adivina la nota",
     tagline: "Lectura a primera vista en el pentagrama",
-    description: "Practica la lectura de notas en clave de sol y de fa.",
+    seoTitle: "Adivina la nota – Lectura a vista",
+    description: "Juego gratis de lectura a vista: nombra notas, bicordes y acordes en clave de sol y de fa. En el navegador o en una Smart TV Samsung, en ocho idiomas.",
     score: "Correctas",
     streak: "Racha",
     avgTime: "Tiempo medio",
@@ -295,7 +298,8 @@ const I18N_STRINGS = {
   pt: {
     title: "Adivinha a nota",
     tagline: "Leitura à primeira vista no pentagrama",
-    description: "Pratica a leitura de notas em clave de sol e de fá.",
+    seoTitle: "Adivinha a nota – Leitura à primeira vista",
+    description: "Jogo grátis de leitura à primeira vista: identifica notas, bicordes e acordes em clave de sol e de fá. No browser ou numa Smart TV Samsung, em oito línguas.",
     score: "Corretas",
     streak: "Sequência",
     avgTime: "Tempo médio",
@@ -392,7 +396,8 @@ const I18N_STRINGS = {
   de: {
     title: "Rate die Note",
     tagline: "Vom-Blatt-Lesen auf dem Notensystem",
-    description: "Übe das Lesen von Noten im Violin- und Bassschlüssel.",
+    seoTitle: "Rate die Note – Vom-Blatt-Lesen üben",
+    description: "Kostenloses Blattspiel: benenne Noten, Zweitklänge und Akkorde im Violin- und Bassschlüssel. Im Browser oder auf dem Samsung-Fernseher, in acht Sprachen.",
     score: "Richtig",
     streak: "Serie",
     avgTime: "Durchschnittszeit",
@@ -489,7 +494,8 @@ const I18N_STRINGS = {
   fr: {
     title: "Devine la note",
     tagline: "Lecture à vue sur la portée",
-    description: "Entraîne-toi à lire les notes en clé de sol et en clé de fa.",
+    seoTitle: "Devine la note – Lecture à vue",
+    description: "Jeu gratuit de lecture à vue : nomme notes, dyades et accords en clé de sol et de fa. Dans le navigateur ou sur Smart TV Samsung, en huit langues.",
     score: "Justes",
     streak: "Série",
     avgTime: "Temps moyen",
@@ -586,7 +592,8 @@ const I18N_STRINGS = {
   zh: {
     title: "猜音符",
     tagline: "五线谱视奏练习",
-    description: "练习高音谱号和低音谱号上的读谱。",
+    seoTitle: "猜音符 – 视奏练习",
+    description: "免费视奏游戏：在高音或低音谱号上辨认单音、双音与和弦。可在浏览器或三星智能电视上玩，支持八种语言。",
     score: "正确",
     streak: "连胜",
     avgTime: "平均用时",
@@ -683,7 +690,8 @@ const I18N_STRINGS = {
   ja: {
     title: "音符当て",
     tagline: "五線譜の初見練習",
-    description: "ト音記号とヘ音記号の読譜を練習します。",
+    seoTitle: "音符当て – 初見練習",
+    description: "無料の初見練習。ト音・ヘ音記号で単音・複音・コードを当てます。ブラウザまたは Samsung テレビ、8言語対応。",
     score: "正解",
     streak: "連続",
     avgTime: "平均時間",
@@ -779,6 +787,27 @@ const I18N_STRINGS = {
   },
 };
 
+const OG_LOCALES = {
+  en: "en_US",
+  it: "it_IT",
+  es: "es_ES",
+  pt: "pt_PT",
+  de: "de_DE",
+  fr: "fr_FR",
+  zh: "zh_CN",
+  ja: "ja_JP",
+};
+
+function setNamedMeta(name, content) {
+  const el = document.querySelector(`meta[name="${name}"]`);
+  if (el) el.setAttribute("content", content);
+}
+
+function setPropertyMeta(property, content) {
+  const el = document.querySelector(`meta[property="${property}"]`);
+  if (el) el.setAttribute("content", content);
+}
+
 const I18n = {
   locale: "en",
 
@@ -812,9 +841,15 @@ const I18n = {
 
   apply() {
     document.documentElement.lang = this.locale;
-    document.title = this.t("title");
-    const meta = document.querySelector('meta[name="description"]');
-    if (meta) meta.setAttribute("content", this.t("description"));
+    const pageTitle = this.t("seoTitle");
+    const pageDescription = this.t("description");
+    document.title = pageTitle;
+    setNamedMeta("description", pageDescription);
+    setPropertyMeta("og:title", pageTitle);
+    setPropertyMeta("og:description", pageDescription);
+    setPropertyMeta("og:locale", OG_LOCALES[this.locale] || "en_US");
+    setNamedMeta("twitter:title", pageTitle);
+    setNamedMeta("twitter:description", pageDescription);
 
     document.querySelectorAll("[data-i18n]").forEach((el) => {
       el.textContent = this.t(el.dataset.i18n);
