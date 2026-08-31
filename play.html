@@ -110,18 +110,29 @@
           <section class="controls" data-i18n-aria="settings" aria-label="Settings">
             <fieldset class="clef-field">
               <legend data-i18n="clef">Clef</legend>
-              <div class="segmented" role="radiogroup" data-i18n-aria="clefGroup" aria-label="Musical clef">
-                <button type="button" class="seg-btn" data-clef="treble" aria-pressed="false">
+              <div class="segmented" role="group" data-i18n-aria="clefGroup" aria-label="Musical clef">
+                <button type="button" class="seg-btn is-active" data-clef="treble" aria-pressed="true">
                   <span class="seg-glyph">𝄞</span>
                   <span data-i18n="clefTreble">Treble</span>
                 </button>
-                <button type="button" class="seg-btn" data-clef="bass" aria-pressed="false">
+                <button type="button" class="seg-btn is-active" data-clef="bass" aria-pressed="true">
                   <span class="seg-glyph">𝄢</span>
                   <span data-i18n="clefBass">Bass</span>
                 </button>
-                <button type="button" class="seg-btn is-active" data-clef="both" aria-pressed="true">
-                  <span class="seg-glyph">𝄞𝄢</span>
-                  <span data-i18n="clefBoth">Both</span>
+              </div>
+            </fieldset>
+
+            <fieldset class="clef-field">
+              <legend data-i18n="shape">Exercise</legend>
+              <div class="segmented" role="group" data-i18n-aria="shapeGroup" aria-label="Notes, dyads, and chords">
+                <button type="button" class="seg-btn is-active" data-shape="notes" aria-pressed="true">
+                  <span data-i18n="shapeNotes">Notes</span>
+                </button>
+                <button type="button" class="seg-btn" data-shape="dyads" aria-pressed="false">
+                  <span data-i18n="shapeDyads">Dyads</span>
+                </button>
+                <button type="button" class="seg-btn" data-shape="chords" aria-pressed="false">
+                  <span data-i18n="shapeChords">Chords</span>
                 </button>
               </div>
             </fieldset>
@@ -162,8 +173,8 @@
                 <input
                   id="tempo"
                   type="range"
-                  min="1.5"
-                  max="8"
+                  min="1"
+                  max="15"
                   step="0.5"
                   value="4"
                   tabindex="-1"
@@ -193,6 +204,25 @@
         </div>
       </div>
 
+      <div class="result-overlay is-hidden" id="resultOverlay">
+        <div
+          class="result-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="resultGrade"
+        >
+          <div class="result-score">
+            <p class="result-kicker" data-i18n="finalGrade">Final grade</p>
+            <p class="result-grade" id="resultGrade">—</p>
+            <p class="result-label" id="resultLabel"></p>
+          </div>
+          <p class="result-summary" id="resultSummary"></p>
+          <button type="button" class="start-btn" id="playAgainBtn" data-i18n="playAgain">
+            Play again
+          </button>
+        </div>
+      </div>
+
       <main class="stage">
         <div class="manuscript">
           <svg
@@ -211,16 +241,9 @@
           <div class="pause-overlay is-hidden" id="pauseOverlay">
             <p data-i18n="paused">Paused</p>
           </div>
+          <p class="quality-hint is-hidden" id="qualityHint"></p>
           <div class="start-overlay" id="startOverlay">
-            <div class="overlay-panel" id="idlePanel">
-              <p id="overlayHint">10 notes. Choose the clef and the time, then start.</p>
-            </div>
-            <div class="overlay-panel is-hidden" id="resultPanel">
-              <p class="result-kicker" data-i18n="finalGrade">Final grade</p>
-              <p class="result-grade" id="resultGrade">—</p>
-              <p class="result-label" id="resultLabel"></p>
-              <p class="result-summary" id="resultSummary"></p>
-            </div>
+            <p id="overlayHint">10 notes. Choose the clef and the time, then start.</p>
           </div>
         </div>
 

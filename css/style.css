@@ -432,32 +432,108 @@ input[type="range"] {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 14px;
-  background: rgba(243, 230, 201, 0.78);
+  align-content: end;
+  justify-items: center;
+  padding: 0 28px 40px;
+  background: linear-gradient(
+    180deg,
+    rgba(243, 230, 201, 0.12) 35%,
+    rgba(243, 230, 201, 0.9) 100%
+  );
   color: var(--ink);
   text-align: center;
+  pointer-events: none;
 }
 
 .start-overlay.is-hidden {
   display: none;
 }
 
+.result-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 35;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 6, 4, 0.72);
+}
+
+.result-overlay.is-hidden {
+  display: none;
+}
+
+.result-dialog {
+  width: min(520px, 100%);
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  padding: 28px 32px 32px;
+  border-radius: 22px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: var(--walnut-mid);
+  color: var(--paper);
+  text-align: center;
+  box-shadow: var(--shadow);
+}
+
+.result-dialog p {
+  margin: 0;
+}
+
+.result-score {
+  display: grid;
+  justify-items: center;
+  gap: 2px;
+}
+
+.result-dialog .start-btn {
+  margin-top: 8px;
+  min-width: 160px;
+  background: var(--gold);
+  color: var(--ink);
+}
+
+.result-dialog .start-btn:hover {
+  background: var(--gold-bright);
+}
+
 .pause-overlay {
   position: absolute;
   inset: 0;
   display: grid;
-  place-items: center;
-  align-content: center;
-  gap: 14px;
-  background: rgba(243, 230, 201, 0.72);
+  align-content: end;
+  justify-items: center;
+  padding: 0 28px 40px;
+  background: linear-gradient(
+    180deg,
+    rgba(243, 230, 201, 0.12) 35%,
+    rgba(243, 230, 201, 0.9) 100%
+  );
   color: var(--ink);
   text-align: center;
   z-index: 2;
+  pointer-events: none;
 }
 
 .pause-overlay.is-hidden {
+  display: none;
+}
+
+.quality-hint {
+  position: absolute;
+  right: 8%;
+  bottom: 40px;
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-style: italic;
+  color: var(--ink);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.quality-hint.is-hidden {
   display: none;
 }
 
@@ -467,19 +543,9 @@ input[type="range"] {
   font-size: 1.8rem;
 }
 
-.overlay-panel {
-  display: grid;
-  justify-items: center;
-  gap: 12px;
-  padding: 8px 20px;
-}
-
-.overlay-panel.is-hidden {
-  display: none;
-}
-
 .start-overlay p {
   margin: 0;
+  max-width: 28ch;
   font-family: "Cormorant Garamond", serif;
   font-size: 1.35rem;
 }
@@ -489,24 +555,25 @@ input[type="range"] {
   font-size: 0.78rem !important;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 
 .result-grade {
   font-size: clamp(4.2rem, 12vw, 7rem);
-  line-height: 0.9;
+  line-height: 0.82;
   font-weight: 700;
-  color: var(--ink);
+  color: var(--gold-bright);
 }
 
 .result-label {
   font-size: clamp(1.4rem, 3vw, 2rem);
+  color: var(--paper);
 }
 
 .result-summary {
   font-family: Outfit, sans-serif !important;
   font-size: 1.05rem !important;
-  color: var(--ink-soft);
+  color: var(--muted);
 }
 
 .start-btn {
@@ -716,7 +783,8 @@ html.is-tv .settings-btn {
   font-size: 1.6rem;
 }
 
-html.is-tv .settings-overlay {
+html.is-tv .settings-overlay,
+html.is-tv .result-overlay {
   position: absolute;
 }
 
@@ -800,8 +868,20 @@ html.is-tv .staff {
   margin: 0 auto;
 }
 
-html.is-tv .timer {
-  padding: 0 16px 4px;
+html.is-tv .quality-hint {
+  right: 6%;
+  bottom: 52px;
+  font-size: 2.4rem;
+}
+
+html.is-tv .start-overlay,
+html.is-tv .pause-overlay {
+  padding: 0 40px 52px;
+}
+
+html.is-tv .start-overlay p {
+  max-width: 36ch;
+  font-size: 1.8rem;
 }
 
 html.is-tv .timer-track {
@@ -812,6 +892,16 @@ html.is-tv .note-btn {
   min-height: 64px;
   font-size: 2rem;
   border-radius: 10px;
+}
+
+html.is-tv .result-dialog {
+  width: 720px;
+  padding: 36px 40px 40px;
+  gap: 16px;
+}
+
+html.is-tv .result-score {
+  gap: 0;
 }
 
 html.is-tv .result-kicker {

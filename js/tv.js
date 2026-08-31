@@ -33,6 +33,7 @@
       return [
         ...document.querySelectorAll("[data-lang]"),
         ...document.querySelectorAll("[data-clef]"),
+        ...document.querySelectorAll("[data-shape]"),
         document.getElementById("roundsDown"),
         document.getElementById("roundsUp"),
         document.getElementById("tempoDown"),
@@ -42,7 +43,10 @@
       ].filter(Boolean);
     }
 
-    const overlay = document.getElementById("startOverlay");
+    if (game && game.showingResults()) {
+      return [document.getElementById("playAgainBtn")].filter(Boolean);
+    }
+
     const items = [
       document.getElementById("settingsBtn"),
       document.getElementById("playBtn"),
@@ -190,7 +194,7 @@
     const game = api();
     const items = visibleFocusables();
     if (game && game.showingResults()) {
-      focusEl(document.getElementById("playBtn"));
+      focusEl(document.getElementById("playAgainBtn"));
       return;
     }
     if (items.includes(document.activeElement)) return;

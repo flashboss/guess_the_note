@@ -1,6 +1,8 @@
 const NOTE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
-const CLEF_MODES = ["treble", "bass", "both"];
+const CLEFS = ["treble", "bass"];
+const SHAPES = ["notes", "dyads", "chords"];
 const SETTINGS_CLEF = "gtn-clef";
+const SETTINGS_SHAPES = "gtn-shapes";
 const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
@@ -19,7 +21,8 @@ const CLEF_RANGES = {
 
 const state = {
   running: false,
-  clefMode: "both",
+  clefs: ["treble", "bass"],
+  shapes: ["notes"],
   rounds: 10,
   seconds: 4,
   current: null,
@@ -57,14 +60,14 @@ const streakEl = document.getElementById("streak");
 const avgTimeEl = document.getElementById("avgTime");
 const progressEl = document.getElementById("progress");
 const startOverlay = document.getElementById("startOverlay");
-const idlePanel = document.getElementById("idlePanel");
-const resultPanel = document.getElementById("resultPanel");
+const resultOverlay = document.getElementById("resultOverlay");
 const resultGrade = document.getElementById("resultGrade");
 const resultLabel = document.getElementById("resultLabel");
 const resultSummary = document.getElementById("resultSummary");
 const pauseOverlay = document.getElementById("pauseOverlay");
 const settingsOverlay = document.getElementById("settingsOverlay");
 const settingsBtn = document.getElementById("settingsBtn");
+const qualityHint = document.getElementById("qualityHint");
 
 function noteFromStep(step) {
   const index = ((step % 7) + 7) % 7;
@@ -104,6 +107,79 @@ const CLEF_PATHS = {
   bass: "M252 262C78 262 0 135 0 39C0 -41 42 -110 123 -110C186 -110 229 -66 229 -4C229 60 182 100 133 100C106 100 96 93 83 93C70 93 67 101 67 111C67 151 127 224 229 224C335 224 381 120 381 -37C381 -140 359 -260 297 -356C237 -449 134 -534 10 -605C1 -610 -5 -615 -5 -623C-5 -629 -1 -635 8 -635C13 -635 19 -633 25 -630C158 -565 286 -489 392 -375C479 -281 531 -159 531 -28C531 146 425 262 252 262ZM629 180C598 180 574 156 574 125C574 94 598 70 629 70C660 70 684 94 684 125C684 156 660 180 629 180ZM630 -71C599 -71 576 -94 576 -125C576 -156 599 -179 630 -179C661 -179 684 -156 684 -125C684 -94 661 -71 630 -71Z",
 };
 
+function drawSharp(x, y) {
+  const g = svgEl("g", {
+    class: "accidental",
+    fill: "#1b1410",
+    stroke: "#1b1410",
+    "stroke-linecap": "square",
+  });
+  g.appendChild(
+    svgEl("line", {
+      x1: x - 3.5,
+      y1: y - 15,
+      x2: x - 3.5,
+      y2: y + 15,
+      "stroke-width": 1.8,
+    })
+  );
+  g.appendChild(
+    svgEl("line", {
+      x1: x + 3.5,
+      y1: y - 15,
+      x2: x + 3.5,
+      y2: y + 15,
+      "stroke-width": 1.8,
+    })
+  );
+  g.appendChild(
+    svgEl("polygon", {
+      points: `${x - 9},${y - 3} ${x + 9},${y - 8} ${x + 9},${y - 3.2} ${x - 9},${y + 1.8}`,
+      stroke: "none",
+    })
+  );
+  g.appendChild(
+    svgEl("polygon", {
+      points: `${x - 9},${y + 8} ${x + 9},${y + 3} ${x + 9},${y + 7.8} ${x - 9},${y + 12.8}`,
+      stroke: "none",
+    })
+  );
+  return g;
+}
+
+function drawFlat(x, y) {
+  const g = svgEl("g", {
+    class: "accidental",
+    fill: "none",
+    stroke: "#1b1410",
+    "stroke-linecap": "round",
+    "stroke-linejoin": "round",
+  });
+  g.appendChild(
+    svgEl("line", {
+      x1: x - 5,
+      y1: y - 18,
+      x2: x - 5,
+      y2: y + 9,
+      "stroke-width": 1.8,
+    })
+  );
+  g.appendChild(
+    svgEl("path", {
+      d: `M ${x - 5} ${y + 9} C ${x + 11} ${y + 5} ${x + 12} ${y - 6} ${x - 5} ${y - 1}`,
+      "stroke-width": 1.8,
+    })
+  );
+  return g;
+}
+
+function drawAccidental(note, y) {
+  const acc = note.accidental || 0;
+  if (!acc) return null;
+  const x = NOTE_X - 32;
+  return acc > 0 ? drawSharp(x, y) : drawFlat(x, y);
+}
+
 function drawClef(clef) {
   const anchorY =
     clef === "treble" ? TOP_LINE_Y + 3 * LINE_GAP : TOP_LINE_Y + LINE_GAP;
@@ -117,7 +193,7 @@ function drawClef(clef) {
   return group;
 }
 
-function drawStaff(clef, note) {
+function drawStaff(clef, challenge) {
   staff.replaceChildren();
 
   staff.appendChild(
@@ -172,10 +248,15 @@ function drawStaff(clef, note) {
 
   staff.appendChild(drawClef(clef));
 
-  if (!note) return;
+  if (!challenge) return;
+  const notes = challenge.notes || [challenge];
+  if (!notes.length) return;
 
-  const y = yForStep(note.step, clef);
-  for (const step of ledgerSteps(note.step, clef)) {
+  const ledgers = new Set();
+  notes.forEach((note) => {
+    ledgerSteps(note.step, clef).forEach((step) => ledgers.add(step));
+  });
+  for (const step of ledgers) {
     const ly = yForStep(step, clef);
     staff.appendChild(
       svgEl("line", {
@@ -189,30 +270,41 @@ function drawStaff(clef, note) {
     );
   }
 
-  const stemUp = note.step < CLEF_RANGES[clef].middleStep;
+  const steps = notes.map((note) => note.step);
+  const low = Math.min(...steps);
+  const high = Math.max(...steps);
+  const yLow = yForStep(low, clef);
+  const yHigh = yForStep(high, clef);
+  const stemUp = (low + high) / 2 < CLEF_RANGES[clef].middleStep;
   const stemX = stemUp ? NOTE_X + 11 : NOTE_X - 11;
-  const stemY2 = stemUp ? y - 58 : y + 58;
+  const stemY1 = stemUp ? yLow : yHigh;
+  const stemY2 = stemUp ? yHigh - 58 : yLow + 58;
   staff.appendChild(
     svgEl("line", {
       x1: stemX,
       x2: stemX,
-      y1: y,
+      y1: stemY1,
       y2: stemY2,
       stroke: "#1b1410",
       "stroke-width": 2.2,
     })
   );
 
-  const head = svgEl("ellipse", {
-    class: "note-head",
-    cx: NOTE_X,
-    cy: y,
-    rx: 13,
-    ry: 9,
-    fill: "#1b1410",
-    transform: `rotate(-18 ${NOTE_X} ${y})`,
+  notes.forEach((note) => {
+    const y = yForStep(note.step, clef);
+    const accidental = drawAccidental(note, y);
+    if (accidental) staff.appendChild(accidental);
+    const head = svgEl("ellipse", {
+      class: "note-head",
+      cx: NOTE_X,
+      cy: y,
+      rx: 13,
+      ry: 9,
+      fill: "#1b1410",
+      transform: `rotate(-18 ${NOTE_X} ${y})`,
+    });
+    staff.appendChild(head);
   });
-  staff.appendChild(head);
 }
 
 function storageGet(key) {
@@ -232,7 +324,7 @@ function storageSet(key, value) {
 }
 
 let audioCtx = null;
-let activeOsc = null;
+let activeOscs = [];
 
 function unlockAudio() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
@@ -243,20 +335,35 @@ function unlockAudio() {
 }
 
 function stopTone() {
-  if (!activeOsc) return;
-  try {
-    activeOsc.stop();
-  } catch (error) {
-    /* already stopped */
-  }
-  activeOsc = null;
+  activeOscs.forEach((osc) => {
+    try {
+      osc.stop();
+    } catch (error) {
+      /* already stopped */
+    }
+  });
+  activeOscs = [];
 }
 
-function playNoteSound(note) {
-  if (!state.sound || !note) return;
+function midiForNote(note) {
+  const index = NOTE_NAMES.indexOf(note.name);
+  if (index < 0) return null;
+  return 12 * (note.octave + 1) + SEMITONES[index] + (note.accidental || 0);
+}
+
+function freqForNote(note) {
+  const midi = midiForNote(note);
+  if (midi == null) return null;
+  return 440 * Math.pow(2, (midi - 69) / 12);
+}
+
+function playNoteSound(challenge) {
+  if (!state.sound || !challenge) return;
+  const notes = challenge.notes || [challenge];
+  if (!notes.length) return;
   const ctx = unlockAudio();
   if (!ctx) return;
-  const start = () => startTone(note, ctx);
+  const start = () => startTones(notes, ctx);
   if (ctx.state === "suspended") {
     ctx.resume().then(start).catch(() => {});
     return;
@@ -264,28 +371,29 @@ function playNoteSound(note) {
   start();
 }
 
-function startTone(note, ctx) {
+function startTones(notes, ctx) {
   stopTone();
-  const index = NOTE_NAMES.indexOf(note.name);
-  if (index < 0) return;
-  const midi = 12 * (note.octave + 1) + SEMITONES[index];
-  const freq = 440 * Math.pow(2, (midi - 69) / 12);
-  const osc = ctx.createOscillator();
-  const gain = ctx.createGain();
-  osc.type = "triangle";
-  osc.frequency.setValueAtTime(freq, ctx.currentTime);
   const now = ctx.currentTime;
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.22, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(now);
-  osc.stop(now + 1.15);
-  osc.onended = () => {
-    if (activeOsc === osc) activeOsc = null;
-  };
-  activeOsc = osc;
+  const vol = 0.2 / Math.max(1, notes.length);
+  notes.forEach((note) => {
+    const freq = freqForNote(note);
+    if (!freq) return;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "triangle";
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.0001, now);
+    gain.gain.exponentialRampToValueAtTime(vol, now + 0.02);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now + 1.1);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 1.15);
+    osc.onended = () => {
+      activeOscs = activeOscs.filter((item) => item !== osc);
+    };
+    activeOscs.push(osc);
+  });
 }
 
 function playFeedback(correct) {
@@ -331,14 +439,119 @@ function t(key) {
 }
 
 function pickClef() {
-  if (state.clefMode === "both") return Math.random() < 0.5 ? "treble" : "bass";
-  return state.clefMode;
+  const clefs = state.clefs.length ? state.clefs : ["treble"];
+  return clefs[Math.floor(Math.random() * clefs.length)];
+}
+
+function challengeFrom(root, notes, quality, kind) {
+  return {
+    ...root,
+    notes,
+    quality,
+    kind,
+  };
+}
+
+function noteAtInterval(root, stepOffset, semitones) {
+  const target = { ...noteFromStep(root.step + stepOffset), clef: root.clef };
+  let accidental = midiForNote(root) + semitones - midiForNote(target);
+  if (accidental > 6) accidental -= 12;
+  if (accidental < -6) accidental += 12;
+  return { ...target, accidental };
+}
+
+function raiseOctave(note) {
+  return {
+    ...noteFromStep(note.step + 7),
+    clef: note.clef,
+    accidental: note.accidental || 0,
+  };
+}
+
+function invertNotes(tones, inversion) {
+  const notes = tones.map((note) => ({ ...note }));
+  for (let i = 0; i < inversion; i += 1) {
+    notes.push(raiseOctave(notes.shift()));
+  }
+  return notes;
+}
+
+function notesInRange(notes, clef) {
+  const { min, max } = CLEF_RANGES[clef];
+  return notes.every((note) => note.step >= min && note.step <= max);
+}
+
+function pickQuality() {
+  return Math.random() < 0.5 ? "major" : "minor";
+}
+
+function pickVoicing(clef, buildTones, maxInversion) {
+  const { min, max } = CLEF_RANGES[clef];
+  const quality = pickQuality();
+  const options = [];
+  for (let step = min; step <= max; step += 1) {
+    const root = { ...noteFromStep(step), clef, accidental: 0 };
+    const tones = buildTones(root, quality);
+    for (let inversion = 0; inversion <= maxInversion; inversion += 1) {
+      const notes = invertNotes(tones, inversion);
+      if (notesInRange(notes, clef)) options.push({ root, notes });
+    }
+  }
+  if (!options.length) return null;
+  const pick = options[Math.floor(Math.random() * options.length)];
+  return { ...pick, quality };
 }
 
 function pickNote(clef) {
   const { min, max } = CLEF_RANGES[clef];
   const step = min + Math.floor(Math.random() * (max - min + 1));
-  return { ...noteFromStep(step), clef };
+  const root = { ...noteFromStep(step), clef, accidental: 0 };
+  return challengeFrom(root, [root], null, "note");
+}
+
+function pickDyad(clef) {
+  const voicing = pickVoicing(
+    clef,
+    (root, quality) => [root, noteAtInterval(root, 2, quality === "major" ? 4 : 3)],
+    1
+  );
+  if (!voicing) return null;
+  return challengeFrom(voicing.root, voicing.notes, voicing.quality, "dyad");
+}
+
+function pickChord(clef) {
+  const voicing = pickVoicing(
+    clef,
+    (root, quality) => [
+      root,
+      noteAtInterval(root, 2, quality === "major" ? 4 : 3),
+      noteAtInterval(root, 4, 7),
+    ],
+    2
+  );
+  if (!voicing) return null;
+  return challengeFrom(voicing.root, voicing.notes, voicing.quality, "chord");
+}
+
+function pickChallenge(clef) {
+  const kinds = state.shapes.length ? state.shapes : ["notes"];
+  const kind = kinds[Math.floor(Math.random() * kinds.length)];
+  if (kind === "dyads") return pickDyad(clef) || pickNote(clef);
+  if (kind === "chords") return pickChord(clef) || pickNote(clef);
+  return pickNote(clef);
+}
+
+function syncQualityHint() {
+  if (!qualityHint) return;
+  const quality = state.running && state.current && state.current.quality;
+  if (!quality) {
+    qualityHint.classList.add("is-hidden");
+    qualityHint.textContent = "";
+    return;
+  }
+  qualityHint.textContent =
+    quality === "major" ? t("qualityMajor") : t("qualityMinor");
+  qualityHint.classList.remove("is-hidden");
 }
 
 function resetButtons() {
@@ -462,18 +675,19 @@ function nextRound() {
   state.locked = false;
   resetButtons();
   const clef = pickClef();
-  state.current = pickNote(clef);
+  state.current = pickChallenge(clef);
   drawStaff(clef, state.current);
   updateStats();
+  syncQualityHint();
   playNoteSound(state.current);
   startTimer();
   notifyUi();
 }
 
 function showIdleOverlay() {
-  idlePanel.classList.remove("is-hidden");
-  resultPanel.classList.add("is-hidden");
+  if (resultOverlay) resultOverlay.classList.add("is-hidden");
   startOverlay.classList.remove("is-hidden");
+  syncQualityHint();
 }
 
 function renderResults() {
@@ -491,9 +705,11 @@ function renderResults() {
 
 function showResultOverlay() {
   renderResults();
-  idlePanel.classList.add("is-hidden");
-  resultPanel.classList.remove("is-hidden");
-  startOverlay.classList.remove("is-hidden");
+  startOverlay.classList.add("is-hidden");
+  if (resultOverlay) resultOverlay.classList.remove("is-hidden");
+  requestAnimationFrame(() => {
+    document.getElementById("playAgainBtn")?.focus();
+  });
 }
 
 function finishSession() {
@@ -523,6 +739,7 @@ function finishSession() {
     bestStreak: state.bestStreak,
   };
   drawStaff(previewClef(), null);
+  syncQualityHint();
   showResultOverlay();
   syncPlayButton();
   notifyUi();
@@ -662,8 +879,7 @@ function startGame() {
   state.answerElapsed = null;
   state.lastResult = null;
   startOverlay.classList.add("is-hidden");
-  idlePanel.classList.remove("is-hidden");
-  resultPanel.classList.add("is-hidden");
+  if (resultOverlay) resultOverlay.classList.add("is-hidden");
   updateStats();
   syncPlayButton();
   nextRound();
@@ -697,28 +913,68 @@ function toggleGame() {
 }
 
 function previewClef() {
-  return state.clefMode === "bass" ? "bass" : "treble";
+  return state.clefs.length === 1 && state.clefs[0] === "bass" ? "bass" : "treble";
 }
 
-function syncClefButtons() {
-  document.querySelectorAll("[data-clef]").forEach((btn) => {
-    const active = btn.dataset.clef === state.clefMode;
-    btn.classList.toggle("is-active", active);
-    btn.setAttribute("aria-pressed", String(active));
+function parseStoredList(raw, allowed, fallback) {
+  if (raw === "both" && allowed.includes("treble") && allowed.includes("bass")) {
+    return ["treble", "bass"];
+  }
+  const parts = String(raw || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter((item) => allowed.includes(item));
+  return parts.length ? parts : fallback.slice();
+}
+
+function toggleListed(list, value, allowed) {
+  if (!allowed.includes(value)) return list;
+  if (list.includes(value)) {
+    if (list.length === 1) return list;
+    return list.filter((item) => item !== value);
+  }
+  return allowed.filter((item) => item === value || list.includes(item));
+}
+
+function syncToggleButtons(selector, active) {
+  document.querySelectorAll(selector).forEach((btn) => {
+    const key = selector.includes("clef") ? btn.dataset.clef : btn.dataset.shape;
+    const on = active.includes(key);
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-pressed", String(on));
   });
 }
 
-function setClef(mode) {
-  if (!CLEF_MODES.includes(mode)) return;
-  state.clefMode = mode;
-  storageSet(SETTINGS_CLEF, mode);
+function syncClefButtons() {
+  syncToggleButtons("[data-clef]", state.clefs);
+}
+
+function syncShapeButtons() {
+  syncToggleButtons("[data-shape]", state.shapes);
+}
+
+function setClefs(clefs) {
+  state.clefs = clefs.length ? clefs : ["treble"];
+  storageSet(SETTINGS_CLEF, state.clefs.join(","));
   syncClefButtons();
   if (!state.running) drawStaff(previewClef(), null);
 }
 
+function setShapes(shapes) {
+  state.shapes = shapes.length ? shapes : ["notes"];
+  storageSet(SETTINGS_SHAPES, state.shapes.join(","));
+  syncShapeButtons();
+}
+
 document.querySelectorAll("[data-clef]").forEach((btn) => {
   btn.addEventListener("click", () => {
-    setClef(btn.dataset.clef);
+    setClefs(toggleListed(state.clefs, btn.dataset.clef, CLEFS));
+  });
+});
+
+document.querySelectorAll("[data-shape]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    setShapes(toggleListed(state.shapes, btn.dataset.shape, SHAPES));
   });
 });
 
@@ -753,11 +1009,12 @@ function setRounds(count) {
 }
 
 function loadSettings() {
-  const clef = storageGet(SETTINGS_CLEF);
-  if (CLEF_MODES.includes(clef)) state.clefMode = clef;
+  state.clefs = parseStoredList(storageGet(SETTINGS_CLEF), CLEFS, ["treble", "bass"]);
   syncClefButtons();
+  state.shapes = parseStoredList(storageGet(SETTINGS_SHAPES), SHAPES, ["notes"]);
+  syncShapeButtons();
   const savedTempo = Number(storageGet(SETTINGS_TEMPO));
-  if (Number.isFinite(savedTempo)) setTempo(savedTempo);
+  if (Number.isFinite(savedTempo) && savedTempo > 0) setTempo(savedTempo);
   const savedRounds = Number(storageGet(SETTINGS_ROUNDS));
   if (Number.isFinite(savedRounds) && savedRounds > 0) setRounds(savedRounds);
   else setRounds(state.rounds);
@@ -825,6 +1082,12 @@ document.querySelectorAll(".note-btn").forEach((btn) => {
 
 document.getElementById("playBtn").addEventListener("click", toggleGame);
 document.getElementById("pauseBtn").addEventListener("click", togglePause);
+document.getElementById("playAgainBtn")?.addEventListener("click", startGame);
+resultOverlay?.addEventListener("click", (event) => {
+  if (event.target !== resultOverlay) return;
+  showIdleOverlay();
+  notifyUi();
+});
 
 if (settingsBtn) {
   settingsBtn.addEventListener("click", toggleSettings);
@@ -848,7 +1111,8 @@ function refreshLabels() {
   setTempo(state.seconds);
   setRounds(state.rounds);
   updateStats();
-  if (!resultPanel.classList.contains("is-hidden")) renderResults();
+  syncQualityHint();
+  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) renderResults();
 }
 
 document.querySelectorAll("[data-lang]").forEach((btn) => {
@@ -875,7 +1139,7 @@ window.GuessTheNote = {
   closeSettings,
   settingsAreOpen,
   getState: () => state,
-  showingResults: () => !resultPanel.classList.contains("is-hidden"),
+  showingResults: () => resultOverlay && !resultOverlay.classList.contains("is-hidden"),
   refreshLabels,
 };
 
