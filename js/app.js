@@ -1695,3 +1695,37 @@ drawStaff(previewClef(), null);
 idleChoices();
 refreshLabels();
 updateStats();
+
+function isPhoneLandscape() {
+  return window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches;
+}
+
+function scrollToStaffIfLandscape() {
+  if (document.documentElement.classList.contains("is-tv")) return;
+  if (!isPhoneLandscape()) return;
+  if (settingsAreOpen()) return;
+  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) return;
+  const target = document.querySelector(".manuscript");
+  if (!target) return;
+  const top = Math.round(target.getBoundingClientRect().top + window.scrollY);
+  window.scrollTo(0, Math.max(0, top));
+}
+
+function scheduleScrollToStaff() {
+  requestAnimationFrame(() => {
+    setTimeout(scrollToStaffIfLandscape, 200);
+  });
+}
+
+const phoneLandscapeMq = window.matchMedia("(orientation: landscape) and (max-height: 520px)");
+const onLandscapeChange = (event) => {
+  if (event.matches) scheduleScrollToStaff();
+};
+if (phoneLandscapeMq.addEventListener) {
+  phoneLandscapeMq.addEventListener("change", onLandscapeChange);
+} else if (phoneLandscapeMq.addListener) {
+  phoneLandscapeMq.addListener(onLandscapeChange);
+}
+window.addEventListener("orientationchange", scheduleScrollToStaff);
+window.addEventListener("load", scheduleScrollToStaff);
+if (isPhoneLandscape()) scheduleScrollToStaff();

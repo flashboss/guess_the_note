@@ -709,6 +709,22 @@ input[type="range"] {
   }
 }
 
+@media (orientation: landscape) and (max-height: 520px) {
+  .app {
+    padding: 8px 0 24px;
+  }
+
+  .topbar {
+    margin-bottom: 10px;
+    gap: 12px;
+  }
+
+  .tagline,
+  .home-link {
+    display: none;
+  }
+}
+
 html.is-tv,
 html.is-tv body {
   width: 1920px;
