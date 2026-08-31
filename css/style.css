@@ -154,7 +154,7 @@ h1 {
   cursor: pointer;
   width: 48px;
   height: 48px;
-  border-radius: 14px;
+  border-radius: 50%;
   border: 1px solid rgba(196, 163, 90, 0.28);
   background: rgba(20, 15, 12, 0.4);
   color: var(--gold-bright);
@@ -266,6 +266,16 @@ body[data-answer-mode="notes"] .choices-only {
   letter-spacing: 0.04em;
 }
 
+.toolbar .play-btn,
+.toolbar .pause-btn {
+  min-width: 0;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  gap: 0;
+  border-radius: 50%;
+}
+
 .play-btn:hover {
   background: var(--gold-bright);
 }
@@ -310,6 +320,14 @@ body[data-answer-mode="notes"] .choices-only {
 .play-icon {
   font-size: 0.78rem;
   line-height: 1;
+}
+
+.toolbar .play-icon {
+  font-size: 1.05rem;
+}
+
+.toolbar .play-btn:not(.is-running) .play-icon {
+  margin-left: 2px;
 }
 
 fieldset {
@@ -677,14 +695,8 @@ input[type="range"] {
     display: grid;
   }
 
-  .toolbar,
-  .play-btn,
-  .pause-btn {
-    width: 100%;
-  }
-
-  .settings-btn {
-    width: 48px;
+  .toolbar {
+    justify-self: end;
   }
 
   .topbar {
@@ -836,8 +848,18 @@ html.is-tv .sound-btn {
   min-height: 48px;
 }
 
-html.is-tv .play-btn,
-html.is-tv .pause-btn,
+html.is-tv .toolbar .play-btn,
+html.is-tv .toolbar .pause-btn {
+  width: 56px;
+  height: 56px;
+  min-width: 0;
+  min-height: 0;
+}
+
+html.is-tv .toolbar .play-icon {
+  font-size: 1.25rem;
+}
+
 html.is-tv .start-btn {
   min-height: 48px;
   min-width: 160px;

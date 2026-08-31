@@ -1240,23 +1240,25 @@ function showPauseOverlay() {
 
 function syncPauseButton() {
   const pauseBtn = document.getElementById("pauseBtn");
-  const pauseLabel = document.getElementById("pauseLabel");
   const pauseIcon = document.getElementById("pauseIcon");
-  if (!pauseBtn || !pauseLabel || !pauseIcon) return;
+  if (!pauseBtn || !pauseIcon) return;
+  const label = state.paused ? t("resume") : t("pause");
   pauseBtn.classList.toggle("is-hidden", !state.running);
   pauseBtn.classList.toggle("is-paused", state.paused);
   pauseBtn.setAttribute("aria-pressed", String(state.paused));
-  pauseLabel.textContent = state.paused ? t("resume") : t("pause");
+  pauseBtn.setAttribute("aria-label", label);
+  pauseBtn.title = label;
   pauseIcon.textContent = state.paused ? "▶" : "⏸";
 }
 
 function syncPlayButton() {
   const playBtn = document.getElementById("playBtn");
-  const playLabel = document.getElementById("playLabel");
   const playIcon = document.getElementById("playIcon");
+  const label = state.running ? t("stop") : t("start");
   playBtn.classList.toggle("is-running", state.running);
   playBtn.setAttribute("aria-pressed", String(state.running));
-  playLabel.textContent = state.running ? t("stop") : t("start");
+  playBtn.setAttribute("aria-label", label);
+  playBtn.title = label;
   playIcon.textContent = state.running ? "■" : "▶";
   if (settingsBtn) settingsBtn.disabled = state.running && !state.paused;
   syncPauseButton();
