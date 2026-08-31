@@ -28,7 +28,7 @@ Open `index.html` for the homepage, or `play.html` for the game (or serve the fo
 - Treble clef: C4 (middle C) through A5
 - Bass clef: E2 through C4
 
-**Difficulty** 1 stays near the staff, uses root position, and avoids extra accidentals and rarer chord types. **10** uses the full range, inversions, accidentals, and diminished/augmented/half-diminished spellings.
+**Difficulty** 1 stays near the staff, uses root position, and avoids extra accidentals and rarer types. **10** uses the full range, inversions, accidentals, and diminished/augmented/half-diminished spellings. Dyads add a diminished fifth from mid levels and an augmented fifth at the top.
 
 In **Notes** answer mode, written accidentals on the root are not used. In **Choices** mode, sharps and flats can appear depending on difficulty.
 

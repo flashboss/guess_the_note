@@ -35,7 +35,7 @@ const CHORD_SPECS = {
   maj9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 11, 14] },
 };
 const KIND_QUALITIES = {
-  dyad: ["major", "minor"],
+  dyad: ["major", "minor", "dim", "aug"],
   chord: ["major", "minor", "dim", "aug"],
   sevenths: ["dom7", "min7", "maj7", "dim7", "halfdim", "aug7"],
   ninths: ["dom9", "min9", "maj9"],
@@ -51,10 +51,16 @@ const SIMPLE_QUALITIES = {
   ninths: ["dom9", "min9", "maj9"],
 };
 const COMMON_QUALITIES = {
-  dyad: ["major", "minor"],
+  dyad: ["major", "minor", "dim"],
   chord: ["major", "minor", "dim", "aug"],
   sevenths: ["dom7", "min7", "maj7", "halfdim"],
   ninths: ["dom9", "min9", "maj9"],
+};
+const DYAD_SPECS = {
+  major: { steps: [0, 2], semis: [0, 4] },
+  minor: { steps: [0, 2], semis: [0, 3] },
+  dim: { steps: [0, 4], semis: [0, 6] },
+  aug: { steps: [0, 4], semis: [0, 8] },
 };
 const SETTINGS_CLEF = "gtn-clef";
 const SETTINGS_SHAPES = "gtn-shapes";
@@ -644,9 +650,7 @@ function pickAccidental() {
 }
 
 function specFor(kind, quality) {
-  if (kind === "dyad") {
-    return { steps: [0, 2], semis: [0, quality === "major" ? 4 : 3] };
-  }
+  if (kind === "dyad") return DYAD_SPECS[quality];
   return CHORD_SPECS[quality];
 }
 
