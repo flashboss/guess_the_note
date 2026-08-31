@@ -910,12 +910,22 @@ function ensureChoiceButtons() {
 function paintChoices(disabled) {
   ensureChoiceButtons();
   const buttons = choiceButtons();
+  buttons.forEach((btn) => {
+    btn.classList.remove("is-picked", "is-correct", "is-wrong");
+  });
+  const active = document.activeElement;
+  if (
+    active &&
+    active.classList.contains("note-btn") &&
+    !state.selected.includes(active.dataset.choice)
+  ) {
+    active.blur();
+  }
   if (!state.choices.length) {
     buttons.forEach((btn) => {
       btn.dataset.choice = "";
       btn.textContent = "—";
       btn.disabled = true;
-      btn.classList.remove("is-picked", "is-correct", "is-wrong");
     });
     return;
   }
@@ -925,8 +935,7 @@ function paintChoices(disabled) {
     btn.dataset.choice = choice.key;
     btn.textContent = choice.label;
     btn.disabled = disabled;
-    btn.classList.toggle("is-picked", state.selected.includes(choice.key));
-    btn.classList.remove("is-correct", "is-wrong");
+    if (state.selected.includes(choice.key)) btn.classList.add("is-picked");
   });
 }
 
@@ -1087,6 +1096,7 @@ function reveal() {
   document.querySelectorAll(".note-btn").forEach((btn) => {
     btn.disabled = true;
     const key = btn.dataset.choice;
+    btn.classList.remove("is-picked");
     if (need.has(key)) btn.classList.add("is-correct");
     if (got.has(key) && !need.has(key)) btn.classList.add("is-wrong");
   });
