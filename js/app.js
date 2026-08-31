@@ -1,8 +1,67 @@
 const NOTE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
+const CHOICE_COUNT_MIN = 3;
+const CHOICE_COUNT_MAX = 7;
+const ACCIDENTALS = [-1, 0, 1];
 const CLEFS = ["treble", "bass"];
-const SHAPES = ["notes", "dyads", "chords"];
+const SHAPES = ["notes", "dyads", "chords", "sevenths", "ninths"];
+const QUALITY_MARKS = {
+  major: "",
+  minor: "-",
+  dim: "°",
+  aug: "+",
+  dom7: "7",
+  min7: "-7",
+  maj7: "Δ",
+  dim7: "°7",
+  halfdim: "ø",
+  aug7: "+7",
+  dom9: "9",
+  min9: "-9",
+  maj9: "Δ9",
+};
+const CHORD_SPECS = {
+  major: { steps: [0, 2, 4], semis: [0, 4, 7] },
+  minor: { steps: [0, 2, 4], semis: [0, 3, 7] },
+  dim: { steps: [0, 2, 4], semis: [0, 3, 6] },
+  aug: { steps: [0, 2, 4], semis: [0, 4, 8] },
+  dom7: { steps: [0, 2, 4, 6], semis: [0, 4, 7, 10] },
+  min7: { steps: [0, 2, 4, 6], semis: [0, 3, 7, 10] },
+  maj7: { steps: [0, 2, 4, 6], semis: [0, 4, 7, 11] },
+  dim7: { steps: [0, 2, 4, 6], semis: [0, 3, 6, 9] },
+  halfdim: { steps: [0, 2, 4, 6], semis: [0, 3, 6, 10] },
+  aug7: { steps: [0, 2, 4, 6], semis: [0, 4, 8, 10] },
+  dom9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 10, 14] },
+  min9: { steps: [0, 2, 4, 6, 8], semis: [0, 3, 7, 10, 14] },
+  maj9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 11, 14] },
+};
+const KIND_QUALITIES = {
+  dyad: ["major", "minor"],
+  chord: ["major", "minor", "dim", "aug"],
+  sevenths: ["dom7", "min7", "maj7", "dim7", "halfdim", "aug7"],
+  ninths: ["dom9", "min9", "maj9"],
+};
+const ANSWER_MODES = ["notes", "choices"];
+const CHOICE_KINDS = ["single", "multiple"];
+const DIFFICULTY_MIN = 1;
+const DIFFICULTY_MAX = 10;
+const SIMPLE_QUALITIES = {
+  dyad: ["major", "minor"],
+  chord: ["major", "minor"],
+  sevenths: ["dom7", "min7", "maj7"],
+  ninths: ["dom9", "min9", "maj9"],
+};
+const COMMON_QUALITIES = {
+  dyad: ["major", "minor"],
+  chord: ["major", "minor", "dim", "aug"],
+  sevenths: ["dom7", "min7", "maj7", "halfdim"],
+  ninths: ["dom9", "min9", "maj9"],
+};
 const SETTINGS_CLEF = "gtn-clef";
 const SETTINGS_SHAPES = "gtn-shapes";
+const SETTINGS_ANSWER_MODE = "gtn-answer-mode";
+const SETTINGS_CHOICE_COUNT = "gtn-choice-count";
+const SETTINGS_CHOICE_KIND = "gtn-choice-kind";
+const SETTINGS_DIFFICULTY = "gtn-difficulty";
 const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
@@ -23,10 +82,15 @@ const state = {
   running: false,
   clefs: ["treble", "bass"],
   shapes: ["notes"],
+  answerMode: "choices",
+  choiceCount: 5,
+  choiceKind: "single",
+  difficulty: 5,
   rounds: 10,
   seconds: 4,
   current: null,
-  guessed: null,
+  choices: [],
+  selected: [],
   locked: false,
   score: 0,
   attempted: 0,
@@ -53,6 +117,10 @@ const tempo = document.getElementById("tempo");
 const tempoLabel = document.getElementById("tempoLabel");
 const roundsInput = document.getElementById("rounds");
 const roundsLabel = document.getElementById("roundsLabel");
+const choiceCountInput = document.getElementById("choiceCount");
+const choiceCountLabel = document.getElementById("choiceCountLabel");
+const difficultyInput = document.getElementById("difficulty");
+const difficultyLabel = document.getElementById("difficultyLabel");
 const overlayHint = document.getElementById("overlayHint");
 const timerFill = document.getElementById("timerFill");
 const scoreEl = document.getElementById("score");
@@ -173,10 +241,56 @@ function drawFlat(x, y) {
   return g;
 }
 
+function drawDoubleSharp(x, y) {
+  const g = svgEl("g", {
+    class: "accidental",
+    fill: "#1b1410",
+    stroke: "#1b1410",
+    "stroke-linecap": "square",
+  });
+  g.appendChild(
+    svgEl("line", {
+      x1: x - 7,
+      y1: y - 8,
+      x2: x + 7,
+      y2: y + 8,
+      "stroke-width": 2.6,
+    })
+  );
+  g.appendChild(
+    svgEl("line", {
+      x1: x + 7,
+      y1: y - 8,
+      x2: x - 7,
+      y2: y + 8,
+      "stroke-width": 2.6,
+    })
+  );
+  g.appendChild(
+    svgEl("line", {
+      x1: x,
+      y1: y - 11,
+      x2: x,
+      y2: y + 11,
+      "stroke-width": 1.6,
+    })
+  );
+  return g;
+}
+
+function drawDoubleFlat(x, y) {
+  const g = svgEl("g", { class: "accidental" });
+  g.appendChild(drawFlat(x - 9, y));
+  g.appendChild(drawFlat(x + 5, y));
+  return g;
+}
+
 function drawAccidental(note, y) {
   const acc = note.accidental || 0;
   if (!acc) return null;
-  const x = NOTE_X - 32;
+  const x = NOTE_X - (Math.abs(acc) >= 2 ? 40 : 32);
+  if (acc >= 2) return drawDoubleSharp(x, y);
+  if (acc <= -2) return drawDoubleFlat(x, y);
   return acc > 0 ? drawSharp(x, y) : drawFlat(x, y);
 }
 
@@ -476,61 +590,126 @@ function invertNotes(tones, inversion) {
   return notes;
 }
 
+function difficultyLevel() {
+  const level = Number(state.difficulty);
+  if (!Number.isFinite(level)) return 5;
+  return Math.min(DIFFICULTY_MAX, Math.max(DIFFICULTY_MIN, Math.round(level)));
+}
+
+function difficultyT() {
+  return (difficultyLevel() - DIFFICULTY_MIN) / (DIFFICULTY_MAX - DIFFICULTY_MIN);
+}
+
+function playRange(clef) {
+  const full = CLEF_RANGES[clef];
+  const t = difficultyT();
+  const easyMin = full.bottomStep;
+  const easyMax = full.topStep - 2;
+  return {
+    min: Math.round(easyMin + (full.min - easyMin) * t),
+    max: Math.round(easyMax + (full.max - easyMax) * t),
+  };
+}
+
 function notesInRange(notes, clef) {
-  const { min, max } = CLEF_RANGES[clef];
+  const { min, max } = playRange(clef);
   return notes.every((note) => note.step >= min && note.step <= max);
 }
 
-function pickQuality() {
-  return Math.random() < 0.5 ? "major" : "minor";
+function difficultyQualities() {
+  const level = difficultyLevel();
+  if (level <= 3) return "simple";
+  if (level <= 7) return "common";
+  return "all";
 }
 
-function pickVoicing(clef, buildTones, maxInversion) {
-  const { min, max } = CLEF_RANGES[clef];
-  const quality = pickQuality();
-  const options = [];
-  for (let step = min; step <= max; step += 1) {
-    const root = { ...noteFromStep(step), clef, accidental: 0 };
-    const tones = buildTones(root, quality);
-    for (let inversion = 0; inversion <= maxInversion; inversion += 1) {
-      const notes = invertNotes(tones, inversion);
-      if (notesInRange(notes, clef)) options.push({ root, notes });
-    }
+function qualitiesForKind(kind) {
+  const all = KIND_QUALITIES[kind];
+  if (!all) return [];
+  const filter = difficultyQualities();
+  if (filter === "simple") return SIMPLE_QUALITIES[kind] || all;
+  if (filter === "common") return COMMON_QUALITIES[kind] || all;
+  return all;
+}
+
+function poolAccidentals() {
+  return difficultyLevel() <= 3 ? [0] : ACCIDENTALS;
+}
+
+function pickAccidental() {
+  if (state.answerMode !== "choices") return 0;
+  const chance = difficultyT() * 0.7;
+  if (chance <= 0 || Math.random() >= chance) return 0;
+  return Math.random() < 0.5 ? 1 : -1;
+}
+
+function specFor(kind, quality) {
+  if (kind === "dyad") {
+    return { steps: [0, 2], semis: [0, quality === "major" ? 4 : 3] };
   }
+  return CHORD_SPECS[quality];
+}
+
+function tonesForQuality(root, quality, kind) {
+  const spec = specFor(kind, quality);
+  if (!spec) return [root];
+  return spec.steps.map((step, index) =>
+    step === 0 ? { ...root } : noteAtInterval(root, step, spec.semis[index])
+  );
+}
+
+function pickVoicing(clef, kind) {
+  const qualities = qualitiesForKind(kind);
+  if (!qualities.length) return null;
+  const { min, max } = playRange(clef);
+  const options = [];
+  qualities.forEach((quality) => {
+    const spec = specFor(kind, quality);
+    if (!spec) return;
+    const maxInversion = Math.min(
+      spec.steps.length - 1,
+      Math.floor((difficultyLevel() - 1) / 2)
+    );
+    for (let step = min; step <= max; step += 1) {
+      const root = { ...noteFromStep(step), clef, accidental: pickAccidental() };
+      const tones = tonesForQuality(root, quality, kind);
+      for (let inversion = 0; inversion <= maxInversion; inversion += 1) {
+        const notes = invertNotes(tones, inversion);
+        if (notesInRange(notes, clef)) options.push({ root, notes, quality });
+      }
+    }
+  });
   if (!options.length) return null;
-  const pick = options[Math.floor(Math.random() * options.length)];
-  return { ...pick, quality };
+  return options[Math.floor(Math.random() * options.length)];
+}
+
+function pickHarmony(clef, kind) {
+  const voicing = pickVoicing(clef, kind);
+  if (!voicing) return null;
+  return challengeFrom(voicing.root, voicing.notes, voicing.quality, kind);
 }
 
 function pickNote(clef) {
-  const { min, max } = CLEF_RANGES[clef];
+  const { min, max } = playRange(clef);
   const step = min + Math.floor(Math.random() * (max - min + 1));
-  const root = { ...noteFromStep(step), clef, accidental: 0 };
+  const root = { ...noteFromStep(step), clef, accidental: pickAccidental() };
   return challengeFrom(root, [root], null, "note");
 }
 
 function pickDyad(clef) {
-  const voicing = pickVoicing(
-    clef,
-    (root, quality) => [root, noteAtInterval(root, 2, quality === "major" ? 4 : 3)],
-    1
-  );
-  if (!voicing) return null;
-  return challengeFrom(voicing.root, voicing.notes, voicing.quality, "dyad");
+  return pickHarmony(clef, "dyad");
 }
 
 function pickChord(clef) {
-  const voicing = pickVoicing(
-    clef,
-    (root, quality) => [
-      root,
-      noteAtInterval(root, 2, quality === "major" ? 4 : 3),
-      noteAtInterval(root, 4, 7),
-    ],
-    2
-  );
-  if (!voicing) return null;
-  return challengeFrom(voicing.root, voicing.notes, voicing.quality, "chord");
+  return pickHarmony(clef, "chord");
+}
+
+function pickSeventh(clef) {
+  return pickHarmony(clef, "sevenths");
+}
+
+function pickNinth(clef) {
+  return pickHarmony(clef, "ninths");
 }
 
 function pickChallenge(clef) {
@@ -538,26 +717,304 @@ function pickChallenge(clef) {
   const kind = kinds[Math.floor(Math.random() * kinds.length)];
   if (kind === "dyads") return pickDyad(clef) || pickNote(clef);
   if (kind === "chords") return pickChord(clef) || pickNote(clef);
+  if (kind === "sevenths") return pickSeventh(clef) || pickNote(clef);
+  if (kind === "ninths") return pickNinth(clef) || pickNote(clef);
   return pickNote(clef);
 }
 
+function accidentalMark(accidental) {
+  if (accidental >= 2) return " ♯♯";
+  if (accidental <= -2) return " ♭♭";
+  if (accidental > 0) return " ♯";
+  if (accidental < 0) return " ♭";
+  return "";
+}
+
+function noteLabel(name, accidental) {
+  return `${t(`note${name}`)}${accidentalMark(accidental)}`;
+}
+
+function answerLabel(name, accidental, quality) {
+  const base = noteLabel(name, accidental || 0);
+  return `${base}${QUALITY_MARKS[quality] || ""}`;
+}
+
+function answerKey(name, accidental, quality) {
+  return `${name}:${accidental || 0}:${quality || ""}`;
+}
+
+function shuffle(list) {
+  const items = list.slice();
+  for (let i = items.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [items[i], items[j]] = [items[j], items[i]];
+  }
+  return items;
+}
+
+function candidateAnswers(qualities) {
+  const quals = qualities && qualities.length ? qualities : [null];
+  const items = [];
+  NOTE_NAMES.forEach((name) => {
+    poolAccidentals().forEach((accidental) => {
+      quals.forEach((quality) => {
+        items.push({ name, accidental, quality });
+      });
+    });
+  });
+  return items;
+}
+
+function qualitiesForChallenge(challenge) {
+  if (!challenge || !challenge.quality) return [null];
+  const list = qualitiesForKind(challenge.kind);
+  return list.length ? list : [challenge.quality];
+}
+
+function uniquePitchItems(challenge) {
+  const map = new Map();
+  (challenge.notes || [challenge]).forEach((note) => {
+    const item = {
+      name: note.name,
+      accidental: note.accidental || 0,
+      quality: null,
+    };
+    map.set(answerKey(item.name, item.accidental, null), item);
+  });
+  return [...map.values()];
+}
+
+function choiceFrom(item, correctKeys) {
+  const key = answerKey(item.name, item.accidental, item.quality);
+  return {
+    key,
+    name: item.name,
+    accidental: item.accidental,
+    quality: item.quality,
+    label: answerLabel(item.name, item.accidental, item.quality),
+    correct: correctKeys.has(key),
+  };
+}
+
+function isNotesMode() {
+  return state.answerMode === "notes";
+}
+
+const MINOR_QUALITIES = new Set(["minor", "min7", "min9", "dim", "dim7", "halfdim"]);
+
 function syncQualityHint() {
   if (!qualityHint) return;
-  const quality = state.running && state.current && state.current.quality;
+  const quality = isNotesMode() && state.running && state.current && state.current.quality;
   if (!quality) {
     qualityHint.classList.add("is-hidden");
     qualityHint.textContent = "";
     return;
   }
-  qualityHint.textContent =
-    quality === "major" ? t("qualityMajor") : t("qualityMinor");
+  qualityHint.textContent = MINOR_QUALITIES.has(quality)
+    ? t("qualityMinor")
+    : t("qualityMajor");
   qualityHint.classList.remove("is-hidden");
 }
 
+function isMultiple() {
+  return state.answerMode === "choices" && state.choiceKind === "multiple";
+}
+
+function pickAriaKey() {
+  if (isNotesMode()) return "pickNote";
+  return isMultiple() ? "pickAll" : "pickChoice";
+}
+
+function syncChoicesAria() {
+  const box = document.getElementById("choices");
+  if (!box) return;
+  const key = pickAriaKey();
+  box.dataset.i18nAria = key;
+  box.setAttribute("aria-label", t(key));
+}
+
+function buildChoices(challenge) {
+  if (isNotesMode()) {
+    return NOTE_NAMES.map((name) => ({
+      key: name,
+      name,
+      accidental: 0,
+      quality: null,
+      label: t(`note${name}`),
+      correct: name === challenge.name,
+    }));
+  }
+
+  const count = state.choiceCount;
+  if (isMultiple()) {
+    const corrects = uniquePitchItems(challenge);
+    const correctKeys = new Set(
+      corrects.map((item) => answerKey(item.name, item.accidental, null))
+    );
+    const optionCount = Math.min(
+      CHOICE_COUNT_MAX,
+      Math.max(count, corrects.length)
+    );
+    const pool = candidateAnswers([null]).filter(
+      (item) => !correctKeys.has(answerKey(item.name, item.accidental, null))
+    );
+    const wrong = shuffle(pool).slice(0, Math.max(0, optionCount - corrects.length));
+    const items = shuffle([...corrects, ...wrong]);
+    return items.map((item) => choiceFrom(item, correctKeys));
+  }
+
+  const correct = {
+    name: challenge.name,
+    accidental: challenge.accidental || 0,
+    quality: challenge.quality || null,
+  };
+  const correctKey = answerKey(correct.name, correct.accidental, correct.quality);
+  const correctKeys = new Set([correctKey]);
+  const pool = candidateAnswers(qualitiesForChallenge(challenge)).filter(
+    (item) => !correctKeys.has(answerKey(item.name, item.accidental, item.quality))
+  );
+  const wrong = shuffle(pool).slice(0, Math.max(0, count - 1));
+  return shuffle([correct, ...wrong]).map((item) => choiceFrom(item, correctKeys));
+}
+
+function choiceButtons() {
+  return [...document.querySelectorAll("#choices .note-btn")];
+}
+
+function desiredButtonCount() {
+  if (isNotesMode()) return NOTE_NAMES.length;
+  if (state.choices.length) return state.choices.length;
+  return state.choiceCount;
+}
+
+function ensureChoiceButtons() {
+  const box = document.getElementById("choices");
+  if (!box) return;
+  const count = desiredButtonCount();
+  box.style.gridTemplateColumns = `repeat(${count}, 1fr)`;
+  while (box.children.length > count) box.removeChild(box.lastChild);
+  while (box.children.length < count) {
+    const btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "note-btn";
+    btn.disabled = true;
+    btn.textContent = "—";
+    box.appendChild(btn);
+  }
+}
+
+function paintChoices(disabled) {
+  ensureChoiceButtons();
+  const buttons = choiceButtons();
+  if (!state.choices.length) {
+    buttons.forEach((btn) => {
+      btn.dataset.choice = "";
+      btn.textContent = "—";
+      btn.disabled = true;
+      btn.classList.remove("is-picked", "is-correct", "is-wrong");
+    });
+    return;
+  }
+  state.choices.forEach((choice, index) => {
+    const btn = buttons[index];
+    if (!btn) return;
+    btn.dataset.choice = choice.key;
+    btn.textContent = choice.label;
+    btn.disabled = disabled;
+    btn.classList.toggle("is-picked", state.selected.includes(choice.key));
+    btn.classList.remove("is-correct", "is-wrong");
+  });
+}
+
+function renderChoices() {
+  const lockSingle = !isMultiple() && state.selected.length > 0;
+  paintChoices(!state.running || state.paused || state.locked || lockSingle);
+}
+
+function choiceLabel(choice) {
+  if (isNotesMode()) return t(`note${choice.name}`);
+  return answerLabel(choice.name, choice.accidental, choice.quality);
+}
+
+function relabelChoices() {
+  if (!state.choices.length) {
+    idleChoices();
+    return;
+  }
+  state.choices = state.choices.map((choice) => ({
+    ...choice,
+    label: choiceLabel(choice),
+  }));
+  const buttons = choiceButtons();
+  state.choices.forEach((choice, index) => {
+    const btn = buttons[index];
+    if (!btn) return;
+    btn.textContent = choice.label;
+  });
+  syncChoicesAria();
+}
+
+function idleChoices() {
+  state.selected = [];
+  if (isNotesMode()) {
+    state.choices = NOTE_NAMES.map((name) => ({
+      key: name,
+      name,
+      accidental: 0,
+      quality: null,
+      label: t(`note${name}`),
+      correct: false,
+    }));
+  } else {
+    state.choices = [];
+  }
+  paintChoices(true);
+  syncChoicesAria();
+}
+
 function resetButtons() {
+  const lockSingle = !isMultiple() && state.selected.length > 0;
   document.querySelectorAll(".note-btn").forEach((btn) => {
-    btn.disabled = false;
-    btn.classList.remove("is-picked", "is-correct", "is-wrong");
+    btn.disabled = lockSingle;
+    if (!state.selected.includes(btn.dataset.choice)) {
+      btn.classList.remove("is-picked");
+    }
+    btn.classList.remove("is-correct", "is-wrong");
+  });
+}
+
+function correctChoiceKeys() {
+  return (state.choices || []).filter((choice) => choice.correct).map((choice) => choice.key);
+}
+
+function selectionIsCorrect() {
+  const need = correctChoiceKeys().slice().sort();
+  const got = state.selected.slice().sort();
+  return need.length > 0 && need.length === got.length && need.every((key, i) => key === got[i]);
+}
+
+function handleChoiceClick(btn) {
+  if (!state.running || state.paused || state.locked) return;
+  const key = btn.dataset.choice;
+  if (!key) return;
+  if (isMultiple()) {
+    if (state.selected.includes(key)) {
+      state.selected = state.selected.filter((item) => item !== key);
+      btn.classList.remove("is-picked");
+      if (!state.selected.length) state.answerElapsed = null;
+    } else {
+      state.selected.push(key);
+      btn.classList.add("is-picked");
+      if (state.selected.length === 1) state.answerElapsed = elapsedMs();
+    }
+    return;
+  }
+  if (state.selected.length) return;
+  state.selected = [key];
+  state.answerElapsed = elapsedMs();
+  btn.classList.add("is-picked");
+  document.querySelectorAll(".note-btn").forEach((other) => {
+    other.disabled = true;
   });
 }
 
@@ -596,9 +1053,10 @@ function reveal() {
   state.locked = true;
   clearTimeout(state.roundTimer);
 
-  const { name } = state.current;
-  const guessed = state.guessed;
-  const correct = guessed === name;
+  const guessed = state.selected.length > 0;
+  const correct = selectionIsCorrect();
+  const need = new Set(correctChoiceKeys());
+  const got = new Set(state.selected);
   const total = state.seconds * 1000;
   const elapsed =
     guessed && state.answerElapsed != null ? state.answerElapsed : total;
@@ -624,10 +1082,9 @@ function reveal() {
 
   document.querySelectorAll(".note-btn").forEach((btn) => {
     btn.disabled = true;
-    if (btn.dataset.note === name) btn.classList.add("is-correct");
-    if (guessed && btn.dataset.note === guessed && !correct) {
-      btn.classList.add("is-wrong");
-    }
+    const key = btn.dataset.choice;
+    if (need.has(key)) btn.classList.add("is-correct");
+    if (got.has(key) && !need.has(key)) btn.classList.add("is-wrong");
   });
 
   playFeedback(correct);
@@ -670,12 +1127,13 @@ function nextRound() {
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
   state.round += 1;
-  state.guessed = null;
+  state.selected = [];
   state.answerElapsed = null;
   state.locked = false;
-  resetButtons();
   const clef = pickClef();
   state.current = pickChallenge(clef);
+  state.choices = buildChoices(state.current);
+  renderChoices();
   drawStaff(clef, state.current);
   updateStats();
   syncQualityHint();
@@ -720,7 +1178,7 @@ function finishSession() {
   state.paused = false;
   hidePauseOverlay();
   state.current = null;
-  state.guessed = null;
+  state.selected = [];
   state.locked = false;
   timerFill.style.transition = "none";
   timerFill.style.transform = "scaleX(1)";
@@ -817,7 +1275,7 @@ function resumeGame() {
     const followUp = state.round >= state.rounds ? finishSession : nextRound;
     state.nextTimer = setTimeout(followUp, delay);
   } else {
-    if (!state.guessed) resetButtons();
+    if (isMultiple() || !state.selected.length) resetButtons();
     else {
       document.querySelectorAll(".note-btn").forEach((btn) => {
         btn.disabled = true;
@@ -893,15 +1351,12 @@ function stopGame() {
   clearTimeout(state.roundTimer);
   clearTimeout(state.nextTimer);
   state.current = null;
-  state.guessed = null;
+  state.selected = [];
   state.locked = false;
   timerFill.style.transition = "none";
   timerFill.style.transform = "scaleX(1)";
   drawStaff(previewClef(), null);
-  document.querySelectorAll(".note-btn").forEach((btn) => {
-    btn.disabled = true;
-    btn.classList.remove("is-picked", "is-correct", "is-wrong");
-  });
+  idleChoices();
   showIdleOverlay();
   syncPlayButton();
   notifyUi();
@@ -966,6 +1421,82 @@ function setShapes(shapes) {
   syncShapeButtons();
 }
 
+function parseStoredValue(raw, allowed, fallback) {
+  return allowed.includes(raw) ? raw : fallback;
+}
+
+function syncExclusiveButtons(selector, attr, value) {
+  document.querySelectorAll(selector).forEach((btn) => {
+    const on = btn.getAttribute(attr) === value;
+    btn.classList.toggle("is-active", on);
+    btn.setAttribute("aria-pressed", String(on));
+  });
+}
+
+function syncAnswerModeButtons() {
+  syncExclusiveButtons("[data-answer-mode]", "data-answer-mode", state.answerMode);
+  const box = document.getElementById("choiceOptions");
+  if (box) box.classList.toggle("is-hidden", state.answerMode !== "choices");
+}
+
+function syncChoiceKindButtons() {
+  syncExclusiveButtons("[data-choice-kind]", "data-choice-kind", state.choiceKind);
+}
+
+function parseDifficulty(raw) {
+  if (raw === "easy") return 2;
+  if (raw === "medium") return 5;
+  if (raw === "hard") return 9;
+  const level = Number(raw);
+  if (Number.isFinite(level)) return level;
+  return 5;
+}
+
+function setDifficulty(level) {
+  if (!difficultyInput) return;
+  const next = Math.min(
+    DIFFICULTY_MAX,
+    Math.max(DIFFICULTY_MIN, Math.round(Number(level)))
+  );
+  difficultyInput.value = String(next);
+  state.difficulty = next;
+  if (difficultyLabel) difficultyLabel.textContent = String(next);
+  storageSet(SETTINGS_DIFFICULTY, String(next));
+  notifyUi();
+}
+
+function setAnswerMode(mode) {
+  state.answerMode = parseStoredValue(mode, ANSWER_MODES, "choices");
+  storageSet(SETTINGS_ANSWER_MODE, state.answerMode);
+  syncAnswerModeButtons();
+  syncChoicesAria();
+  syncQualityHint();
+  if (!state.running) idleChoices();
+  notifyUi();
+}
+
+function setChoiceKind(kind) {
+  state.choiceKind = parseStoredValue(kind, CHOICE_KINDS, "single");
+  storageSet(SETTINGS_CHOICE_KIND, state.choiceKind);
+  syncChoiceKindButtons();
+  syncChoicesAria();
+  if (!state.running) idleChoices();
+  notifyUi();
+}
+
+function setChoiceCount(count) {
+  if (!choiceCountInput) return;
+  const min = Number(choiceCountInput.min) || CHOICE_COUNT_MIN;
+  const max = Number(choiceCountInput.max) || CHOICE_COUNT_MAX;
+  const next = Math.min(max, Math.max(min, Math.round(Number(count))));
+  choiceCountInput.value = String(next);
+  state.choiceCount = next;
+  if (choiceCountLabel) choiceCountLabel.textContent = String(next);
+  storageSet(SETTINGS_CHOICE_COUNT, String(next));
+  if (!state.running) idleChoices();
+  notifyUi();
+}
+
 document.querySelectorAll("[data-clef]").forEach((btn) => {
   btn.addEventListener("click", () => {
     setClefs(toggleListed(state.clefs, btn.dataset.clef, CLEFS));
@@ -975,6 +1506,18 @@ document.querySelectorAll("[data-clef]").forEach((btn) => {
 document.querySelectorAll("[data-shape]").forEach((btn) => {
   btn.addEventListener("click", () => {
     setShapes(toggleListed(state.shapes, btn.dataset.shape, SHAPES));
+  });
+});
+
+document.querySelectorAll("[data-answer-mode]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    setAnswerMode(btn.dataset.answerMode);
+  });
+});
+
+document.querySelectorAll("[data-choice-kind]").forEach((btn) => {
+  btn.addEventListener("click", () => {
+    setChoiceKind(btn.dataset.choiceKind);
   });
 });
 
@@ -1013,6 +1556,12 @@ function loadSettings() {
   syncClefButtons();
   state.shapes = parseStoredList(storageGet(SETTINGS_SHAPES), SHAPES, ["notes"]);
   syncShapeButtons();
+  setAnswerMode(parseStoredValue(storageGet(SETTINGS_ANSWER_MODE), ANSWER_MODES, "choices"));
+  setChoiceKind(parseStoredValue(storageGet(SETTINGS_CHOICE_KIND), CHOICE_KINDS, "single"));
+  setDifficulty(parseDifficulty(storageGet(SETTINGS_DIFFICULTY)));
+  const savedChoices = Number(storageGet(SETTINGS_CHOICE_COUNT));
+  if (Number.isFinite(savedChoices) && savedChoices > 0) setChoiceCount(savedChoices);
+  else setChoiceCount(state.choiceCount);
   const savedTempo = Number(storageGet(SETTINGS_TEMPO));
   if (Number.isFinite(savedTempo) && savedTempo > 0) setTempo(savedTempo);
   const savedRounds = Number(storageGet(SETTINGS_ROUNDS));
@@ -1043,24 +1592,16 @@ tempo.addEventListener("input", () => {
   setTempo(Number(tempo.value));
 });
 
-document.getElementById("tempoDown").addEventListener("click", () => {
-  setTempo(Number(tempo.value) - Number(tempo.step));
-});
-
-document.getElementById("tempoUp").addEventListener("click", () => {
-  setTempo(Number(tempo.value) + Number(tempo.step));
-});
-
 roundsInput?.addEventListener("input", () => {
   setRounds(Number(roundsInput.value));
 });
 
-document.getElementById("roundsDown")?.addEventListener("click", () => {
-  setRounds(Number(roundsInput.value) - Number(roundsInput.step));
+difficultyInput?.addEventListener("input", () => {
+  setDifficulty(Number(difficultyInput.value));
 });
 
-document.getElementById("roundsUp")?.addEventListener("click", () => {
-  setRounds(Number(roundsInput.value) + Number(roundsInput.step));
+choiceCountInput?.addEventListener("input", () => {
+  setChoiceCount(Number(choiceCountInput.value));
 });
 
 document.getElementById("soundBtn").addEventListener("click", () => {
@@ -1068,16 +1609,10 @@ document.getElementById("soundBtn").addEventListener("click", () => {
   setSound(!state.sound);
 });
 
-document.querySelectorAll(".note-btn").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    if (!state.running || state.paused || state.locked || state.guessed) return;
-    state.guessed = btn.dataset.note;
-    state.answerElapsed = elapsedMs();
-    btn.classList.add("is-picked");
-    document.querySelectorAll(".note-btn").forEach((other) => {
-      other.disabled = true;
-    });
-  });
+document.getElementById("choices")?.addEventListener("click", (event) => {
+  const btn = event.target.closest(".note-btn");
+  if (!btn) return;
+  handleChoiceClick(btn);
 });
 
 document.getElementById("playBtn").addEventListener("click", toggleGame);
@@ -1098,10 +1633,12 @@ settingsOverlay?.addEventListener("click", (event) => {
 });
 
 document.addEventListener("keydown", (event) => {
+  if (settingsAreOpen()) return;
+  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) return;
   const index = Number(event.key) - 1;
-  if (index >= 0 && index < NOTE_NAMES.length) {
-    const btn = document.querySelector(`[data-note="${NOTE_NAMES[index]}"]`);
-    btn?.click();
+  const buttons = choiceButtons();
+  if (index >= 0 && index < buttons.length) {
+    buttons[index].click();
   }
 });
 
@@ -1110,7 +1647,12 @@ function refreshLabels() {
   syncSoundButton();
   setTempo(state.seconds);
   setRounds(state.rounds);
+  setChoiceCount(state.choiceCount);
+  setDifficulty(state.difficulty);
+  syncAnswerModeButtons();
+  syncChoiceKindButtons();
   updateStats();
+  relabelChoices();
   syncQualityHint();
   if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) renderResults();
 }
@@ -1146,8 +1688,6 @@ window.GuessTheNote = {
 loadSettings();
 if (window.I18n) window.I18n.apply();
 drawStaff(previewClef(), null);
-document.querySelectorAll(".note-btn").forEach((btn) => {
-  btn.disabled = true;
-});
+idleChoices();
 refreshLabels();
 updateStats();

@@ -34,13 +34,15 @@
         ...document.querySelectorAll("[data-lang]"),
         ...document.querySelectorAll("[data-clef]"),
         ...document.querySelectorAll("[data-shape]"),
-        document.getElementById("roundsDown"),
-        document.getElementById("roundsUp"),
-        document.getElementById("tempoDown"),
-        document.getElementById("tempoUp"),
+        document.getElementById("difficulty"),
+        ...document.querySelectorAll("[data-answer-mode]"),
+        ...document.querySelectorAll("[data-choice-kind]"),
+        document.getElementById("choiceCount"),
+        document.getElementById("rounds"),
+        document.getElementById("tempo"),
         document.getElementById("soundBtn"),
         document.getElementById("settingsClose"),
-      ].filter(Boolean);
+      ].filter((el) => el && !el.closest(".is-hidden"));
     }
 
     if (game && game.showingResults()) {
@@ -57,6 +59,18 @@
   function focusEl(el) {
     if (!el) return;
     el.focus();
+  }
+
+  function nudgeRange(el, dir) {
+    if (!el || el.type !== "range") return false;
+    const step = Number(el.step) || 1;
+    const min = Number(el.min);
+    const max = Number(el.max);
+    const next = Math.min(max, Math.max(min, Number(el.value) + dir * step));
+    if (next === Number(el.value)) return true;
+    el.value = String(next);
+    el.dispatchEvent(new Event("input", { bubbles: true }));
+    return true;
   }
 
   function currentIndex(items) {
@@ -131,11 +145,13 @@
 
     if (key === "ArrowLeft" || code === 37) {
       event.preventDefault();
+      if (nudgeRange(document.activeElement, -1)) return;
       moveFocus(-1, 0);
       return;
     }
     if (key === "ArrowRight" || code === 39) {
       event.preventDefault();
+      if (nudgeRange(document.activeElement, 1)) return;
       moveFocus(1, 0);
       return;
     }

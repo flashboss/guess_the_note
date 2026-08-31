@@ -134,8 +134,82 @@
                 <button type="button" class="seg-btn" data-shape="chords" aria-pressed="false">
                   <span data-i18n="shapeChords">Chords</span>
                 </button>
+                <button type="button" class="seg-btn" data-shape="sevenths" aria-pressed="false">
+                  <span data-i18n="shapeSevenths">Sevenths</span>
+                </button>
+                <button type="button" class="seg-btn" data-shape="ninths" aria-pressed="false">
+                  <span data-i18n="shapeNinths">Ninths</span>
+                </button>
               </div>
             </fieldset>
+
+            <div class="tempo-field">
+              <span class="tempo-heading">
+                <span data-i18n="difficulty">Difficulty</span>
+                <strong id="difficultyLabel">5</strong>
+              </span>
+              <div class="tempo-stepper">
+                <input
+                  id="difficulty"
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="1"
+                  value="5"
+                  data-i18n-aria="difficultyGroup"
+                  aria-label="Difficulty"
+                />
+              </div>
+              <span class="tempo-hints">
+                <span data-i18n="easier">Easier</span>
+                <span data-i18n="harder">Harder</span>
+              </span>
+            </div>
+
+            <fieldset class="clef-field">
+              <legend data-i18n="answerMode">Answers</legend>
+              <div class="segmented" role="group" data-i18n-aria="answerModeGroup" aria-label="How to answer">
+                <button type="button" class="seg-btn" data-answer-mode="notes" aria-pressed="false">
+                  <span data-i18n="answerModeNotes">Notes</span>
+                </button>
+                <button type="button" class="seg-btn is-active" data-answer-mode="choices" aria-pressed="true">
+                  <span data-i18n="answerModeChoices">Choices</span>
+                </button>
+              </div>
+            </fieldset>
+
+            <div class="choices-only" id="choiceOptions">
+              <div class="tempo-field">
+                <span class="tempo-heading">
+                  <span data-i18n="choiceCount">Number of answers</span>
+                  <strong id="choiceCountLabel">5</strong>
+                </span>
+                <div class="tempo-stepper">
+                  <input
+                    id="choiceCount"
+                    type="range"
+                    min="3"
+                    max="7"
+                    step="1"
+                    value="5"
+                    data-i18n-aria="choiceCount"
+                    aria-label="Number of answers"
+                  />
+                </div>
+              </div>
+
+              <fieldset class="clef-field">
+                <legend data-i18n="choiceKind">Selection</legend>
+                <div class="segmented" role="group" data-i18n-aria="choiceKindGroup" aria-label="One answer or several">
+                  <button type="button" class="seg-btn is-active" data-choice-kind="single" aria-pressed="true">
+                    <span data-i18n="choiceKindSingle">Single</span>
+                  </button>
+                  <button type="button" class="seg-btn" data-choice-kind="multiple" aria-pressed="false">
+                    <span data-i18n="choiceKindMultiple">Multiple</span>
+                  </button>
+                </div>
+              </fieldset>
+            </div>
 
             <div class="tempo-field">
               <span class="tempo-heading">
@@ -143,9 +217,6 @@
                 <strong id="roundsLabel">10</strong>
               </span>
               <div class="tempo-stepper">
-                <button type="button" id="roundsDown" data-i18n-aria="roundsDown" aria-label="Fewer notes">
-                  −
-                </button>
                 <input
                   id="rounds"
                   type="range"
@@ -153,11 +224,9 @@
                   max="30"
                   step="5"
                   value="10"
-                  tabindex="-1"
+                  data-i18n-aria="roundsSetting"
+                  aria-label="Number of notes"
                 />
-                <button type="button" id="roundsUp" data-i18n-aria="roundsUp" aria-label="More notes">
-                  +
-                </button>
               </div>
             </div>
 
@@ -167,9 +236,6 @@
                 <strong id="tempoLabel">4.0 s</strong>
               </span>
               <div class="tempo-stepper">
-                <button type="button" id="tempoDown" data-i18n-aria="tempoDown" aria-label="Decrease time">
-                  −
-                </button>
                 <input
                   id="tempo"
                   type="range"
@@ -177,11 +243,9 @@
                   max="15"
                   step="0.5"
                   value="4"
-                  tabindex="-1"
+                  data-i18n-aria="tempo"
+                  aria-label="Time between notes"
                 />
-                <button type="button" id="tempoUp" data-i18n-aria="tempoUp" aria-label="Increase time">
-                  +
-                </button>
               </div>
               <span class="tempo-hints">
                 <span data-i18n="harder">Harder</span>
@@ -247,15 +311,7 @@
           </div>
         </div>
 
-        <div class="guesses" role="group" data-i18n-aria="pickNote" aria-label="Choose the note">
-          <button type="button" class="note-btn" data-note="Do">Do</button>
-          <button type="button" class="note-btn" data-note="Re">Re</button>
-          <button type="button" class="note-btn" data-note="Mi">Mi</button>
-          <button type="button" class="note-btn" data-note="Fa">Fa</button>
-          <button type="button" class="note-btn" data-note="Sol">Sol</button>
-          <button type="button" class="note-btn" data-note="La">La</button>
-          <button type="button" class="note-btn" data-note="Si">Si</button>
-        </div>
+        <div class="guesses" id="choices" role="group" data-i18n-aria="pickChoice" aria-label="Choose the answer"></div>
       </main>
     </div>
 

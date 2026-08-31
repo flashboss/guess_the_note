@@ -1,6 +1,6 @@
 # Guess the Note
 
-A small web app for practicing music-note reading on a staff. Notes appear at random on a treble or bass staff; the player has a limited time to name them. After ten notes, the session ends with a grade from 0 to 10.
+A small web app for practicing music-note reading on a staff. Notes, dyads, or chords appear at random on a treble or bass staff; the player has a limited time to pick the correct answer among five choices. After the session, a grade from 0 to 10 is shown.
 
 ## GitHub Pages
 
@@ -16,18 +16,21 @@ Enable **GitHub Pages** on the repository with source **GitHub Actions**. The wo
 
 Open `index.html` for the homepage, or `play.html` for the game (or serve the folder with any static file server).
 
-1. Choose the clef: treble, bass, or both at random.
-2. Set **time between notes** — a shorter interval is harder.
-3. Name the note with the buttons. Keys `1`–`7` work as shortcuts.
-4. The UI is available in English, Italian, Spanish, Portuguese, German, French, Chinese, and Japanese. It follows the browser language and can be changed from the language bar.
-5. The correct note is highlighted on the buttons, then the next note is shown. After ten notes the session ends with a final grade.
+1. Open settings and choose the clef, the shapes (notes, dyads, triads, sevenths, ninths), difficulty, how to answer, tempo, and number of rounds.
+2. Set **difficulty** from 1 (simplest notes) to 10 (full range, inversions, accidentals, and rarer chords). Set **time between notes** — a shorter interval is also harder.
+3. **Answers:** **Notes** uses the seven natural names (Do–Si, or C–B). **Choices** uses a quiz with 3–7 predefined answers, either **single** (one correct) or **multiple** (select every written pitch). Keys `1`–`7` work as shortcuts.
+4. In Choices mode, labels can include sharps and flats. Chord symbols use `-` for minor, `°` for diminished, `+` for augmented, `7` / `Δ` / `ø` for sevenths, and `9` for ninths.
+5. The UI is available in English, Italian, Spanish, Portuguese, German, French, Chinese, and Japanese. It follows the browser language and can be changed from the language bar.
+6. Correct answers are highlighted on the buttons, then the next challenge is shown. After the session a final grade is shown.
 
 ## Note ranges
 
 - Treble clef: C4 (middle C) through A5
 - Bass clef: E2 through C4
 
-Natural notes only (no accidentals).
+**Difficulty** 1 stays near the staff, uses root position, and avoids extra accidentals and rarer chord types. **10** uses the full range, inversions, accidentals, and diminished/augmented/half-diminished spellings.
+
+In **Notes** answer mode, written accidentals on the root are not used. In **Choices** mode, sharps and flats can appear depending on difficulty.
 
 ## Samsung TV (Tizen)
 
@@ -35,7 +38,7 @@ The same project is a Tizen web app (`config.xml`) that can be sideloaded on a S
 
 ### Remote
 
-- Arrows: move between clef, tempo, Start/Stop, and note buttons
+- Arrows: move between settings, Start/Stop, and answer buttons
 - Enter / OK: confirm
 - Play/Pause: start or stop the drill
 - Back: stop the drill, or exit the app if it is already stopped
