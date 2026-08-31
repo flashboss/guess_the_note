@@ -4,6 +4,8 @@ const SETTINGS_CLEF = "gtn-clef";
 const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
+const GRADE_ACCURACY = 0.7;
+const GRADE_SPEED = 0.3;
 const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
@@ -27,6 +29,9 @@ const state = {
   attempted: 0,
   streak: 0,
   round: 0,
+  qualitySum: 0,
+  timeSum: 0,
+  answerElapsed: null,
   lastResult: null,
   roundTimer: null,
   nextTimer: null,
@@ -48,7 +53,7 @@ const overlayHint = document.getElementById("overlayHint");
 const timerFill = document.getElementById("timerFill");
 const scoreEl = document.getElementById("score");
 const streakEl = document.getElementById("streak");
-const accuracyEl = document.getElementById("accuracy");
+const avgTimeEl = document.getElementById("avgTime");
 const progressEl = document.getElementById("progress");
 const startOverlay = document.getElementById("startOverlay");
 const idlePanel = document.getElementById("idlePanel");
@@ -349,12 +354,26 @@ function formatMessage(key, vars) {
   );
 }
 
+function remainingMs() {
+  return Math.max(0, state.timerStartedAt + state.timerDuration - Date.now());
+}
+
+function elapsedMs() {
+  const total = state.seconds * 1000;
+  return Math.max(0, Math.min(total, total - remainingMs()));
+}
+
+function sessionQuality() {
+  return state.attempted ? state.qualitySum / state.attempted : 0;
+}
+
 function updateStats() {
   scoreEl.textContent = String(state.score);
   streakEl.textContent = String(state.streak);
   progressEl.textContent = `${state.round} / ${state.rounds}`;
-  accuracyEl.textContent = state.attempted
-    ? `${Math.round((state.score / state.attempted) * 100)}%`
+  if (!avgTimeEl) return;
+  avgTimeEl.textContent = state.attempted
+    ? `${(state.timeSum / state.attempted / 1000).toFixed(1)} ${t("tempoUnit")}`
     : "—";
 }
 
@@ -366,8 +385,16 @@ function reveal() {
   const { name } = state.current;
   const guessed = state.guessed;
   const correct = guessed === name;
+  const total = state.seconds * 1000;
+  const elapsed =
+    guessed && state.answerElapsed != null ? state.answerElapsed : total;
+  const speed = total ? Math.max(0, Math.min(1, (total - elapsed) / total)) : 0;
+  const quality = correct ? GRADE_ACCURACY + GRADE_SPEED * speed : 0;
+
+  state.attempted += 1;
+  state.qualitySum += quality;
+  state.timeSum += elapsed;
   if (guessed) {
-    state.attempted += 1;
     if (correct) {
       state.score += 1;
       state.streak += 1;
@@ -375,7 +402,6 @@ function reveal() {
       state.streak = 0;
     }
   } else {
-    state.attempted += 1;
     state.streak = 0;
   }
 
@@ -428,6 +454,7 @@ function nextRound() {
   clearTimeout(state.nextTimer);
   state.round += 1;
   state.guessed = null;
+  state.answerElapsed = null;
   state.locked = false;
   resetButtons();
   const clef = pickClef();
@@ -448,15 +475,12 @@ function showIdleOverlay() {
 function renderResults() {
   const result = state.lastResult;
   if (!result) return;
-  const accuracy = result.attempted
-    ? Math.round((result.score / result.attempted) * 100)
-    : 0;
   resultGrade.textContent = String(result.grade);
   resultLabel.textContent = t(`grade${result.grade}`);
   resultSummary.textContent = formatMessage("resultSummary", {
     score: result.score,
     total: result.attempted,
-    accuracy,
+    accuracy: result.percent,
   });
 }
 
@@ -483,11 +507,12 @@ function finishSession() {
     btn.disabled = true;
     btn.classList.remove("is-picked");
   });
-  const grade = state.attempted
-    ? Math.round((state.score / state.attempted) * 10)
-    : 0;
+  const quality = sessionQuality();
+  const percent = Math.round(quality * 100);
+  const grade = Math.max(0, Math.min(10, Math.round(quality * 10)));
   state.lastResult = {
     grade,
+    percent,
     score: state.score,
     attempted: state.attempted,
   };
@@ -625,6 +650,9 @@ function startGame() {
   state.attempted = 0;
   state.streak = 0;
   state.round = 0;
+  state.qualitySum = 0;
+  state.timeSum = 0;
+  state.answerElapsed = null;
   state.lastResult = null;
   startOverlay.classList.add("is-hidden");
   idlePanel.classList.remove("is-hidden");
@@ -780,6 +808,7 @@ document.querySelectorAll(".note-btn").forEach((btn) => {
   btn.addEventListener("click", () => {
     if (!state.running || state.paused || state.locked || state.guessed) return;
     state.guessed = btn.dataset.note;
+    state.answerElapsed = elapsedMs();
     btn.classList.add("is-picked");
     document.querySelectorAll(".note-btn").forEach((other) => {
       other.disabled = true;
@@ -811,6 +840,7 @@ function refreshLabels() {
   syncSoundButton();
   setTempo(state.seconds);
   setRounds(state.rounds);
+  updateStats();
   if (!resultPanel.classList.contains("is-hidden")) renderResults();
 }
 
