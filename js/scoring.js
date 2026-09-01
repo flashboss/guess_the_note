@@ -97,8 +97,8 @@ function sessionSettingsSnapshot() {
   };
 }
 
-function sessionQuality() {
-  return state.roundWeightSum ? state.weightedQualitySum / state.roundWeightSum : 0;
+function sessionGradeQuality() {
+  return state.attempted ? state.gradeQualitySum / state.attempted : 0;
 }
 
 function pauseScoreFactor() {
@@ -106,10 +106,11 @@ function pauseScoreFactor() {
   return Math.max(0, 1 - pauses * PAUSE_QUALITY_FACTOR);
 }
 
-function applyPausePenalty(quality, universalScore) {
+function applyPausePenalty(gradeQuality, universalScore) {
   const factor = pauseScoreFactor();
+  const quality = gradeQuality * factor;
   return {
-    quality: quality * factor,
+    quality,
     universalScore: Math.round(universalScore * factor),
     pauseCount: state.pauseCount || 0,
     pausePenaltyPercent: Math.round((1 - factor) * 100),
@@ -128,7 +129,7 @@ export {
   sessionDifficultyIndex,
   formatUniversalScore,
   sessionSettingsSnapshot,
-  sessionQuality,
+  sessionGradeQuality,
   pauseScoreFactor,
   applyPausePenalty,
 };

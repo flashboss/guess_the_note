@@ -17,7 +17,7 @@ const {
   resultSummary, pauseOverlay, settingsOverlay, settingsBtn, qualityHint,
 } = dom;
 import { t, notifyUi, shuffle, difficultyLevel, difficultyT, isNotesMode, isMultiple, formatMessage } from "./util.js";
-import { universalRoundPoints, fullRoundWeight, sessionQuality, applyPausePenalty, sessionDifficultyIndex, formatUniversalScore, sessionSettingsSnapshot } from "./scoring.js";
+import { universalRoundPoints, fullRoundWeight, sessionGradeQuality, applyPausePenalty, sessionDifficultyIndex, formatUniversalScore, sessionSettingsSnapshot } from "./scoring.js";
 import { closeSettings } from "./settings.js";
 
 let audioCtx = null;
@@ -980,10 +980,13 @@ function handleChoiceClick(btn) {
   if (state.selected.length) return;
   state.selected = [key];
   state.answerElapsed = elapsedMs();
+  clearTimeout(state.roundTimer);
+  freezeTimerBar(Math.max(0, state.seconds * 1000 - state.answerElapsed));
   btn.classList.add("is-picked");
   document.querySelectorAll(".note-btn").forEach((other) => {
     other.disabled = true;
   });
+  reveal();
 }
 
 function remainingMs() {
@@ -1011,12 +1014,15 @@ function reveal() {
   clearTimeout(state.roundTimer);
 
   const guessed = state.selected.length > 0;
-  const correct = selectionIsCorrect();
-  const need = new Set(correctChoiceKeys());
-  const got = new Set(state.selected);
   const total = state.seconds * 1000;
   const elapsed =
     guessed && state.answerElapsed != null ? state.answerElapsed : total;
+  if (guessed && state.answerElapsed != null) {
+    freezeTimerBar(Math.max(0, total - elapsed));
+  }
+  const correct = selectionIsCorrect();
+  const need = new Set(correctChoiceKeys());
+  const got = new Set(state.selected);
   const speed = total ? Math.max(0, Math.min(1, (total - elapsed) / total)) : 0;
   const quality = correct
     ? GRADE_ACCURACY + GRADE_SPEED * Math.sqrt(speed)
@@ -1025,7 +1031,7 @@ function reveal() {
   state.attempted += 1;
   const roundWeight = fullRoundWeight(state.current);
   state.roundWeightSum += roundWeight;
-  state.weightedQualitySum += quality * roundWeight;
+  state.gradeQualitySum += quality;
   state.timeSum += elapsed;
   if (guessed) {
     if (correct) {
@@ -1163,10 +1169,9 @@ function finishSession() {
     btn.disabled = true;
     btn.classList.remove("is-picked");
   });
-  const penalized = applyPausePenalty(sessionQuality(), state.universalScore);
-  const quality = penalized.quality;
-  const percent = Math.round(quality * 100);
-  const grade = Math.max(0, Math.min(10, Math.round(quality * 10)));
+  const penalized = applyPausePenalty(sessionGradeQuality(), state.universalScore);
+  const percent = Math.round(penalized.quality * 100);
+  const grade = Math.max(0, Math.min(10, Math.round(penalized.quality * 10)));
   state.lastResult = {
     grade,
     percent,
@@ -1292,7 +1297,7 @@ function startGame() {
   state.streak = 0;
   state.bestStreak = 0;
   state.round = 0;
-  state.weightedQualitySum = 0;
+  state.gradeQualitySum = 0;
   state.roundWeightSum = 0;
   state.timeSum = 0;
   state.universalScore = 0;

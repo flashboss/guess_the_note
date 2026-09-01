@@ -126,7 +126,7 @@ const UNIVERSAL_STREAK_STEP = 500;
 const UNIVERSAL_SPEED_DIVISOR = 2;
 const PAUSE_QUALITY_FACTOR = 0.06;
 
-// Difficulty ladder (single unified scale for grade and universal score).
+// Difficulty ladder for the universal score (weighted by challenge, settings, and session length).
 // Shape kind: note < dyad < chord < seventh < ninth.
 // Per round: kind × quality × pitch density × accidentals × answer panel × slider.
 // Session: rounds endurance (√ rounds/10) and shape-menu spread when several types are selected.

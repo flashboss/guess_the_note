@@ -17,7 +17,7 @@ const state = {
   streak: 0,
   bestStreak: 0,
   round: 0,
-  weightedQualitySum: 0,
+  gradeQualitySum: 0,
   roundWeightSum: 0,
   timeSum: 0,
   universalScore: 0,
