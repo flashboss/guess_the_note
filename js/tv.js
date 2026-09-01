@@ -17,8 +17,29 @@
     return el?.tagName === "INPUT" && (el.type === "text" || el.type === "search");
   }
 
+  function settingsFocusables() {
+    return [
+      ...document.querySelectorAll("#settingsOverlay [data-lang]"),
+      ...document.querySelectorAll("#settingsOverlay [data-clef]"),
+      ...document.querySelectorAll("#settingsOverlay [data-shape]"),
+      document.getElementById("difficulty"),
+      ...document.querySelectorAll("#settingsOverlay [data-answer-mode]"),
+      ...document.querySelectorAll("#settingsOverlay [data-choice-kind]"),
+      document.getElementById("choiceCount"),
+      document.getElementById("rounds"),
+      document.getElementById("tempo"),
+      document.getElementById("soundBtn"),
+      document.getElementById("playerName"),
+      document.getElementById("settingsClose"),
+    ].filter((el) => el && !el.closest(".is-hidden") && !el.closest("[hidden]"));
+  }
+
   function visibleFocusables() {
     const game = api();
+    if (game && game.settingsAreOpen()) {
+      return settingsFocusables();
+    }
+
     const running = game && game.getState().running;
     const paused = game && game.getState().paused;
     if (running && paused) {
@@ -36,23 +57,6 @@
         document.getElementById("pauseBtn"),
       ].filter(Boolean);
       return [...toolbar, ...notes];
-    }
-
-    if (game && game.settingsAreOpen()) {
-      return [
-        ...document.querySelectorAll("[data-lang]"),
-        ...document.querySelectorAll("[data-clef]"),
-        ...document.querySelectorAll("[data-shape]"),
-        document.getElementById("difficulty"),
-        ...document.querySelectorAll("[data-answer-mode]"),
-        ...document.querySelectorAll("[data-choice-kind]"),
-        document.getElementById("choiceCount"),
-        document.getElementById("rounds"),
-        document.getElementById("tempo"),
-        document.getElementById("soundBtn"),
-        document.getElementById("playerName"),
-        document.getElementById("settingsClose"),
-      ].filter((el) => el && !el.closest(".is-hidden") && !el.closest("[hidden]"));
     }
 
     if (game && game.showingResults()) {
@@ -254,7 +258,7 @@
     }
     if (game && game.settingsAreOpen()) {
       if (items.includes(active)) return;
-      focusEl(items.find((el) => el.dataset.lang) || items[0]);
+      focusEl(items.find((el) => el.dataset.lang) || document.getElementById("settingsClose") || items[0]);
       return;
     }
     if (items.includes(active)) return;
