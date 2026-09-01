@@ -20,6 +20,16 @@ const QUALITY_MARKS = {
   maj9: "Δ9",
   sus2: "sus2",
   sus4: "sus4",
+  majFlat5: "♭5",
+  majSharp5: "♯5",
+  minFlat5: "-♭5",
+  minSharp5: "-♯5",
+  dom7Flat5: "7♭5",
+  dom7Sharp5: "7♯5",
+  min7Flat5: "-7♭5",
+  min7Sharp5: "-7♯5",
+  maj7Flat5: "Δ♭5",
+  maj7Sharp5: "Δ♯5",
 };
 const CHORD_SPECS = {
   major: { steps: [0, 2, 4], semis: [0, 4, 7] },
@@ -35,11 +45,43 @@ const CHORD_SPECS = {
   dom9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 10, 14] },
   min9: { steps: [0, 2, 4, 6, 8], semis: [0, 3, 7, 10, 14] },
   maj9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 11, 14] },
+  majFlat5: { steps: [0, 2, 4], semis: [0, 4, 6] },
+  majSharp5: { steps: [0, 2, 4], semis: [0, 4, 8] },
+  minFlat5: { steps: [0, 2, 4], semis: [0, 3, 6] },
+  minSharp5: { steps: [0, 2, 4], semis: [0, 3, 8] },
+  dom7Flat5: { steps: [0, 2, 4, 6], semis: [0, 4, 6, 10] },
+  dom7Sharp5: { steps: [0, 2, 4, 6], semis: [0, 4, 8, 10] },
+  min7Flat5: { steps: [0, 2, 4, 6], semis: [0, 3, 6, 10] },
+  min7Sharp5: { steps: [0, 2, 4, 6], semis: [0, 3, 8, 10] },
+  maj7Flat5: { steps: [0, 2, 4, 6], semis: [0, 4, 6, 11] },
+  maj7Sharp5: { steps: [0, 2, 4, 6], semis: [0, 4, 8, 11] },
 };
 const KIND_QUALITIES = {
   dyad: ["major", "minor", "dim", "aug"],
-  chord: ["major", "minor", "dim", "aug"],
-  sevenths: ["dom7", "min7", "maj7", "dim7", "halfdim", "aug7"],
+  chord: [
+    "major",
+    "minor",
+    "dim",
+    "aug",
+    "majFlat5",
+    "majSharp5",
+    "minFlat5",
+    "minSharp5",
+  ],
+  sevenths: [
+    "dom7",
+    "min7",
+    "maj7",
+    "dim7",
+    "halfdim",
+    "aug7",
+    "dom7Flat5",
+    "dom7Sharp5",
+    "min7Flat5",
+    "min7Sharp5",
+    "maj7Flat5",
+    "maj7Sharp5",
+  ],
   ninths: ["dom9", "min9", "maj9"],
 };
 const ANSWER_MODES = ["notes", "choices"];
@@ -112,6 +154,16 @@ const QUALITY_WEIGHT = {
   dom9: 1.12,
   min9: 1.14,
   maj9: 1.16,
+  majFlat5: 1.12,
+  majSharp5: 1.12,
+  minFlat5: 1.12,
+  minSharp5: 1.12,
+  dom7Flat5: 1.14,
+  dom7Sharp5: 1.14,
+  min7Flat5: 1.15,
+  min7Sharp5: 1.14,
+  maj7Flat5: 1.14,
+  maj7Sharp5: 1.14,
 };
 const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
@@ -951,7 +1003,18 @@ function isNotesMode() {
   return state.answerMode === "notes";
 }
 
-const MINOR_QUALITIES = new Set(["minor", "min7", "min9", "dim", "dim7", "halfdim"]);
+const MINOR_QUALITIES = new Set([
+  "minor",
+  "min7",
+  "min9",
+  "dim",
+  "dim7",
+  "halfdim",
+  "minFlat5",
+  "minSharp5",
+  "min7Flat5",
+  "min7Sharp5",
+]);
 
 function syncQualityHint() {
   if (!qualityHint) return;
