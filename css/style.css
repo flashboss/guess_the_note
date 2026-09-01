@@ -583,6 +583,22 @@ input[type="range"] {
   color: var(--paper);
 }
 
+.result-universal-kicker {
+  margin-top: 10px;
+}
+
+.result-universal {
+  margin: 0;
+  font-family: Outfit, sans-serif;
+  font-size: clamp(2rem, 6vw, 3.2rem);
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.08em;
+  line-height: 1;
+  color: var(--gold-bright);
+  text-shadow: 0 0 24px rgba(230, 199, 120, 0.22);
+}
+
 .result-summary {
   font-family: Outfit, sans-serif !important;
   font-size: 1.05rem !important;
@@ -942,6 +958,11 @@ html.is-tv .result-grade {
 
 html.is-tv .result-label {
   font-size: 2.4rem;
+}
+
+html.is-tv .result-universal {
+  font-size: 3.6rem;
+  letter-spacing: 0.1em;
 }
 
 html.is-tv .result-summary {

@@ -73,6 +73,9 @@ const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
 const GRADE_ACCURACY = 0.85;
 const GRADE_SPEED = 0.15;
+const UNIVERSAL_BASE = 2500;
+const UNIVERSAL_STREAK_STEP = 500;
+const UNIVERSAL_SPEED_DIVISOR = 2;
 const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
@@ -105,6 +108,7 @@ const state = {
   round: 0,
   qualitySum: 0,
   timeSum: 0,
+  universalScore: 0,
   answerElapsed: null,
   lastResult: null,
   roundTimer: null,
@@ -137,6 +141,7 @@ const startOverlay = document.getElementById("startOverlay");
 const resultOverlay = document.getElementById("resultOverlay");
 const resultGrade = document.getElementById("resultGrade");
 const resultLabel = document.getElementById("resultLabel");
+const resultUniversal = document.getElementById("resultUniversal");
 const resultSummary = document.getElementById("resultSummary");
 const pauseOverlay = document.getElementById("pauseOverlay");
 const settingsOverlay = document.getElementById("settingsOverlay");
@@ -1051,6 +1056,31 @@ function formatMessage(key, vars) {
   );
 }
 
+function universalRoundPoints(correct, elapsedMs, totalMs, streakAfter, difficulty) {
+  if (!correct) return 0;
+  const speedBonus = Math.floor(Math.max(0, totalMs - elapsedMs) / UNIVERSAL_SPEED_DIVISOR);
+  const streakBonus = Math.max(0, streakAfter - 1) * UNIVERSAL_STREAK_STEP;
+  return difficulty * (UNIVERSAL_BASE + speedBonus + streakBonus);
+}
+
+function formatUniversalScore(value) {
+  const locale = window.I18n?.locale || "en";
+  return new Intl.NumberFormat(locale).format(Math.max(0, Math.round(value)));
+}
+
+function sessionSettingsSnapshot() {
+  return {
+    difficulty: state.difficulty,
+    rounds: state.rounds,
+    seconds: state.seconds,
+    answerMode: state.answerMode,
+    choiceCount: state.choiceCount,
+    choiceKind: state.choiceKind,
+    clefs: state.clefs.slice().sort().join(","),
+    shapes: state.shapes.slice().sort().join(","),
+  };
+}
+
 function remainingMs() {
   return Math.max(0, state.timerStartedAt + state.timerDuration - Date.now());
 }
@@ -1099,6 +1129,13 @@ function reveal() {
       state.score += 1;
       state.streak += 1;
       if (state.streak > state.bestStreak) state.bestStreak = state.streak;
+      state.universalScore += universalRoundPoints(
+        true,
+        elapsed,
+        total,
+        state.streak,
+        state.difficulty
+      );
     } else {
       state.streak = 0;
     }
@@ -1180,6 +1217,9 @@ function renderResults() {
   if (!result) return;
   resultGrade.textContent = String(result.grade);
   resultLabel.textContent = t(`grade${result.grade}`);
+  if (resultUniversal) {
+    resultUniversal.textContent = formatUniversalScore(result.universalScore);
+  }
   resultSummary.textContent = formatMessage("resultSummary", {
     score: result.score,
     total: result.attempted,
@@ -1222,6 +1262,8 @@ function finishSession() {
     score: state.score,
     attempted: state.attempted,
     bestStreak: state.bestStreak,
+    universalScore: state.universalScore,
+    settings: sessionSettingsSnapshot(),
   };
   drawStaff(previewClef(), null);
   syncQualityHint();
@@ -1363,6 +1405,7 @@ function startGame() {
   state.round = 0;
   state.qualitySum = 0;
   state.timeSum = 0;
+  state.universalScore = 0;
   state.answerElapsed = null;
   state.lastResult = null;
   startOverlay.classList.add("is-hidden");
@@ -1715,6 +1758,8 @@ window.GuessTheNote = {
   closeSettings,
   settingsAreOpen,
   getState: () => state,
+  getLastResult: () => state.lastResult,
+  formatUniversalScore,
   showingResults: () => resultOverlay && !resultOverlay.classList.contains("is-hidden"),
   refreshLabels,
 };
