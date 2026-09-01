@@ -17,8 +17,21 @@
     return el?.tagName === "INPUT" && (el.type === "text" || el.type === "search");
   }
 
+  function isFocusable(el) {
+    return Boolean(
+      el &&
+        !el.disabled &&
+        !el.closest(".is-hidden") &&
+        !el.closest("[hidden]")
+    );
+  }
+
+  function focusable(items) {
+    return items.filter(isFocusable);
+  }
+
   function settingsFocusables() {
-    return [
+    return focusable([
       ...document.querySelectorAll("#settingsOverlay [data-lang]"),
       ...document.querySelectorAll("#settingsOverlay [data-clef]"),
       ...document.querySelectorAll("#settingsOverlay [data-shape]"),
@@ -31,7 +44,7 @@
       document.getElementById("soundBtn"),
       document.getElementById("playerName"),
       document.getElementById("settingsClose"),
-    ].filter((el) => el && !el.closest(".is-hidden") && !el.closest("[hidden]"));
+    ]);
   }
 
   function visibleFocusables() {
@@ -43,31 +56,29 @@
     const running = game && game.getState().running;
     const paused = game && game.getState().paused;
     if (running && paused) {
-      return [
+      return focusable([
         document.getElementById("settingsBtn"),
         document.getElementById("pauseBtn"),
         document.getElementById("playBtn"),
-      ].filter(Boolean);
+      ]);
     }
     if (running) {
       const enabled = noteButtons().filter((btn) => !btn.disabled);
       const notes = enabled.length ? enabled : noteButtons();
-      const toolbar = [
-        document.getElementById("settingsBtn"),
+      return focusable([
         document.getElementById("pauseBtn"),
-      ].filter(Boolean);
-      return [...toolbar, ...notes];
+        ...notes,
+      ]);
     }
 
     if (game && game.showingResults()) {
-      return [document.getElementById("playAgainBtn")].filter(Boolean);
+      return focusable([document.getElementById("playAgainBtn")]);
     }
 
-    const items = [
+    return focusable([
       document.getElementById("settingsBtn"),
       document.getElementById("playBtn"),
-    ];
-    return items.filter(Boolean);
+    ]);
   }
 
   function focusEl(el) {

@@ -13,7 +13,7 @@ const {
   playerNameInput,
 } = dom;
 import { t, storageGet, storageSet, notifyUi, isNotesMode, formatMessage } from "./util.js";
-import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone, pauseGame } from "./game.js";
+import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone } from "./game.js";
 
 function settingsAreOpen() {
   return settingsOverlay && !settingsOverlay.classList.contains("is-hidden");
@@ -27,10 +27,7 @@ function focusSettingsDialog() {
 }
 
 function openSettings() {
-  if (!settingsOverlay) return;
-  if (state.running && !state.paused) {
-    pauseGame({ keepSettings: true });
-  }
+  if ((state.running && !state.paused) || !settingsOverlay) return;
   settingsOverlay.classList.remove("is-hidden");
   if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "true");
   syncHallOfFameFieldLabels();

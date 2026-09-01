@@ -1222,10 +1222,7 @@ function syncPlayButton() {
   playBtn.setAttribute("aria-label", label);
   playBtn.title = label;
   playIcon.textContent = state.running ? "■" : "▶";
-  if (settingsBtn) {
-    const isTv = document.documentElement.classList.contains("is-tv");
-    settingsBtn.disabled = !isTv && state.running && !state.paused;
-  }
+  if (settingsBtn) settingsBtn.disabled = state.running && !state.paused;
   syncPauseButton();
 }
 
