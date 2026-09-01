@@ -1,6 +1,26 @@
 import { CLEFS, SHAPES } from "./constants.js";
 import { state, dom } from "./state.js";
-import { notifyUi, toggleListed } from "./util.js";
+import { notifyUi } from "./util.js";
+import {
+  toggleListed,
+  setClefs,
+  setShapes,
+  setAnswerMode,
+  setChoiceKind,
+  setSound,
+  loadSettings,
+  setTempo,
+  setRounds,
+  setChoiceCount,
+  setDifficulty,
+  syncAnswerModeButtons,
+  syncChoiceKindButtons,
+  syncSoundButton,
+  settingsAreOpen,
+  openSettings,
+  closeSettings,
+  toggleSettings,
+} from "./settings.js";
 import {
   startGame,
   stopGame,
@@ -22,25 +42,6 @@ import {
   relabelChoices,
   syncQualityHint,
 } from "./game.js";
-import {
-  settingsAreOpen,
-  openSettings,
-  closeSettings,
-  toggleSettings,
-  setClefs,
-  setShapes,
-  setAnswerMode,
-  setChoiceKind,
-  setSound,
-  loadSettings,
-  setTempo,
-  setRounds,
-  setChoiceCount,
-  setDifficulty,
-  syncAnswerModeButtons,
-  syncChoiceKindButtons,
-  syncSoundButton,
-} from "./settings.js";
 import { formatUniversalScore } from "./scoring.js";
 
 const {

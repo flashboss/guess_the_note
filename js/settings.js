@@ -10,7 +10,7 @@ const {
   tempo, tempoLabel, roundsInput, roundsLabel, choiceCountInput, choiceCountLabel,
   difficultyInput, difficultyLabel, overlayHint, settingsOverlay, settingsBtn,
 } = dom;
-import { t, storageGet, storageSet, notifyUi, isNotesMode } from "./util.js";
+import { t, storageGet, storageSet, notifyUi, isNotesMode, formatMessage } from "./util.js";
 import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone } from "./game.js";
 
 function settingsAreOpen() {
@@ -181,30 +181,6 @@ function setChoiceCount(count) {
   notifyUi();
 }
 
-document.querySelectorAll("[data-clef]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setClefs(toggleListed(state.clefs, btn.dataset.clef, CLEFS));
-  });
-});
-
-document.querySelectorAll("[data-shape]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setShapes(toggleListed(state.shapes, btn.dataset.shape, SHAPES));
-  });
-});
-
-document.querySelectorAll("[data-answer-mode]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setAnswerMode(btn.dataset.answerMode);
-  });
-});
-
-document.querySelectorAll("[data-choice-kind]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setChoiceKind(btn.dataset.choiceKind);
-  });
-});
-
 function setTempo(seconds) {
   const min = Number(tempo.min);
   const max = Number(tempo.max);
@@ -271,60 +247,6 @@ function setSound(on) {
   syncSoundButton();
   if (!state.sound) stopTone();
 }
-
-tempo.addEventListener("input", () => {
-  setTempo(Number(tempo.value));
-});
-
-roundsInput?.addEventListener("input", () => {
-  setRounds(Number(roundsInput.value));
-});
-
-difficultyInput?.addEventListener("input", () => {
-  setDifficulty(Number(difficultyInput.value));
-});
-
-choiceCountInput?.addEventListener("input", () => {
-  setChoiceCount(Number(choiceCountInput.value));
-});
-
-document.getElementById("soundBtn").addEventListener("click", () => {
-  if (!state.sound) unlockAudio();
-  setSound(!state.sound);
-});
-
-document.getElementById("choices")?.addEventListener("click", (event) => {
-  const btn = event.target.closest(".note-btn");
-  if (!btn) return;
-  handleChoiceClick(btn);
-});
-
-document.getElementById("playBtn").addEventListener("click", toggleGame);
-document.getElementById("pauseBtn").addEventListener("click", togglePause);
-document.getElementById("playAgainBtn")?.addEventListener("click", startGame);
-resultOverlay?.addEventListener("click", (event) => {
-  if (event.target !== resultOverlay) return;
-  showIdleOverlay();
-  notifyUi();
-});
-
-if (settingsBtn) {
-  settingsBtn.addEventListener("click", toggleSettings);
-}
-document.getElementById("settingsClose")?.addEventListener("click", closeSettings);
-settingsOverlay?.addEventListener("click", (event) => {
-  if (event.target === settingsOverlay) closeSettings();
-});
-
-document.addEventListener("keydown", (event) => {
-  if (settingsAreOpen()) return;
-  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) return;
-  const index = Number(event.key) - 1;
-  const buttons = choiceButtons();
-  if (index >= 0 && index < buttons.length) {
-    buttons[index].click();
-  }
-});
 
 export {
   settingsAreOpen,
