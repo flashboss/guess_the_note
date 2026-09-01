@@ -76,6 +76,36 @@ const GRADE_SPEED = 0.15;
 const UNIVERSAL_BASE = 2500;
 const UNIVERSAL_STREAK_STEP = 500;
 const UNIVERSAL_SPEED_DIVISOR = 2;
+
+// Difficulty ladder (single unified scale for grade and universal score).
+// Shape kind: note < dyad < chord < seventh < ninth.
+// Per round: kind × quality × pitch density × accidentals × answer panel × slider.
+// Session: rounds endurance (√ rounds/10) and shape-menu spread when several types are selected.
+const SHAPE_KIND_WEIGHT = {
+  note: 1,
+  notes: 1,
+  dyad: 1.3,
+  dyads: 1.3,
+  chord: 1.5,
+  chords: 1.5,
+  sevenths: 1.85,
+  ninths: 2.15,
+};
+const QUALITY_WEIGHT = {
+  major: 1,
+  minor: 1.04,
+  dim: 1.1,
+  aug: 1.1,
+  dom7: 1.06,
+  min7: 1.08,
+  maj7: 1.1,
+  halfdim: 1.15,
+  dim7: 1.18,
+  aug7: 1.2,
+  dom9: 1.12,
+  min9: 1.14,
+  maj9: 1.16,
+};
 const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
 const TOP_LINE_Y = 78;
@@ -106,7 +136,8 @@ const state = {
   streak: 0,
   bestStreak: 0,
   round: 0,
-  qualitySum: 0,
+  weightedQualitySum: 0,
+  roundWeightSum: 0,
   timeSum: 0,
   universalScore: 0,
   answerElapsed: null,
@@ -1056,11 +1087,72 @@ function formatMessage(key, vars) {
   );
 }
 
-function universalRoundPoints(correct, elapsedMs, totalMs, streakAfter, difficulty) {
+function universalRoundPoints(correct, elapsedMs, totalMs, streakAfter, roundWeight) {
   if (!correct) return 0;
   const speedBonus = Math.floor(Math.max(0, totalMs - elapsedMs) / UNIVERSAL_SPEED_DIVISOR);
   const streakBonus = Math.max(0, streakAfter - 1) * UNIVERSAL_STREAK_STEP;
-  return difficulty * (UNIVERSAL_BASE + speedBonus + streakBonus);
+  return Math.round(roundWeight * (UNIVERSAL_BASE + speedBonus + streakBonus));
+}
+
+function sliderWeight() {
+  return 0.75 + difficultyLevel() * 0.025;
+}
+
+function answerSettingsWeight() {
+  if (isNotesMode()) return 0.88;
+  const choices = state.choiceCount || CHOICE_COUNT_MIN;
+  const countFactor = 1 + (choices - CHOICE_COUNT_MIN) * 0.07;
+  return countFactor * (isMultiple() ? 1.35 : 1);
+}
+
+function sessionRoundsFactor() {
+  return Math.sqrt(state.rounds / 10);
+}
+
+function shapeMenuSpreadFactor() {
+  const kinds = state.shapes.length ? state.shapes : ["notes"];
+  if (kinds.length <= 1) return 1;
+  return 1 + (kinds.length - 1) * 0.04;
+}
+
+function averageShapeMenuWeight() {
+  const kinds = state.shapes.length ? state.shapes : ["notes"];
+  const total = kinds.reduce((sum, kind) => sum + (SHAPE_KIND_WEIGHT[kind] || 1), 0);
+  return total / kinds.length;
+}
+
+function challengeRoundWeight(challenge) {
+  if (!challenge) return 1;
+  const kindW = SHAPE_KIND_WEIGHT[challenge.kind] || 1;
+  const qualW = challenge.quality ? QUALITY_WEIGHT[challenge.quality] || 1 : 1;
+  const accidental = challenge.accidental || 0;
+  const accW = 1 + Math.abs(accidental) * 0.06 + (Math.abs(accidental) >= 2 ? 0.06 : 0);
+  const noteCount = challenge.notes?.length || 1;
+  const densityW = 1 + Math.max(0, noteCount - 1) * 0.05;
+  return kindW * qualW * accW * densityW;
+}
+
+function fullRoundWeight(challenge) {
+  return (
+    challengeRoundWeight(challenge) *
+    answerSettingsWeight() *
+    sliderWeight() *
+    sessionRoundsFactor() *
+    shapeMenuSpreadFactor()
+  );
+}
+
+function sessionDifficultyIndex() {
+  if (!state.attempted) {
+    return (
+      averageShapeMenuWeight() *
+      answerSettingsWeight() *
+      sliderWeight() *
+      sessionRoundsFactor() *
+      shapeMenuSpreadFactor()
+    );
+  }
+  return state.roundWeightSum / state.attempted;
 }
 
 function formatUniversalScore(value) {
@@ -1091,7 +1183,7 @@ function elapsedMs() {
 }
 
 function sessionQuality() {
-  return state.attempted ? state.qualitySum / state.attempted : 0;
+  return state.roundWeightSum ? state.weightedQualitySum / state.roundWeightSum : 0;
 }
 
 function updateStats() {
@@ -1122,7 +1214,9 @@ function reveal() {
     : 0;
 
   state.attempted += 1;
-  state.qualitySum += quality;
+  const roundWeight = fullRoundWeight(state.current);
+  state.roundWeightSum += roundWeight;
+  state.weightedQualitySum += quality * roundWeight;
   state.timeSum += elapsed;
   if (guessed) {
     if (correct) {
@@ -1134,7 +1228,7 @@ function reveal() {
         elapsed,
         total,
         state.streak,
-        state.difficulty
+        roundWeight
       );
     } else {
       state.streak = 0;
@@ -1263,6 +1357,7 @@ function finishSession() {
     attempted: state.attempted,
     bestStreak: state.bestStreak,
     universalScore: state.universalScore,
+    sessionDifficulty: Math.round(sessionDifficultyIndex() * 100) / 100,
     settings: sessionSettingsSnapshot(),
   };
   drawStaff(previewClef(), null);
@@ -1403,7 +1498,8 @@ function startGame() {
   state.streak = 0;
   state.bestStreak = 0;
   state.round = 0;
-  state.qualitySum = 0;
+  state.weightedQualitySum = 0;
+  state.roundWeightSum = 0;
   state.timeSum = 0;
   state.universalScore = 0;
   state.answerElapsed = null;
