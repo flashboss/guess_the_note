@@ -78,6 +78,27 @@
             <button type="button" data-lang="zh" aria-pressed="false">中文</button>
             <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
           </section>
+
+          <section class="controls hof-settings-controls" data-i18n-aria="settings" aria-label="Settings">
+            <div class="tempo-field">
+              <span class="tempo-heading">
+                <span data-i18n="hallOfFameDisplayCount">Entries shown</span>
+                <strong id="hofDisplayLabel">10</strong>
+              </span>
+              <div class="tempo-stepper">
+                <input
+                  id="hofDisplayCount"
+                  type="range"
+                  min="5"
+                  max="50"
+                  step="1"
+                  value="10"
+                  data-i18n-aria="hallOfFameDisplayCount"
+                  aria-label="Entries shown"
+                />
+              </div>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -92,8 +113,8 @@
       </footer>
     </div>
 
-    <script src="js/i18n.js?v=20250901d"></script>
-    <script src="js/page-settings.js?v=20250901d"></script>
-    <script type="module" src="js/hall-of-fame-page.js?v=20250901e"></script>
+    <script src="js/i18n.js?v=20250901h"></script>
+    <script src="js/page-settings.js?v=20250901h"></script>
+    <script type="module" src="js/hall-of-fame-page.js?v=20250901h"></script>
   </body>
 </html>

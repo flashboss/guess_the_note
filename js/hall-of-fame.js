@@ -1,7 +1,10 @@
 import {
   HALL_OF_FAME_API_URL,
   HALL_OF_FAME_SUBMIT_TOKEN,
-  HALL_OF_FAME_MAX_DISPLAY,
+  SETTINGS_HALL_OF_FAME_DISPLAY,
+  HALL_OF_FAME_DISPLAY_MIN,
+  HALL_OF_FAME_DISPLAY_MAX,
+  HALL_OF_FAME_DISPLAY_DEFAULT,
   SETTINGS_HALL_OF_FAME_CACHE,
   SETTINGS_HALL_OF_FAME_LOCAL,
   SETTINGS_SOUND,
@@ -12,6 +15,26 @@ import { storageGet, storageSet, t } from "./util.js";
 import { formatUniversalScore } from "./scoring.js";
 
 const LOCAL_MAX_RECORDS = 50;
+
+function getHallOfFameDisplayLimit() {
+  const saved = Number(storageGet(SETTINGS_HALL_OF_FAME_DISPLAY));
+  if (Number.isFinite(saved)) {
+    return Math.min(
+      HALL_OF_FAME_DISPLAY_MAX,
+      Math.max(HALL_OF_FAME_DISPLAY_MIN, Math.round(saved))
+    );
+  }
+  return HALL_OF_FAME_DISPLAY_DEFAULT;
+}
+
+function setHallOfFameDisplayLimit(count) {
+  const next = Math.min(
+    HALL_OF_FAME_DISPLAY_MAX,
+    Math.max(HALL_OF_FAME_DISPLAY_MIN, Math.round(Number(count)))
+  );
+  storageSet(SETTINGS_HALL_OF_FAME_DISPLAY, String(next));
+  return next;
+}
 
 function apiEnabled() {
   return Boolean(HALL_OF_FAME_API_URL);
@@ -344,7 +367,7 @@ function formatRecordDate(iso) {
 
 function renderRecordsTable(container, records, options = {}) {
   if (!container) return;
-  const limit = options.limit ?? HALL_OF_FAME_MAX_DISPLAY;
+  const limit = options.limit ?? getHallOfFameDisplayLimit();
   const rows = sortedRecords(records).slice(0, limit);
 
   if (!rows.length) {
@@ -396,5 +419,7 @@ export {
   showCelebration,
   hideCelebration,
   showHallOfFameCelebration,
+  getHallOfFameDisplayLimit,
+  setHallOfFameDisplayLimit,
   formatRecordDate,
 };
