@@ -26,6 +26,7 @@ const state = {
   roundTimer: null,
   nextTimer: null,
   sound: true,
+  playerName: "",
   paused: false,
   pauseCount: 0,
   pauseKind: null,
@@ -60,11 +61,12 @@ const pauseOverlay = document.getElementById("pauseOverlay");
 const settingsOverlay = document.getElementById("settingsOverlay");
 const settingsBtn = document.getElementById("settingsBtn");
 const qualityHint = document.getElementById("qualityHint");
+const playerNameInput = document.getElementById("playerName");
 
 export { state };
 export const dom = {
   staff, tempo, tempoLabel, roundsInput, roundsLabel, choiceCountInput, choiceCountLabel,
   difficultyInput, difficultyLabel, overlayHint, timerFill, scoreEl, streakEl, avgTimeEl,
   progressEl, startOverlay, resultOverlay, resultGrade, resultLabel, resultUniversal,
-  resultSummary, pauseOverlay, settingsOverlay, settingsBtn, qualityHint,
+  resultSummary, pauseOverlay, settingsOverlay, settingsBtn, qualityHint, playerNameInput,
 };

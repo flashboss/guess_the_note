@@ -119,6 +119,16 @@ const SETTINGS_DIFFICULTY = "gtn-difficulty";
 const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
+const SETTINGS_PLAYER_NAME = "gtn-player-name";
+const PLAYER_NAME_MAX = 24;
+const RANDOM_NAME_ADJECTIVES = [
+  "Swift", "Clever", "Lucky", "Bold", "Grand", "Sharp", "Quick", "Noble",
+  "Brave", "Golden", "Stellar", "Mighty", "Keen", "Rapid", "Ace", "Clef",
+];
+const RANDOM_NAME_NOUNS = [
+  "Maestro", "Reader", "Solist", "Virtuoso", "Star", "Pitch", "Staff",
+  "Hero", "Legend", "Ace", "Prodigy", "Player", "Notist", "Sight",
+];
 const GRADE_ACCURACY = 0.85;
 const GRADE_SPEED = 0.15;
 const UNIVERSAL_BASE = 2500;
@@ -203,6 +213,10 @@ export {
   SETTINGS_TEMPO,
   SETTINGS_ROUNDS,
   SETTINGS_SOUND,
+  SETTINGS_PLAYER_NAME,
+  PLAYER_NAME_MAX,
+  RANDOM_NAME_ADJECTIVES,
+  RANDOM_NAME_NOUNS,
   GRADE_ACCURACY,
   GRADE_SPEED,
   UNIVERSAL_BASE,

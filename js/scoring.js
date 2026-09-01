@@ -94,6 +94,7 @@ function sessionSettingsSnapshot() {
     choiceKind: state.choiceKind,
     clefs: state.clefs.slice().sort().join(","),
     shapes: state.shapes.slice().sort().join(","),
+    playerName: state.playerName,
   };
 }
 

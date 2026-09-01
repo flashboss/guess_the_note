@@ -44,6 +44,8 @@ const I18N_STRINGS = {
     soundOn: "On",
     soundOff: "Off",
     soundAria: "Play the pitched note when it appears",
+    hallOfFameName: "Player name",
+    hallOfFameNameAria: "Name used for the hall of fame leaderboard",
     start: "Start",
     stop: "Stop",
     pause: "Pause",
@@ -144,6 +146,8 @@ const I18N_STRINGS = {
     soundOn: "Acceso",
     soundOff: "Spento",
     soundAria: "Riproduci la nota quando compare",
+    hallOfFameName: "Nome del Giocatore",
+    hallOfFameNameAria: "Nome usato in classifica",
     start: "Avvia",
     stop: "Ferma",
     pause: "Pausa",
@@ -244,6 +248,8 @@ const I18N_STRINGS = {
     soundOn: "Activado",
     soundOff: "Desactivado",
     soundAria: "Reproducir la nota cuando aparece",
+    hallOfFameName: "Nombre del jugador",
+    hallOfFameNameAria: "Nombre usado en la clasificación",
     start: "Iniciar",
     stop: "Detener",
     pause: "Pausa",
@@ -344,6 +350,8 @@ const I18N_STRINGS = {
     soundOn: "Ligado",
     soundOff: "Desligado",
     soundAria: "Tocar a nota quando aparece",
+    hallOfFameName: "Nome do jogador",
+    hallOfFameNameAria: "Nome usado na classificação",
     start: "Iniciar",
     stop: "Parar",
     pause: "Pausa",
@@ -444,6 +452,8 @@ const I18N_STRINGS = {
     soundOn: "An",
     soundOff: "Aus",
     soundAria: "Die Note abspielen, wenn sie erscheint",
+    hallOfFameName: "Spielername",
+    hallOfFameNameAria: "Name für die Bestenliste",
     start: "Starten",
     stop: "Stoppen",
     pause: "Pause",
@@ -544,6 +554,8 @@ const I18N_STRINGS = {
     soundOn: "Activé",
     soundOff: "Désactivé",
     soundAria: "Jouer la note lorsqu'elle apparaît",
+    hallOfFameName: "Nom du joueur",
+    hallOfFameNameAria: "Nom utilisé au classement",
     start: "Démarrer",
     stop: "Arrêter",
     pause: "Pause",
@@ -644,6 +656,8 @@ const I18N_STRINGS = {
     soundOn: "开",
     soundOff: "关",
     soundAria: "音符出现时播放音高",
+    hallOfFameName: "玩家名称",
+    hallOfFameNameAria: "排行榜使用的名称",
     start: "开始",
     stop: "停止",
     pause: "暂停",
@@ -744,6 +758,8 @@ const I18N_STRINGS = {
     soundOn: "オン",
     soundOff: "オフ",
     soundAria: "音符が出たときに音を鳴らす",
+    hallOfFameName: "プレイヤー名",
+    hallOfFameNameAria: "ランキングに使う名前",
     start: "開始",
     stop: "停止",
     pause: "一時停止",
@@ -868,10 +884,12 @@ const I18n = {
     setNamedMeta("twitter:description", pageDescription);
 
     document.querySelectorAll("[data-i18n]").forEach((el) => {
-      el.textContent = this.t(el.dataset.i18n);
+      const key = el.getAttribute("data-i18n");
+      if (key) el.textContent = this.t(key);
     });
     document.querySelectorAll("[data-i18n-aria]").forEach((el) => {
-      el.setAttribute("aria-label", this.t(el.dataset.i18nAria));
+      const key = el.getAttribute("data-i18n-aria");
+      if (key) el.setAttribute("aria-label", this.t(key));
     });
     document.querySelectorAll("[data-lang]").forEach((btn) => {
       btn.classList.toggle("is-active", btn.dataset.lang === this.locale);

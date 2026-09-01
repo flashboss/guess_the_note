@@ -3,12 +3,14 @@ import {
   CLEFS, SHAPES,
   SETTINGS_CLEF, SETTINGS_SHAPES, SETTINGS_ANSWER_MODE, SETTINGS_CHOICE_COUNT,
   SETTINGS_CHOICE_KIND, SETTINGS_DIFFICULTY, SETTINGS_TEMPO, SETTINGS_ROUNDS, SETTINGS_SOUND,
+  SETTINGS_PLAYER_NAME, PLAYER_NAME_MAX, RANDOM_NAME_ADJECTIVES, RANDOM_NAME_NOUNS,
   DIFFICULTY_MIN, DIFFICULTY_MAX,
 } from "./constants.js";
 import { state, dom } from "./state.js";
 const {
   tempo, tempoLabel, roundsInput, roundsLabel, choiceCountInput, choiceCountLabel,
   difficultyInput, difficultyLabel, overlayHint, settingsOverlay, settingsBtn,
+  playerNameInput,
 } = dom;
 import { t, storageGet, storageSet, notifyUi, isNotesMode, formatMessage } from "./util.js";
 import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone } from "./game.js";
@@ -21,6 +23,7 @@ function openSettings() {
   if ((state.running && !state.paused) || !settingsOverlay) return;
   settingsOverlay.classList.remove("is-hidden");
   if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "true");
+  syncHallOfFameFieldLabels();
   notifyUi();
 }
 
@@ -211,6 +214,62 @@ function setRounds(count) {
   updateOverlayHint();
 }
 
+function normalizePlayerName(raw) {
+  return String(raw || "")
+    .replace(/[\u0000-\u001f\u007f]/g, "")
+    .replace(/\s+/g, " ")
+    .trim()
+    .slice(0, PLAYER_NAME_MAX);
+}
+
+function generateRandomPlayerName() {
+  const adj =
+    RANDOM_NAME_ADJECTIVES[Math.floor(Math.random() * RANDOM_NAME_ADJECTIVES.length)];
+  const noun = RANDOM_NAME_NOUNS[Math.floor(Math.random() * RANDOM_NAME_NOUNS.length)];
+  const suffix = Math.random() < 0.35 ? ` ${Math.floor(Math.random() * 90) + 10}` : "";
+  return normalizePlayerName(`${adj} ${noun}${suffix}`);
+}
+
+function syncPlayerNameInput() {
+  if (!playerNameInput) return;
+  playerNameInput.value = state.playerName;
+}
+
+function translatedLabel(key, fallback) {
+  if (!window.I18n) return fallback;
+  const value = window.I18n.t(key);
+  return value === key ? fallback : value;
+}
+
+function syncHallOfFameFieldLabels() {
+  const label = document.getElementById("playerNameLabel");
+  if (label) {
+    label.textContent = translatedLabel(
+      "hallOfFameName",
+      label.dataset.defaultLabel || "Player name"
+    );
+  }
+  if (playerNameInput) {
+    playerNameInput.setAttribute(
+      "aria-label",
+      translatedLabel("hallOfFameNameAria", "Player name")
+    );
+  }
+}
+
+function setPlayerName(name, { persist = true, fallbackRandom = true } = {}) {
+  const next = normalizePlayerName(name);
+  state.playerName = next || (fallbackRandom ? generateRandomPlayerName() : "");
+  syncPlayerNameInput();
+  if (persist && state.playerName) storageSet(SETTINGS_PLAYER_NAME, state.playerName);
+  notifyUi();
+}
+
+function loadPlayerName() {
+  const saved = normalizePlayerName(storageGet(SETTINGS_PLAYER_NAME));
+  setPlayerName(saved || generateRandomPlayerName(), { persist: !saved });
+}
+
 function loadSettings() {
   state.clefs = parseStoredList(storageGet(SETTINGS_CLEF), CLEFS, ["treble", "bass"]);
   syncClefButtons();
@@ -230,6 +289,7 @@ function loadSettings() {
   const savedSound = storageGet(SETTINGS_SOUND);
   if (savedSound === "0" || savedSound === "1") setSound(savedSound === "1");
   else syncSoundButton();
+  loadPlayerName();
 }
 
 function syncSoundButton() {
@@ -276,4 +336,10 @@ export {
   loadSettings,
   syncSoundButton,
   setSound,
+  normalizePlayerName,
+  generateRandomPlayerName,
+  syncPlayerNameInput,
+  syncHallOfFameFieldLabels,
+  setPlayerName,
+  loadPlayerName,
 };

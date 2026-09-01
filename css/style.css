@@ -418,6 +418,34 @@ input[type="range"] {
   color: var(--muted);
 }
 
+.text-field {
+  display: grid;
+  gap: 8px;
+}
+
+.text-field-label {
+  font-family: Outfit, sans-serif;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+
+.text-field input[type="text"] {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 11px 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(196, 163, 90, 0.28);
+  background: rgba(20, 15, 12, 0.4);
+  color: var(--paper);
+  font: inherit;
+}
+
+.text-field input[type="text"]::placeholder {
+  color: rgba(243, 230, 201, 0.45);
+}
+
 .stage {
   display: grid;
   gap: 18px;
@@ -514,17 +542,11 @@ input[type="range"] {
 .pause-overlay {
   position: absolute;
   inset: 0;
-  display: grid;
-  align-content: end;
-  justify-items: center;
-  padding: 0 28px 40px;
   background: linear-gradient(
     180deg,
     rgba(243, 230, 201, 0.12) 35%,
     rgba(243, 230, 201, 0.9) 100%
   );
-  color: var(--ink);
-  text-align: center;
   z-index: 2;
   pointer-events: none;
 }
@@ -551,9 +573,14 @@ input[type="range"] {
 }
 
 .pause-overlay p {
+  position: absolute;
+  left: 8%;
+  bottom: 40px;
   margin: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: 1.8rem;
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-style: italic;
+  color: var(--ink);
 }
 
 .start-overlay p {
@@ -888,6 +915,12 @@ html.is-tv .tempo-field input {
   pointer-events: none;
 }
 
+html.is-tv .text-field input[type="text"] {
+  min-height: 52px;
+  font-size: 1.25rem;
+  padding: 12px 16px;
+}
+
 html.is-tv .stage {
   flex: 1;
   min-height: 0;
@@ -916,9 +949,14 @@ html.is-tv .quality-hint {
   font-size: 2.4rem;
 }
 
-html.is-tv .start-overlay,
-html.is-tv .pause-overlay {
+html.is-tv .start-overlay {
   padding: 0 40px 52px;
+}
+
+html.is-tv .pause-overlay p {
+  left: 6%;
+  bottom: 52px;
+  font-size: 2.4rem;
 }
 
 html.is-tv .start-overlay p {

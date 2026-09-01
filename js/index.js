@@ -16,6 +16,9 @@ import {
   syncAnswerModeButtons,
   syncChoiceKindButtons,
   syncSoundButton,
+  setPlayerName,
+  syncPlayerNameInput,
+  syncHallOfFameFieldLabels,
   settingsAreOpen,
   openSettings,
   closeSettings,
@@ -52,6 +55,7 @@ const {
   resultOverlay,
   settingsBtn,
   settingsOverlay,
+  playerNameInput,
 } = dom;
 
 document.querySelectorAll("[data-clef]").forEach((btn) => {
@@ -92,6 +96,14 @@ difficultyInput?.addEventListener("input", () => {
 
 choiceCountInput?.addEventListener("input", () => {
   setChoiceCount(Number(choiceCountInput.value));
+});
+
+playerNameInput?.addEventListener("input", () => {
+  setPlayerName(playerNameInput.value, { fallbackRandom: false });
+});
+
+playerNameInput?.addEventListener("blur", () => {
+  setPlayerName(playerNameInput.value);
 });
 
 document.getElementById("soundBtn")?.addEventListener("click", () => {
@@ -139,6 +151,8 @@ function refreshLabels() {
   setDifficulty(state.difficulty);
   syncAnswerModeButtons();
   syncChoiceKindButtons();
+  syncPlayerNameInput();
+  syncHallOfFameFieldLabels();
   updateStats();
   relabelChoices();
   syncQualityHint();
@@ -170,6 +184,7 @@ window.GuessTheNote = {
   settingsAreOpen,
   getState: () => state,
   getLastResult: () => state.lastResult,
+  getPlayerName: () => state.playerName,
   formatUniversalScore,
   showingResults: () => resultOverlay && !resultOverlay.classList.contains("is-hidden"),
   refreshLabels,

@@ -1182,6 +1182,7 @@ function finishSession() {
     pauseCount: penalized.pauseCount,
     pausePenaltyPercent: penalized.pausePenaltyPercent,
     sessionDifficulty: Math.round(sessionDifficultyIndex() * 100) / 100,
+    playerName: state.playerName,
     settings: sessionSettingsSnapshot(),
   };
   drawStaff(previewClef(), null);
