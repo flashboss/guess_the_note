@@ -1147,6 +1147,7 @@ function renderResults() {
 }
 
 function showResultOverlay() {
+  hideCelebration();
   renderResults();
   startOverlay.classList.add("is-hidden");
   if (resultOverlay) resultOverlay.classList.remove("is-hidden");

@@ -128,10 +128,6 @@ document.getElementById("playAgainBtn")?.addEventListener("click", () => {
   hideCelebration();
   startGame();
 });
-document.getElementById("hofCelebrationClose")?.addEventListener("click", hideCelebration);
-document.getElementById("hallOfFameCelebration")?.addEventListener("click", (event) => {
-  if (event.target.id === "hallOfFameCelebration") hideCelebration();
-});
 resultOverlay?.addEventListener("click", (event) => {
   if (event.target !== resultOverlay) return;
   showIdleOverlay();
@@ -169,15 +165,22 @@ function refreshLabels() {
   relabelChoices();
   syncQualityHint();
   if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) renderResults();
+  const hofBadge = document.getElementById("resultHofBadge");
+  const hofBadgeText = document.getElementById("resultHofBadgeText");
+  const hofPendingText = document.getElementById("resultHofPendingText");
+  if (hofPendingText && !document.getElementById("resultHofPending")?.classList.contains("is-hidden")) {
+    hofPendingText.textContent = window.I18n.t("hallOfFameChecking");
+  }
+  if (hofBadge && hofBadgeText && !hofBadge.classList.contains("is-hidden")) {
+    hofBadgeText.textContent = window.I18n.t(
+      hofBadge.dataset.newHigh === "1" ? "hallOfFameNewRecord" : "hallOfFameQualified"
+    );
+  }
 }
 
-document.querySelectorAll("[data-lang]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    window.I18n.setLocale(btn.dataset.lang);
-    window.I18n.apply();
-    refreshLabels();
-    notifyUi();
-  });
+window.I18n?.bindLangButtons(() => {
+  refreshLabels();
+  notifyUi();
 });
 
 window.addEventListener("gtn:i18n", refreshLabels);

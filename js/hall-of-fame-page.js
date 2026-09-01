@@ -31,19 +31,10 @@ function applyPageCopy() {
   document.title = t("hallOfFameTitle");
 }
 
-document.querySelectorAll("[data-lang]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    window.I18n.setLocale(btn.dataset.lang);
-    window.I18n.apply();
-    applyPageCopy();
-    refreshBoard();
-  });
+window.addEventListener("gtn:i18n", () => {
+  applyPageCopy();
+  refreshBoard();
 });
-
-document.getElementById("hofCelebrationClose")?.addEventListener("click", () => {
-  document.getElementById("hallOfFameCelebration")?.classList.add("is-hidden");
-});
-
 if (window.I18n) window.I18n.apply();
 applyPageCopy();
 refreshBoard();

@@ -62,13 +62,7 @@ function syncHomeJsonLd() {
   });
 }
 
-document.querySelectorAll("[data-lang]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    window.I18n.setLocale(btn.dataset.lang);
-    window.I18n.apply();
-    syncHomeJsonLd();
-  });
-});
+window.addEventListener("gtn:i18n", syncHomeJsonLd);
 
 if (window.I18n) window.I18n.apply();
 syncHomeJsonLd();

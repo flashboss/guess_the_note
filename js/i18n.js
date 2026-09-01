@@ -73,6 +73,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "Local device only — configure the API URL for a global board.",
     hallOfFameCachedNote: "Showing cached scores — live data unavailable.",
     hallOfFameNewRecord: "New high score!",
+    hallOfFameQualified: "You're on the hall of fame!",
+    hallOfFameChecking: "Checking the hall of fame…",
     hallOfFameViewLink: "Hall of fame",
     homeLead: "A sight-reading drill. Choose how many notes to play, name each one before the timer ends, then get a grade from 0 to 10.",
     homeFeatureClefTitle: "Treble, bass, or both",
@@ -190,6 +192,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "Solo su questo dispositivo — configura l’URL API per una classifica globale.",
     hallOfFameCachedNote: "Dati in cache — connessione non disponibile.",
     hallOfFameNewRecord: "Nuovo record!",
+    hallOfFameQualified: "Sei in classifica!",
+    hallOfFameChecking: "Verifica classifica in corso…",
     hallOfFameViewLink: "Classifica",
     homeLead: "Lettura a prima vista con un numero di prove a scelta. Nomina la nota prima che scada il tempo e ricevi un voto da 0 a 10.",
     homeFeatureClefTitle: "Violino, basso o entrambe",
@@ -307,6 +311,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "Solo en este dispositivo — configura la URL de la API para una tabla global.",
     hallOfFameCachedNote: "Datos en caché — datos en vivo no disponibles.",
     hallOfFameNewRecord: "¡Nuevo récord!",
+    hallOfFameQualified: "¡Estás en la clasificación!",
+    hallOfFameChecking: "Comprobando la clasificación…",
     hallOfFameViewLink: "Clasificación",
     homeLead: "Lectura a vista. Elige cuántas notas tocar, nombra cada una antes de que se acabe el tiempo y recibe una nota de 0 a 10.",
     homeFeatureClefTitle: "Sol, fa o ambas",
@@ -424,6 +430,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "Apenas neste dispositivo — configure o URL da API para uma tabela global.",
     hallOfFameCachedNote: "Dados em cache — dados ao vivo indisponíveis.",
     hallOfFameNewRecord: "Novo recorde!",
+    hallOfFameQualified: "Estás na classificação!",
+    hallOfFameChecking: "A verificar a classificação…",
     hallOfFameViewLink: "Classificação",
     homeLead: "Leitura à primeira vista. Escolhe quantas notas tocar, diz o nome de cada uma antes do tempo acabar e recebe uma nota de 0 a 10.",
     homeFeatureClefTitle: "Sol, fá ou ambas",
@@ -541,6 +549,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "Nur auf diesem Gerät — API-URL für eine globale Liste konfigurieren.",
     hallOfFameCachedNote: "Zwischengespeicherte Daten — Live-Daten nicht verfügbar.",
     hallOfFameNewRecord: "Neuer Rekord!",
+    hallOfFameQualified: "Du stehst in der Bestenliste!",
+    hallOfFameChecking: "Bestenliste wird geprüft…",
     hallOfFameViewLink: "Bestenliste",
     homeLead: "Noten vom Blatt. Wähle, wie viele Noten du spielst, benenne jede, bevor die Zeit abläuft, und erhalte eine Note von 0 bis 10.",
     homeFeatureClefTitle: "Violine, Bass oder beides",
@@ -658,6 +668,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "Appareil local uniquement — configurez l’URL API pour un classement global.",
     hallOfFameCachedNote: "Données en cache — données en direct indisponibles.",
     hallOfFameNewRecord: "Nouveau record !",
+    hallOfFameQualified: "Tu es au classement !",
+    hallOfFameChecking: "Vérification du classement…",
     hallOfFameViewLink: "Classement",
     homeLead: "Lecture à vue. Choisis le nombre de notes, nomme chacune avant la fin du temps et reçois une note de 0 à 10.",
     homeFeatureClefTitle: "Sol, fa ou les deux",
@@ -775,6 +787,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "仅限本设备 — 配置 API URL 以启用全球排行榜。",
     hallOfFameCachedNote: "显示缓存数据 — 无法获取实时数据。",
     hallOfFameNewRecord: "新纪录！",
+    hallOfFameQualified: "你上榜了！",
+    hallOfFameChecking: "正在核对排行榜…",
     hallOfFameViewLink: "排行榜",
     homeLead: "视奏练习。自选题目数量，在计时结束前说出每个音符，然后获得 0 到 10 的分数。",
     homeFeatureClefTitle: "高音、低音或两者",
@@ -892,6 +906,8 @@ const I18N_STRINGS = {
     hallOfFameLocalNote: "この端末のみ — グローバルボードには API URL を設定してください。",
     hallOfFameCachedNote: "キャッシュを表示中 — ライブデータは利用できません。",
     hallOfFameNewRecord: "新記録！",
+    hallOfFameQualified: "ランキング入り！",
+    hallOfFameChecking: "ランキングを確認中…",
     hallOfFameViewLink: "ランキング",
     homeLead: "初見練習。問題数を選び、制限時間内に各音符を答え、0から10の評価を受けます。",
     homeFeatureClefTitle: "ト音、ヘ音、または両方",
@@ -1016,6 +1032,18 @@ const I18n = {
       btn.setAttribute("aria-pressed", String(btn.dataset.lang === this.locale));
     });
     window.dispatchEvent(new Event("gtn:i18n"));
+  },
+
+  bindLangButtons(onLocaleChange) {
+    document.querySelectorAll("[data-lang]").forEach((btn) => {
+      if (btn.dataset.langBound === "1") return;
+      btn.dataset.langBound = "1";
+      btn.addEventListener("click", () => {
+        I18n.setLocale(btn.dataset.lang);
+        I18n.apply();
+        if (typeof onLocaleChange === "function") onLocaleChange();
+      });
+    });
   },
 };
 

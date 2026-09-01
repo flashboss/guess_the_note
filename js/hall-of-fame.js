@@ -7,6 +7,7 @@ import {
   SETTINGS_SOUND,
   PLAYER_NAME_MAX,
 } from "./constants.js";
+import { startFireworks, stopFireworks } from "./fireworks.js";
 import { storageGet, storageSet, t } from "./util.js";
 import { formatUniversalScore } from "./scoring.js";
 
@@ -198,44 +199,101 @@ function qualifiesForBoard(score, records) {
   return value >= cutoff;
 }
 
-function celebrationEl() {
-  return document.getElementById("hallOfFameCelebration");
+function celebrationSlot() {
+  return document.getElementById("resultHofSlot");
+}
+
+function celebrationPending() {
+  return document.getElementById("resultHofPending");
+}
+
+function celebrationPendingText() {
+  return document.getElementById("resultHofPendingText");
+}
+
+function celebrationBadge() {
+  return document.getElementById("resultHofBadge");
+}
+
+function celebrationBadgeText() {
+  return document.getElementById("resultHofBadgeText");
 }
 
 function playCelebrationTone() {
   if (storageGet(SETTINGS_SOUND) === "0") return;
   try {
-    const ctx = new AudioContext();
-    const notes = [523.25, 659.25, 783.99, 1046.5];
-    notes.forEach((freq, index) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
+    const audio = new AudioContext();
+    const melody = [
+      { freq: 523.25, at: 0, dur: 0.22 },
+      { freq: 659.25, at: 0.14, dur: 0.22 },
+      { freq: 783.99, at: 0.28, dur: 0.24 },
+      { freq: 1046.5, at: 0.44, dur: 0.34 },
+      { freq: 1174.66, at: 0.62, dur: 0.28 },
+      { freq: 1318.51, at: 0.8, dur: 0.5 },
+    ];
+    melody.forEach(({ freq, at, dur }) => {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
       osc.type = "triangle";
       osc.frequency.value = freq;
       gain.gain.value = 0.0001;
       osc.connect(gain);
-      gain.connect(ctx.destination);
-      const start = ctx.currentTime + index * 0.12;
-      gain.gain.exponentialRampToValueAtTime(0.08, start + 0.02);
-      gain.gain.exponentialRampToValueAtTime(0.0001, start + 0.35);
+      gain.connect(audio.destination);
+      const start = audio.currentTime + at;
+      gain.gain.exponentialRampToValueAtTime(0.1, start + 0.03);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + dur);
       osc.start(start);
-      osc.stop(start + 0.36);
+      osc.stop(start + dur + 0.02);
     });
-    window.setTimeout(() => ctx.close(), 1200);
+    window.setTimeout(() => audio.close(), 1800);
   } catch {
     /* ignore */
   }
 }
 
-function showCelebration() {
-  const overlay = celebrationEl();
-  if (!overlay) return;
-  overlay.classList.remove("is-hidden");
+function showHofPending() {
+  const slot = celebrationSlot();
+  const pending = celebrationPending();
+  const badge = celebrationBadge();
+  const label = celebrationPendingText();
+  if (label) label.textContent = t("hallOfFameChecking");
+  slot?.classList.remove("is-hidden");
+  pending?.classList.remove("is-hidden");
+  badge?.classList.add("is-hidden");
+}
+
+function hideHofStatus() {
+  celebrationSlot()?.classList.add("is-hidden");
+  celebrationPending()?.classList.add("is-hidden");
+  const badge = celebrationBadge();
+  badge?.classList.add("is-hidden");
+  if (badge) delete badge.dataset.newHigh;
+}
+
+function showHallOfFameCelebration(isNewHigh) {
+  const pending = celebrationPending();
+  const badge = celebrationBadge();
+  const label = celebrationBadgeText();
+  pending?.classList.add("is-hidden");
+  if (badge) {
+    badge.dataset.newHigh = isNewHigh ? "1" : "0";
+    badge.classList.remove("is-hidden");
+  }
+  if (label) {
+    label.textContent = t(isNewHigh ? "hallOfFameNewRecord" : "hallOfFameQualified");
+  }
+  celebrationSlot()?.classList.remove("is-hidden");
+  startFireworks();
   playCelebrationTone();
 }
 
 function hideCelebration() {
-  celebrationEl()?.classList.add("is-hidden");
+  hideHofStatus();
+  stopFireworks();
+}
+
+function showCelebration() {
+  showHallOfFameCelebration(true);
 }
 
 async function processSessionResult(result) {
@@ -248,18 +306,28 @@ async function processSessionResult(result) {
   };
   if (!entry.name || entry.score <= 0) return null;
 
+  showHofPending();
+
   let board;
   try {
     board = await loadRecords();
   } catch {
+    hideHofStatus();
     return null;
   }
 
   const records = Array.isArray(board.records) ? board.records : [];
-  if (!qualifiesForBoard(entry.score, records)) return null;
+  if (!qualifiesForBoard(entry.score, records)) {
+    hideHofStatus();
+    return null;
+  }
 
   const response = await submitRecord(entry);
-  if (response?.ok && response.isNewHigh) showCelebration();
+  if (response?.ok && response.added) {
+    showHallOfFameCelebration(Boolean(response.isNewHigh));
+  } else {
+    hideHofStatus();
+  }
   return response;
 }
 
@@ -290,7 +358,6 @@ function renderRecordsTable(container, records, options = {}) {
         <th scope="col">${t("hallOfFameRank")}</th>
         <th scope="col">${t("hallOfFamePlayer")}</th>
         <th scope="col">${t("hallOfFameScore")}</th>
-        <th scope="col">${t("hallOfFameGrade")}</th>
         <th scope="col">${t("hallOfFameDate")}</th>
       </tr>
     </thead>
@@ -303,7 +370,6 @@ function renderRecordsTable(container, records, options = {}) {
         <td>${index + 1}</td>
         <td>${escapeHtml(row.name)}</td>
         <td>${escapeHtml(formatUniversalScore(row.score))}</td>
-        <td>${escapeHtml(String(row.grade ?? "—"))}</td>
         <td>${escapeHtml(formatRecordDate(row.at))}</td>
       </tr>
     `
@@ -329,5 +395,6 @@ export {
   renderRecordsTable,
   showCelebration,
   hideCelebration,
+  showHallOfFameCelebration,
   formatRecordDate,
 };

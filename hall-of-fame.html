@@ -35,21 +35,51 @@
             </p>
           </div>
         </div>
-        <a class="home-cta home-cta-secondary hof-play-link" href="play.html" data-i18n="homePlay">
-          Play in the browser
-        </a>
+        <div class="toolbar page-toolbar">
+          <a class="home-cta home-cta-secondary hof-play-link" href="play.html" data-i18n="homePlay">
+            Play in the browser
+          </a>
+          <button
+            type="button"
+            class="settings-btn"
+            id="settingsBtn"
+            aria-haspopup="dialog"
+            aria-expanded="false"
+            aria-controls="settingsOverlay"
+            data-i18n-aria="settings"
+            aria-label="Settings"
+          >
+            ⚙
+          </button>
+        </div>
       </header>
 
-      <section class="lang-bar" data-i18n-aria="language" aria-label="Language">
-        <button type="button" data-lang="en" aria-pressed="false">EN</button>
-        <button type="button" data-lang="it" aria-pressed="false">IT</button>
-        <button type="button" data-lang="es" aria-pressed="false">ES</button>
-        <button type="button" data-lang="pt" aria-pressed="false">PT</button>
-        <button type="button" data-lang="de" aria-pressed="false">DE</button>
-        <button type="button" data-lang="fr" aria-pressed="false">FR</button>
-        <button type="button" data-lang="zh" aria-pressed="false">中文</button>
-        <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
-      </section>
+      <div class="settings-overlay is-hidden" id="settingsOverlay">
+        <div
+          class="settings-dialog"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="settingsTitle"
+        >
+          <div class="settings-head">
+            <h2 id="settingsTitle" data-i18n="settings">Settings</h2>
+            <button type="button" class="settings-close" id="settingsClose" data-i18n="close">
+              Close
+            </button>
+          </div>
+
+          <section class="lang-bar" data-i18n-aria="language" aria-label="Language">
+            <button type="button" data-lang="en" aria-pressed="false">EN</button>
+            <button type="button" data-lang="it" aria-pressed="false">IT</button>
+            <button type="button" data-lang="es" aria-pressed="false">ES</button>
+            <button type="button" data-lang="pt" aria-pressed="false">PT</button>
+            <button type="button" data-lang="de" aria-pressed="false">DE</button>
+            <button type="button" data-lang="fr" aria-pressed="false">FR</button>
+            <button type="button" data-lang="zh" aria-pressed="false">中文</button>
+            <button type="button" data-lang="ja" aria-pressed="false">日本語</button>
+          </section>
+        </div>
+      </div>
 
       <main class="hof-main">
         <p class="hof-status" id="hofStatus" aria-live="polite"></p>
@@ -62,7 +92,8 @@
       </footer>
     </div>
 
-    <script src="js/i18n.js?v=20250901"></script>
-    <script type="module" src="js/hall-of-fame-page.js?v=20250901b"></script>
+    <script src="js/i18n.js?v=20250901d"></script>
+    <script src="js/page-settings.js?v=20250901d"></script>
+    <script type="module" src="js/hall-of-fame-page.js?v=20250901e"></script>
   </body>
 </html>
