@@ -854,6 +854,8 @@ html.is-tv .settings-btn {
 html.is-tv .settings-overlay,
 html.is-tv .result-overlay {
   position: absolute;
+  inset: 0;
+  z-index: 40;
 }
 
 html.is-tv .settings-dialog {
