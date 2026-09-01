@@ -99,7 +99,11 @@ choiceCountInput?.addEventListener("input", () => {
 });
 
 playerNameInput?.addEventListener("input", () => {
-  setPlayerName(playerNameInput.value, { fallbackRandom: false });
+  setPlayerName(playerNameInput.value, {
+    fallbackRandom: false,
+    notify: false,
+    syncInput: false,
+  });
 });
 
 playerNameInput?.addEventListener("blur", () => {

@@ -1222,16 +1222,19 @@ function syncPlayButton() {
   playBtn.setAttribute("aria-label", label);
   playBtn.title = label;
   playIcon.textContent = state.running ? "■" : "▶";
-  if (settingsBtn) settingsBtn.disabled = state.running && !state.paused;
+  if (settingsBtn) {
+    const isTv = document.documentElement.classList.contains("is-tv");
+    settingsBtn.disabled = !isTv && state.running && !state.paused;
+  }
   syncPauseButton();
 }
 
-function pauseGame() {
+function pauseGame(options = {}) {
   if (!state.running || state.paused) return;
   state.pauseCount += 1;
   state.paused = true;
   stopTone();
-  closeSettings();
+  if (!options.keepSettings) closeSettings();
   if (state.locked) {
     state.pauseKind = "next";
     state.pauseRemaining = Math.max(0, state.nextDueAt - Date.now());

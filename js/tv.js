@@ -13,6 +13,10 @@
     return [...document.querySelectorAll(".note-btn")];
   }
 
+  function isTextField(el) {
+    return el?.tagName === "INPUT" && (el.type === "text" || el.type === "search");
+  }
+
   function visibleFocusables() {
     const game = api();
     const running = game && game.getState().running;
@@ -26,7 +30,12 @@
     }
     if (running) {
       const enabled = noteButtons().filter((btn) => !btn.disabled);
-      return enabled.length ? enabled : noteButtons();
+      const notes = enabled.length ? enabled : noteButtons();
+      const toolbar = [
+        document.getElementById("settingsBtn"),
+        document.getElementById("pauseBtn"),
+      ].filter(Boolean);
+      return [...toolbar, ...notes];
     }
 
     if (game && game.settingsAreOpen()) {
@@ -41,6 +50,7 @@
         document.getElementById("rounds"),
         document.getElementById("tempo"),
         document.getElementById("soundBtn"),
+        document.getElementById("playerName"),
         document.getElementById("settingsClose"),
       ].filter((el) => el && !el.closest(".is-hidden") && !el.closest("[hidden]"));
     }
@@ -142,6 +152,15 @@
     api()?.unlockAudio?.();
     const key = event.key;
     const code = event.keyCode;
+    const active = document.activeElement;
+
+    if (isTextField(active)) {
+      if (code === 10009 || key === "XF86Back" || key === "Escape") {
+        event.preventDefault();
+        active.blur();
+      }
+      return;
+    }
 
     if (key === "ArrowLeft" || code === 37) {
       event.preventDefault();
@@ -226,6 +245,8 @@
 
   window.addEventListener("gtn:ui", () => {
     const game = api();
+    const active = document.activeElement;
+    if (isTextField(active)) return;
     const items = visibleFocusables();
     if (game && game.showingResults()) {
       focusEl(document.getElementById("playAgainBtn"));

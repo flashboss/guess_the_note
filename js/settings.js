@@ -13,18 +13,29 @@ const {
   playerNameInput,
 } = dom;
 import { t, storageGet, storageSet, notifyUi, isNotesMode, formatMessage } from "./util.js";
-import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone } from "./game.js";
+import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone, pauseGame } from "./game.js";
 
 function settingsAreOpen() {
   return settingsOverlay && !settingsOverlay.classList.contains("is-hidden");
 }
 
+function focusSettingsDialog() {
+  const first =
+    document.querySelector("#settingsOverlay [data-lang]") ||
+    document.getElementById("settingsClose");
+  first?.focus();
+}
+
 function openSettings() {
-  if ((state.running && !state.paused) || !settingsOverlay) return;
+  if (!settingsOverlay) return;
+  if (state.running && !state.paused) {
+    pauseGame({ keepSettings: true });
+  }
   settingsOverlay.classList.remove("is-hidden");
   if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "true");
   syncHallOfFameFieldLabels();
   notifyUi();
+  requestAnimationFrame(focusSettingsDialog);
 }
 
 function closeSettings() {
@@ -232,7 +243,9 @@ function generateRandomPlayerName() {
 
 function syncPlayerNameInput() {
   if (!playerNameInput) return;
-  playerNameInput.value = state.playerName;
+  if (playerNameInput.value !== state.playerName) {
+    playerNameInput.value = state.playerName;
+  }
 }
 
 function translatedLabel(key, fallback) {
@@ -257,12 +270,12 @@ function syncHallOfFameFieldLabels() {
   }
 }
 
-function setPlayerName(name, { persist = true, fallbackRandom = true } = {}) {
+function setPlayerName(name, { persist = true, fallbackRandom = true, notify = true, syncInput = true } = {}) {
   const next = normalizePlayerName(name);
   state.playerName = next || (fallbackRandom ? generateRandomPlayerName() : "");
-  syncPlayerNameInput();
+  if (syncInput) syncPlayerNameInput();
   if (persist && state.playerName) storageSet(SETTINGS_PLAYER_NAME, state.playerName);
-  notifyUi();
+  if (notify) notifyUi();
 }
 
 function loadPlayerName() {
