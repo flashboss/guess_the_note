@@ -167,13 +167,13 @@ const QUALITY_WEIGHT = {
 };
 const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
 const LINE_GAP = 20;
-const TOP_LINE_Y = 78;
+const TOP_LINE_Y = 100;
 const BOTTOM_LINE_Y = TOP_LINE_Y + 4 * LINE_GAP;
 const NOTE_X = 430;
 
 const CLEF_RANGES = {
-  treble: { min: 0, max: 12, bottomStep: 2, topStep: 10, middleStep: 6 },
-  bass: { min: -12, max: 0, bottomStep: -10, topStep: -2, middleStep: -6 },
+  treble: { min: -6, max: 18, bottomStep: 2, topStep: 10, middleStep: 6 },
+  bass: { min: -18, max: 6, bottomStep: -10, topStep: -2, middleStep: -6 },
 };
 
 export {
