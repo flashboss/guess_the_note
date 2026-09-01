@@ -82,6 +82,7 @@ const GRADE_SPEED = 0.15;
 const UNIVERSAL_BASE = 2500;
 const UNIVERSAL_STREAK_STEP = 500;
 const UNIVERSAL_SPEED_DIVISOR = 2;
+const PAUSE_QUALITY_FACTOR = 0.06;
 
 // Difficulty ladder (single unified scale for grade and universal score).
 // Shape kind: note < dyad < chord < seventh < ninth.
@@ -152,6 +153,7 @@ const state = {
   nextTimer: null,
   sound: true,
   paused: false,
+  pauseCount: 0,
   pauseKind: null,
   pauseRemaining: 0,
   timerStartedAt: 0,
@@ -1293,6 +1295,21 @@ function sessionQuality() {
   return state.roundWeightSum ? state.weightedQualitySum / state.roundWeightSum : 0;
 }
 
+function pauseScoreFactor() {
+  const pauses = state.pauseCount || 0;
+  return Math.max(0, 1 - pauses * PAUSE_QUALITY_FACTOR);
+}
+
+function applyPausePenalty(quality, universalScore) {
+  const factor = pauseScoreFactor();
+  return {
+    quality: quality * factor,
+    universalScore: Math.round(universalScore * factor),
+    pauseCount: state.pauseCount || 0,
+    pausePenaltyPercent: Math.round((1 - factor) * 100),
+  };
+}
+
 function updateStats() {
   scoreEl.textContent = String(state.score);
   streakEl.textContent = String(state.streak);
@@ -1421,12 +1438,19 @@ function renderResults() {
   if (resultUniversal) {
     resultUniversal.textContent = formatUniversalScore(result.universalScore);
   }
-  resultSummary.textContent = formatMessage("resultSummary", {
+  let summary = formatMessage("resultSummary", {
     score: result.score,
     total: result.attempted,
     accuracy: result.percent,
     streak: result.bestStreak,
   });
+  if (result.pauseCount > 0) {
+    summary += ` · ${formatMessage("resultPausePenalty", {
+      count: result.pauseCount,
+      penalty: result.pausePenaltyPercent,
+    })}`;
+  }
+  resultSummary.textContent = summary;
 }
 
 function showResultOverlay() {
@@ -1454,7 +1478,8 @@ function finishSession() {
     btn.disabled = true;
     btn.classList.remove("is-picked");
   });
-  const quality = sessionQuality();
+  const penalized = applyPausePenalty(sessionQuality(), state.universalScore);
+  const quality = penalized.quality;
   const percent = Math.round(quality * 100);
   const grade = Math.max(0, Math.min(10, Math.round(quality * 10)));
   state.lastResult = {
@@ -1463,7 +1488,9 @@ function finishSession() {
     score: state.score,
     attempted: state.attempted,
     bestStreak: state.bestStreak,
-    universalScore: state.universalScore,
+    universalScore: penalized.universalScore,
+    pauseCount: penalized.pauseCount,
+    pausePenaltyPercent: penalized.pausePenaltyPercent,
     sessionDifficulty: Math.round(sessionDifficultyIndex() * 100) / 100,
     settings: sessionSettingsSnapshot(),
   };
@@ -1510,6 +1537,7 @@ function syncPlayButton() {
 
 function pauseGame() {
   if (!state.running || state.paused) return;
+  state.pauseCount += 1;
   state.paused = true;
   stopTone();
   closeSettings();
@@ -1599,6 +1627,7 @@ function startGame() {
   unlockAudio();
   state.running = true;
   state.paused = false;
+  state.pauseCount = 0;
   hidePauseOverlay();
   state.score = 0;
   state.attempted = 0;
