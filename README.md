@@ -16,8 +16,8 @@ Enable **GitHub Pages** on the repository with source **GitHub Actions**. The wo
 
 Open `index.html` for the homepage, or `play.html` for the game (or serve the folder with any static file server).
 
-1. Open settings and choose the clef, the shapes (notes, dyads, triads, sevenths, ninths), difficulty, how to answer, tempo, and number of rounds.
-2. Set **difficulty** from 1 (simplest notes) to 10 (full range, inversions, accidentals, and rarer chords). Set **time between notes** — a shorter interval is also harder.
+1. Open settings and choose the clef, exercise type (notes and/or chords), difficulty, how to answer, tempo, and number of rounds.
+2. Set **difficulty** from 1 (simplest notes) to 10 (full range, inversions, accidentals, and richer chords). With **Chords** enabled, lower levels use triads only; mid levels add dyads and sevenths; high levels add ninths. Set **time between notes** — a shorter interval is also harder.
 3. **Answers:** **Notes** uses the seven natural names (Do–Si, or C–B). **Choices** uses a quiz with 3–7 predefined answers, either **single** (one correct) or **multiple** (select every written pitch). Keys `1`–`7` work as shortcuts.
 4. In Choices mode, labels can include sharps and flats. Chord symbols use `-` for minor, `°` for diminished, `+` for augmented, `7` / `Δ` / `ø` for sevenths, and `9` for ninths.
 5. The UI is available in English, Italian, Spanish, Portuguese, German, French, Chinese, and Japanese. It follows the browser language and can be changed from the language bar.

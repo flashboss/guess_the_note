@@ -3,7 +3,7 @@ const CHOICE_COUNT_MIN = 3;
 const CHOICE_COUNT_MAX = 7;
 const ACCIDENTALS = [-1, 0, 1];
 const CLEFS = ["treble", "bass"];
-const SHAPES = ["notes", "dyads", "chords", "sevenths", "ninths"];
+const SHAPES = ["notes", "chords"];
 const QUALITY_MARKS = {
   major: "",
   minor: "-",
@@ -18,6 +18,8 @@ const QUALITY_MARKS = {
   dom9: "9",
   min9: "-9",
   maj9: "Δ9",
+  sus2: "sus2",
+  sus4: "sus4",
 };
 const CHORD_SPECS = {
   major: { steps: [0, 2, 4], semis: [0, 4, 7] },
@@ -61,6 +63,10 @@ const DYAD_SPECS = {
   minor: { steps: [0, 2], semis: [0, 3] },
   dim: { steps: [0, 4], semis: [0, 6] },
   aug: { steps: [0, 4], semis: [0, 8] },
+};
+const SUS_SPECS = {
+  sus2: { steps: [0, 1, 4], semis: [0, 2, 7] },
+  sus4: { steps: [0, 3, 4], semis: [0, 5, 7] },
 };
 const SETTINGS_CLEF = "gtn-clef";
 const SETTINGS_SHAPES = "gtn-shapes";
@@ -686,6 +692,7 @@ function pickAccidental() {
 }
 
 function specFor(kind, quality) {
+  if (quality === "sus2" || quality === "sus4") return SUS_SPECS[quality];
   if (kind === "dyad") return DYAD_SPECS[quality];
   return CHORD_SPECS[quality];
 }
@@ -752,13 +759,30 @@ function pickNinth(clef) {
   return pickHarmony(clef, "ninths");
 }
 
+function chordKindsForDifficulty() {
+  const level = difficultyLevel();
+  if (level <= 3) return ["chord"];
+  if (level <= 5) return ["chord", "dyad"];
+  if (level <= 7) return ["dyad", "chord", "sevenths"];
+  return ["dyad", "chord", "sevenths", "ninths"];
+}
+
+function pickHarmonyByKind(clef, kind) {
+  if (kind === "dyad") return pickDyad(clef);
+  if (kind === "chord") return pickChord(clef);
+  if (kind === "sevenths") return pickSeventh(clef);
+  if (kind === "ninths") return pickNinth(clef);
+  return null;
+}
+
 function pickChallenge(clef) {
   const kinds = state.shapes.length ? state.shapes : ["notes"];
-  const kind = kinds[Math.floor(Math.random() * kinds.length)];
-  if (kind === "dyads") return pickDyad(clef) || pickNote(clef);
-  if (kind === "chords") return pickChord(clef) || pickNote(clef);
-  if (kind === "sevenths") return pickSeventh(clef) || pickNote(clef);
-  if (kind === "ninths") return pickNinth(clef) || pickNote(clef);
+  const shape = kinds[Math.floor(Math.random() * kinds.length)];
+  if (shape === "chords") {
+    const harmonyKinds = chordKindsForDifficulty();
+    const kind = harmonyKinds[Math.floor(Math.random() * harmonyKinds.length)];
+    return pickHarmonyByKind(clef, kind) || pickNote(clef);
+  }
   return pickNote(clef);
 }
 
@@ -811,17 +835,102 @@ function qualitiesForChallenge(challenge) {
   return list.length ? list : [challenge.quality];
 }
 
-function uniquePitchItems(challenge) {
+function notePitchClass(note) {
+  const index = NOTE_NAMES.indexOf(note.name);
+  if (index < 0) return null;
+  let pc = SEMITONES[index] + (note.accidental || 0);
+  pc = ((pc % 12) + 12) % 12;
+  return pc;
+}
+
+function challengePitchClasses(challenge) {
+  return (challenge.notes || [challenge])
+    .map(notePitchClass)
+    .filter((pc) => pc != null)
+    .sort((a, b) => a - b);
+}
+
+function pitchClassesEqual(a, b) {
+  return a.length === b.length && a.every((value, index) => value === b[index]);
+}
+
+function allSpellings(pitchClass) {
+  const results = [];
+  NOTE_NAMES.forEach((name, index) => {
+    for (let accidental = -2; accidental <= 2; accidental += 1) {
+      let pc = SEMITONES[index] + accidental;
+      pc = ((pc % 12) + 12) % 12;
+      if (pc === pitchClass) results.push({ name, accidental });
+    }
+  });
+  return results;
+}
+
+function kindForNoteCount(noteCount) {
+  if (noteCount <= 1) return "note";
+  if (noteCount === 2) return "dyad";
+  if (noteCount === 3) return "chord";
+  if (noteCount === 4) return "sevenths";
+  return "ninths";
+}
+
+function interpretationQualities(noteCount) {
+  if (noteCount <= 1) return [null];
+  if (noteCount === 2) return KIND_QUALITIES.dyad;
+  if (noteCount === 3) return [...KIND_QUALITIES.chord, "sus2", "sus4"];
+  if (noteCount === 4) return KIND_QUALITIES.sevenths;
+  return KIND_QUALITIES.ninths;
+}
+
+function pitchClassesForRootQuality(root, quality, kind) {
+  const tones = tonesForQuality(root, quality, kind);
+  return tones.map(notePitchClass).filter((pc) => pc != null).sort((a, b) => a - b);
+}
+
+function noteInterpretations(challenge) {
   const map = new Map();
-  (challenge.notes || [challenge]).forEach((note) => {
-    const item = {
-      name: note.name,
-      accidental: note.accidental || 0,
-      quality: null,
-    };
-    map.set(answerKey(item.name, item.accidental, null), item);
+  const pitch = notePitchClass(challenge);
+  if (pitch == null) return [];
+  allSpellings(pitch).forEach(({ name, accidental }) => {
+    const item = { name, accidental, quality: null };
+    map.set(answerKey(name, accidental, null), item);
   });
   return [...map.values()];
+}
+
+function chordInterpretations(challenge) {
+  const notes = challenge.notes || [];
+  if (notes.length <= 1) return noteInterpretations(challenge);
+
+  const target = challengePitchClasses(challenge);
+  const kind = kindForNoteCount(notes.length);
+  const qualities = interpretationQualities(notes.length);
+  const found = new Map();
+
+  if (challenge.quality) {
+    const primary = {
+      name: challenge.name,
+      accidental: challenge.accidental || 0,
+      quality: challenge.quality,
+    };
+    found.set(answerKey(primary.name, primary.accidental, primary.quality), primary);
+  }
+
+  const template = notes[0];
+  for (let pc = 0; pc < 12; pc += 1) {
+    allSpellings(pc).forEach(({ name, accidental }) => {
+      const root = { ...template, name, accidental };
+      qualities.forEach((quality) => {
+        if (!specFor(kind, quality)) return;
+        const pcs = pitchClassesForRootQuality(root, quality, kind);
+        if (!pitchClassesEqual(pcs, target)) return;
+        const item = { name, accidental, quality };
+        found.set(answerKey(name, accidental, quality), item);
+      });
+    });
+  }
+
+  return [...found.values()];
 }
 
 function choiceFrom(item, correctKeys) {
@@ -887,16 +996,14 @@ function buildChoices(challenge) {
 
   const count = state.choiceCount;
   if (isMultiple()) {
-    const corrects = uniquePitchItems(challenge);
+    const corrects = chordInterpretations(challenge);
     const correctKeys = new Set(
-      corrects.map((item) => answerKey(item.name, item.accidental, null))
+      corrects.map((item) => answerKey(item.name, item.accidental, item.quality))
     );
-    const optionCount = Math.min(
-      CHOICE_COUNT_MAX,
-      Math.max(count, corrects.length)
-    );
-    const pool = candidateAnswers([null]).filter(
-      (item) => !correctKeys.has(answerKey(item.name, item.accidental, null))
+    const optionCount = Math.max(count, corrects.length, CHOICE_COUNT_MIN);
+    const noteCount = (challenge.notes || [challenge]).length;
+    const pool = candidateAnswers(interpretationQualities(noteCount)).filter(
+      (item) => !correctKeys.has(answerKey(item.name, item.accidental, item.quality))
     );
     const wrong = shuffle(pool).slice(0, Math.max(0, optionCount - corrects.length));
     const items = shuffle([...corrects, ...wrong]);
@@ -1550,6 +1657,20 @@ function parseStoredList(raw, allowed, fallback) {
   return parts.length ? parts : fallback.slice();
 }
 
+function parseStoredShapes(raw) {
+  const legacyHarmony = new Set(["dyads", "sevenths", "ninths"]);
+  const selected = new Set();
+  String(raw || "")
+    .split(",")
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .forEach((item) => {
+      if (item === "notes") selected.add("notes");
+      else if (item === "chords" || legacyHarmony.has(item)) selected.add("chords");
+    });
+  return selected.size ? [...selected] : ["notes"];
+}
+
 function toggleListed(list, value, allowed) {
   if (!allowed.includes(value)) return list;
   if (list.includes(value)) {
@@ -1727,7 +1848,7 @@ function setRounds(count) {
 function loadSettings() {
   state.clefs = parseStoredList(storageGet(SETTINGS_CLEF), CLEFS, ["treble", "bass"]);
   syncClefButtons();
-  state.shapes = parseStoredList(storageGet(SETTINGS_SHAPES), SHAPES, ["notes"]);
+  state.shapes = parseStoredShapes(storageGet(SETTINGS_SHAPES));
   syncShapeButtons();
   setAnswerMode(parseStoredValue(storageGet(SETTINGS_ANSWER_MODE), ANSWER_MODES, "choices"));
   setChoiceKind(parseStoredValue(storageGet(SETTINGS_CHOICE_KIND), CHOICE_KINDS, "single"));
