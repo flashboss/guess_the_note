@@ -1,243 +1,47 @@
-const NOTE_NAMES = ["Do", "Re", "Mi", "Fa", "Sol", "La", "Si"];
-const CHOICE_COUNT_MIN = 3;
-const CHOICE_COUNT_MAX = 7;
-const ACCIDENTALS = [-1, 0, 1];
-const CLEFS = ["treble", "bass"];
-const SHAPES = ["notes", "chords"];
-const QUALITY_MARKS = {
-  major: "",
-  minor: "-",
-  dim: "°",
-  aug: "+",
-  dom7: "7",
-  min7: "-7",
-  maj7: "Δ",
-  dim7: "°7",
-  halfdim: "ø",
-  aug7: "+7",
-  dom9: "9",
-  min9: "-9",
-  maj9: "Δ9",
-  sus2: "sus2",
-  sus4: "sus4",
-  majFlat5: "♭5",
-  majSharp5: "♯5",
-  minFlat5: "-♭5",
-  minSharp5: "-♯5",
-  dom7Flat5: "7♭5",
-  dom7Sharp5: "7♯5",
-  min7Flat5: "-7♭5",
-  min7Sharp5: "-7♯5",
-  maj7Flat5: "Δ♭5",
-  maj7Sharp5: "Δ♯5",
-};
-const CHORD_SPECS = {
-  major: { steps: [0, 2, 4], semis: [0, 4, 7] },
-  minor: { steps: [0, 2, 4], semis: [0, 3, 7] },
-  dim: { steps: [0, 2, 4], semis: [0, 3, 6] },
-  aug: { steps: [0, 2, 4], semis: [0, 4, 8] },
-  dom7: { steps: [0, 2, 4, 6], semis: [0, 4, 7, 10] },
-  min7: { steps: [0, 2, 4, 6], semis: [0, 3, 7, 10] },
-  maj7: { steps: [0, 2, 4, 6], semis: [0, 4, 7, 11] },
-  dim7: { steps: [0, 2, 4, 6], semis: [0, 3, 6, 9] },
-  halfdim: { steps: [0, 2, 4, 6], semis: [0, 3, 6, 10] },
-  aug7: { steps: [0, 2, 4, 6], semis: [0, 4, 8, 10] },
-  dom9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 10, 14] },
-  min9: { steps: [0, 2, 4, 6, 8], semis: [0, 3, 7, 10, 14] },
-  maj9: { steps: [0, 2, 4, 6, 8], semis: [0, 4, 7, 11, 14] },
-  majFlat5: { steps: [0, 2, 4], semis: [0, 4, 6] },
-  majSharp5: { steps: [0, 2, 4], semis: [0, 4, 8] },
-  minFlat5: { steps: [0, 2, 4], semis: [0, 3, 6] },
-  minSharp5: { steps: [0, 2, 4], semis: [0, 3, 8] },
-  dom7Flat5: { steps: [0, 2, 4, 6], semis: [0, 4, 6, 10] },
-  dom7Sharp5: { steps: [0, 2, 4, 6], semis: [0, 4, 8, 10] },
-  min7Flat5: { steps: [0, 2, 4, 6], semis: [0, 3, 6, 10] },
-  min7Sharp5: { steps: [0, 2, 4, 6], semis: [0, 3, 8, 10] },
-  maj7Flat5: { steps: [0, 2, 4, 6], semis: [0, 4, 6, 11] },
-  maj7Sharp5: { steps: [0, 2, 4, 6], semis: [0, 4, 8, 11] },
-};
-const KIND_QUALITIES = {
-  dyad: ["major", "minor", "dim", "aug"],
-  chord: [
-    "major",
-    "minor",
-    "dim",
-    "aug",
-    "majFlat5",
-    "majSharp5",
-    "minFlat5",
-    "minSharp5",
-  ],
-  sevenths: [
-    "dom7",
-    "min7",
-    "maj7",
-    "dim7",
-    "halfdim",
-    "aug7",
-    "dom7Flat5",
-    "dom7Sharp5",
-    "min7Flat5",
-    "min7Sharp5",
-    "maj7Flat5",
-    "maj7Sharp5",
-  ],
-  ninths: ["dom9", "min9", "maj9"],
-};
-const ANSWER_MODES = ["notes", "choices"];
-const CHOICE_KINDS = ["single", "multiple"];
-const DIFFICULTY_MIN = 1;
-const DIFFICULTY_MAX = 10;
-const SIMPLE_QUALITIES = {
-  dyad: ["major", "minor"],
-  chord: ["major", "minor"],
-  sevenths: ["dom7", "min7", "maj7"],
-  ninths: ["dom9", "min9", "maj9"],
-};
-const COMMON_QUALITIES = {
-  dyad: ["major", "minor", "dim"],
-  chord: ["major", "minor", "dim", "aug"],
-  sevenths: ["dom7", "min7", "maj7", "halfdim"],
-  ninths: ["dom9", "min9", "maj9"],
-};
-const DYAD_SPECS = {
-  major: { steps: [0, 2], semis: [0, 4] },
-  minor: { steps: [0, 2], semis: [0, 3] },
-  dim: { steps: [0, 4], semis: [0, 6] },
-  aug: { steps: [0, 4], semis: [0, 8] },
-};
-const SUS_SPECS = {
-  sus2: { steps: [0, 1, 4], semis: [0, 2, 7] },
-  sus4: { steps: [0, 3, 4], semis: [0, 5, 7] },
-};
-const SETTINGS_CLEF = "gtn-clef";
-const SETTINGS_SHAPES = "gtn-shapes";
-const SETTINGS_ANSWER_MODE = "gtn-answer-mode";
-const SETTINGS_CHOICE_COUNT = "gtn-choice-count";
-const SETTINGS_CHOICE_KIND = "gtn-choice-kind";
-const SETTINGS_DIFFICULTY = "gtn-difficulty";
-const SETTINGS_TEMPO = "gtn-tempo";
-const SETTINGS_ROUNDS = "gtn-rounds";
-const SETTINGS_SOUND = "gtn-sound";
-const GRADE_ACCURACY = 0.85;
-const GRADE_SPEED = 0.15;
-const UNIVERSAL_BASE = 2500;
-const UNIVERSAL_STREAK_STEP = 500;
-const UNIVERSAL_SPEED_DIVISOR = 2;
-const PAUSE_QUALITY_FACTOR = 0.06;
+import {
+  NOTE_NAMES, CHOICE_COUNT_MIN, CHOICE_COUNT_MAX, ACCIDENTALS, CLEFS, SHAPES,
+  QUALITY_MARKS, CHORD_SPECS, KIND_QUALITIES, DYAD_SPECS, SUS_SPECS,
+  SETTINGS_CLEF, SETTINGS_SHAPES, SETTINGS_ANSWER_MODE, SETTINGS_CHOICE_COUNT,
+  SETTINGS_CHOICE_KIND, SETTINGS_DIFFICULTY, SETTINGS_TEMPO, SETTINGS_ROUNDS, SETTINGS_SOUND,
+  GRADE_ACCURACY, GRADE_SPEED, UNIVERSAL_BASE, UNIVERSAL_STREAK_STEP, UNIVERSAL_SPEED_DIVISOR,
+  PAUSE_QUALITY_FACTOR, SHAPE_KIND_WEIGHT, QUALITY_WEIGHT, SEMITONES, LINE_GAP,
+  TOP_LINE_Y, BOTTOM_LINE_Y, NOTE_X, CLEF_RANGES, DIFFICULTY_MIN, DIFFICULTY_MAX,
+  SIMPLE_QUALITIES, COMMON_QUALITIES,
+} from "./constants.js";
+import { state } from "./state.js";
+import { dom } from "./state.js";
+const {
+  staff, tempo, tempoLabel, roundsInput, roundsLabel, choiceCountInput, choiceCountLabel,
+  difficultyInput, difficultyLabel, overlayHint, timerFill, scoreEl, streakEl, avgTimeEl,
+  progressEl, startOverlay, resultOverlay, resultGrade, resultLabel, resultUniversal,
+  resultSummary, pauseOverlay, settingsOverlay, settingsBtn, qualityHint,
+} = dom;
+import { t, notifyUi, shuffle, difficultyLevel, difficultyT, isNotesMode, isMultiple, formatMessage } from "./util.js";
+import { universalRoundPoints, fullRoundWeight, sessionQuality, applyPausePenalty, sessionDifficultyIndex, formatUniversalScore, sessionSettingsSnapshot } from "./scoring.js";
+import { closeSettings } from "./settings.js";
 
-// Difficulty ladder (single unified scale for grade and universal score).
-// Shape kind: note < dyad < chord < seventh < ninth.
-// Per round: kind × quality × pitch density × accidentals × answer panel × slider.
-// Session: rounds endurance (√ rounds/10) and shape-menu spread when several types are selected.
-const SHAPE_KIND_WEIGHT = {
-  note: 1,
-  notes: 1,
-  dyad: 1.3,
-  dyads: 1.3,
-  chord: 1.5,
-  chords: 1.5,
-  sevenths: 1.85,
-  ninths: 2.15,
-};
-const QUALITY_WEIGHT = {
-  major: 1,
-  minor: 1.04,
-  dim: 1.1,
-  aug: 1.1,
-  dom7: 1.06,
-  min7: 1.08,
-  maj7: 1.1,
-  halfdim: 1.15,
-  dim7: 1.18,
-  aug7: 1.2,
-  dom9: 1.12,
-  min9: 1.14,
-  maj9: 1.16,
-  majFlat5: 1.12,
-  majSharp5: 1.12,
-  minFlat5: 1.12,
-  minSharp5: 1.12,
-  dom7Flat5: 1.14,
-  dom7Sharp5: 1.14,
-  min7Flat5: 1.15,
-  min7Sharp5: 1.14,
-  maj7Flat5: 1.14,
-  maj7Sharp5: 1.14,
-};
-const SEMITONES = [0, 2, 4, 5, 7, 9, 11];
-const LINE_GAP = 20;
-const TOP_LINE_Y = 78;
-const BOTTOM_LINE_Y = TOP_LINE_Y + 4 * LINE_GAP;
-const NOTE_X = 430;
+let audioCtx = null;
+let activeOscs = [];
 
-const CLEF_RANGES = {
-  treble: { min: 0, max: 12, bottomStep: 2, topStep: 10, middleStep: 6 },
-  bass: { min: -12, max: 0, bottomStep: -10, topStep: -2, middleStep: -6 },
+// Bravura (SMuFL) outlines — origin on the G / F line, 250 units = 1 staff space.
+const CLEF_PATHS = {
+  treble:
+    "M376 415C374 427 376 428 382 434C398 449 419 470 438 491C522 583 572 702 572 815C572 902 548 988 507 1048C492 1070 466 1098 455 1098C441 1098 410 1072 390 1050C316 968 292 843 292 739C292 681 299 616 306 575C308 563 309 561 297 551C233 498 164 437 112 373C43 287 0 194 0 87C0 -87 119 -252 364 -252C387 -252 413 -250 433 -246C444 -244 446 -243 448 -255C460 -322 475 -409 475 -456C475 -604 375 -622 316 -622C262 -622 236 -606 236 -593C236 -586 245 -583 268 -576C299 -567 335 -540 335 -482C335 -427 300 -380 239 -380C172 -380 132 -433 132 -495C132 -560 171 -658 322 -658C389 -658 519 -628 519 -458C519 -401 501 -306 490 -244C488 -232 489 -233 503 -227C604 -187 671 -102 671 11C671 139 577 252 430 252C404 252 404 252 401 270ZM470 943C503 943 530 916 530 861C530 792 497 728 419 650C403 634 379 611 356 591C349 585 345 586 343 599C339 625 337 659 337 691C337 847 409 943 470 943ZM361 262C364 243 364 244 346 238C258 208 201 129 201 44C201 -46 248 -110 316 -133C324 -136 336 -139 343 -139C351 -139 355 -134 355 -128C355 -121 347 -118 340 -115C298 -97 268 -54 268 -8C268 49 307 92 368 109C384 113 386 112 388 101L438 -197C440 -208 439 -208 424 -211C408 -214 388 -216 368 -216C193 -216 80 -119 80 20C80 79 90 158 173 252C233 319 279 356 326 394C336 402 338 401 340 390ZM430 103C428 115 429 118 441 117C522 110 589 42 589 -46C589 -109 551 -160 495 -188C483 -194 481 -194 479 -182Z",
+  bass: "M252 262C78 262 0 135 0 39C0 -41 42 -110 123 -110C186 -110 229 -66 229 -4C229 60 182 100 133 100C106 100 96 93 83 93C70 93 67 101 67 111C67 151 127 224 229 224C335 224 381 120 381 -37C381 -140 359 -260 297 -356C237 -449 134 -534 10 -605C1 -610 -5 -615 -5 -623C-5 -629 -1 -635 8 -635C13 -635 19 -633 25 -630C158 -565 286 -489 392 -375C479 -281 531 -159 531 -28C531 146 425 262 252 262ZM629 180C598 180 574 156 574 125C574 94 598 70 629 70C660 70 684 94 684 125C684 156 660 180 629 180ZM630 -71C599 -71 576 -94 576 -125C576 -156 599 -179 630 -179C661 -179 684 -156 684 -125C684 -94 661 -71 630 -71Z",
 };
 
-const state = {
-  running: false,
-  clefs: ["treble", "bass"],
-  shapes: ["notes"],
-  answerMode: "choices",
-  choiceCount: 5,
-  choiceKind: "single",
-  difficulty: 5,
-  rounds: 10,
-  seconds: 4,
-  current: null,
-  choices: [],
-  selected: [],
-  locked: false,
-  score: 0,
-  attempted: 0,
-  streak: 0,
-  bestStreak: 0,
-  round: 0,
-  weightedQualitySum: 0,
-  roundWeightSum: 0,
-  timeSum: 0,
-  universalScore: 0,
-  answerElapsed: null,
-  lastResult: null,
-  roundTimer: null,
-  nextTimer: null,
-  sound: true,
-  paused: false,
-  pauseCount: 0,
-  pauseKind: null,
-  pauseRemaining: 0,
-  timerStartedAt: 0,
-  timerDuration: 0,
-  nextDueAt: 0,
-};
-
-const staff = document.getElementById("staff");
-const tempo = document.getElementById("tempo");
-const tempoLabel = document.getElementById("tempoLabel");
-const roundsInput = document.getElementById("rounds");
-const roundsLabel = document.getElementById("roundsLabel");
-const choiceCountInput = document.getElementById("choiceCount");
-const choiceCountLabel = document.getElementById("choiceCountLabel");
-const difficultyInput = document.getElementById("difficulty");
-const difficultyLabel = document.getElementById("difficultyLabel");
-const overlayHint = document.getElementById("overlayHint");
-const timerFill = document.getElementById("timerFill");
-const scoreEl = document.getElementById("score");
-const streakEl = document.getElementById("streak");
-const avgTimeEl = document.getElementById("avgTime");
-const progressEl = document.getElementById("progress");
-const startOverlay = document.getElementById("startOverlay");
-const resultOverlay = document.getElementById("resultOverlay");
-const resultGrade = document.getElementById("resultGrade");
-const resultLabel = document.getElementById("resultLabel");
-const resultUniversal = document.getElementById("resultUniversal");
-const resultSummary = document.getElementById("resultSummary");
-const pauseOverlay = document.getElementById("pauseOverlay");
-const settingsOverlay = document.getElementById("settingsOverlay");
-const settingsBtn = document.getElementById("settingsBtn");
-const qualityHint = document.getElementById("qualityHint");
+const MINOR_QUALITIES = new Set([
+  "minor",
+  "min7",
+  "min9",
+  "dim",
+  "dim7",
+  "halfdim",
+  "minFlat5",
+  "minSharp5",
+  "min7Flat5",
+  "min7Sharp5",
+]);
 
 function noteFromStep(step) {
   const index = ((step % 7) + 7) % 7;
@@ -523,25 +327,6 @@ function drawStaff(clef, challenge) {
   });
 }
 
-function storageGet(key) {
-  try {
-    return localStorage.getItem(key);
-  } catch (error) {
-    return null;
-  }
-}
-
-function storageSet(key, value) {
-  try {
-    localStorage.setItem(key, value);
-  } catch (error) {
-    /* private mode or TV storage may be unavailable */
-  }
-}
-
-let audioCtx = null;
-let activeOscs = [];
-
 function unlockAudio() {
   const Ctx = window.AudioContext || window.webkitAudioContext;
   if (!Ctx) return null;
@@ -650,10 +435,6 @@ function startFeedback(correct, ctx) {
   beep(ctx, 164.81, now + 0.12, 0.22, "triangle", 0.16);
 }
 
-function t(key) {
-  return window.I18n ? window.I18n.t(key) : key;
-}
-
 function pickClef() {
   const clefs = state.clefs.length ? state.clefs : ["treble"];
   return clefs[Math.floor(Math.random() * clefs.length)];
@@ -690,16 +471,6 @@ function invertNotes(tones, inversion) {
     notes.push(raiseOctave(notes.shift()));
   }
   return notes;
-}
-
-function difficultyLevel() {
-  const level = Number(state.difficulty);
-  if (!Number.isFinite(level)) return 5;
-  return Math.min(DIFFICULTY_MAX, Math.max(DIFFICULTY_MIN, Math.round(level)));
-}
-
-function difficultyT() {
-  return (difficultyLevel() - DIFFICULTY_MIN) / (DIFFICULTY_MAX - DIFFICULTY_MIN);
 }
 
 function playRange(clef) {
@@ -861,15 +632,6 @@ function answerKey(name, accidental, quality) {
   return `${name}:${accidental || 0}:${quality || ""}`;
 }
 
-function shuffle(list) {
-  const items = list.slice();
-  for (let i = items.length - 1; i > 0; i -= 1) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [items[i], items[j]] = [items[j], items[i]];
-  }
-  return items;
-}
-
 function candidateAnswers(qualities) {
   const quals = qualities && qualities.length ? qualities : [null];
   const items = [];
@@ -999,23 +761,6 @@ function choiceFrom(item, correctKeys) {
   };
 }
 
-function isNotesMode() {
-  return state.answerMode === "notes";
-}
-
-const MINOR_QUALITIES = new Set([
-  "minor",
-  "min7",
-  "min9",
-  "dim",
-  "dim7",
-  "halfdim",
-  "minFlat5",
-  "minSharp5",
-  "min7Flat5",
-  "min7Sharp5",
-]);
-
 function syncQualityHint() {
   if (!qualityHint) return;
   const quality = isNotesMode() && state.running && state.current && state.current.quality;
@@ -1028,10 +773,6 @@ function syncQualityHint() {
     ? t("qualityMinor")
     : t("qualityMajor");
   qualityHint.classList.remove("is-hidden");
-}
-
-function isMultiple() {
-  return state.answerMode === "choices" && state.choiceKind === "multiple";
 }
 
 function pickAriaKey() {
@@ -1252,99 +993,6 @@ function handleChoiceClick(btn) {
   });
 }
 
-function formatMessage(key, vars) {
-  return Object.entries(vars).reduce(
-    (text, [name, value]) => text.split(`{${name}}`).join(String(value)),
-    t(key)
-  );
-}
-
-function universalRoundPoints(correct, elapsedMs, totalMs, streakAfter, roundWeight) {
-  if (!correct) return 0;
-  const speedBonus = Math.floor(Math.max(0, totalMs - elapsedMs) / UNIVERSAL_SPEED_DIVISOR);
-  const streakBonus = Math.max(0, streakAfter - 1) * UNIVERSAL_STREAK_STEP;
-  return Math.round(roundWeight * (UNIVERSAL_BASE + speedBonus + streakBonus));
-}
-
-function sliderWeight() {
-  return 0.75 + difficultyLevel() * 0.025;
-}
-
-function answerSettingsWeight() {
-  if (isNotesMode()) return 0.88;
-  const choices = state.choiceCount || CHOICE_COUNT_MIN;
-  const countFactor = 1 + (choices - CHOICE_COUNT_MIN) * 0.07;
-  return countFactor * (isMultiple() ? 1.35 : 1);
-}
-
-function sessionRoundsFactor() {
-  return Math.sqrt(state.rounds / 10);
-}
-
-function shapeMenuSpreadFactor() {
-  const kinds = state.shapes.length ? state.shapes : ["notes"];
-  if (kinds.length <= 1) return 1;
-  return 1 + (kinds.length - 1) * 0.04;
-}
-
-function averageShapeMenuWeight() {
-  const kinds = state.shapes.length ? state.shapes : ["notes"];
-  const total = kinds.reduce((sum, kind) => sum + (SHAPE_KIND_WEIGHT[kind] || 1), 0);
-  return total / kinds.length;
-}
-
-function challengeRoundWeight(challenge) {
-  if (!challenge) return 1;
-  const kindW = SHAPE_KIND_WEIGHT[challenge.kind] || 1;
-  const qualW = challenge.quality ? QUALITY_WEIGHT[challenge.quality] || 1 : 1;
-  const accidental = challenge.accidental || 0;
-  const accW = 1 + Math.abs(accidental) * 0.06 + (Math.abs(accidental) >= 2 ? 0.06 : 0);
-  const noteCount = challenge.notes?.length || 1;
-  const densityW = 1 + Math.max(0, noteCount - 1) * 0.05;
-  return kindW * qualW * accW * densityW;
-}
-
-function fullRoundWeight(challenge) {
-  return (
-    challengeRoundWeight(challenge) *
-    answerSettingsWeight() *
-    sliderWeight() *
-    sessionRoundsFactor() *
-    shapeMenuSpreadFactor()
-  );
-}
-
-function sessionDifficultyIndex() {
-  if (!state.attempted) {
-    return (
-      averageShapeMenuWeight() *
-      answerSettingsWeight() *
-      sliderWeight() *
-      sessionRoundsFactor() *
-      shapeMenuSpreadFactor()
-    );
-  }
-  return state.roundWeightSum / state.attempted;
-}
-
-function formatUniversalScore(value) {
-  const locale = window.I18n?.locale || "en";
-  return new Intl.NumberFormat(locale).format(Math.max(0, Math.round(value)));
-}
-
-function sessionSettingsSnapshot() {
-  return {
-    difficulty: state.difficulty,
-    rounds: state.rounds,
-    seconds: state.seconds,
-    answerMode: state.answerMode,
-    choiceCount: state.choiceCount,
-    choiceKind: state.choiceKind,
-    clefs: state.clefs.slice().sort().join(","),
-    shapes: state.shapes.slice().sort().join(","),
-  };
-}
-
 function remainingMs() {
   return Math.max(0, state.timerStartedAt + state.timerDuration - Date.now());
 }
@@ -1352,25 +1000,6 @@ function remainingMs() {
 function elapsedMs() {
   const total = state.seconds * 1000;
   return Math.max(0, Math.min(total, total - remainingMs()));
-}
-
-function sessionQuality() {
-  return state.roundWeightSum ? state.weightedQualitySum / state.roundWeightSum : 0;
-}
-
-function pauseScoreFactor() {
-  const pauses = state.pauseCount || 0;
-  return Math.max(0, 1 - pauses * PAUSE_QUALITY_FACTOR);
-}
-
-function applyPausePenalty(quality, universalScore) {
-  const factor = pauseScoreFactor();
-  return {
-    quality: quality * factor,
-    universalScore: Math.round(universalScore * factor),
-    pauseCount: state.pauseCount || 0,
-    pausePenaltyPercent: Math.round((1 - factor) * 100),
-  };
 }
 
 function updateStats() {
@@ -1657,33 +1286,6 @@ function togglePause() {
   else pauseGame();
 }
 
-function settingsAreOpen() {
-  return settingsOverlay && !settingsOverlay.classList.contains("is-hidden");
-}
-
-function openSettings() {
-  if ((state.running && !state.paused) || !settingsOverlay) return;
-  settingsOverlay.classList.remove("is-hidden");
-  if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "true");
-  notifyUi();
-}
-
-function closeSettings() {
-  if (!settingsOverlay) return;
-  settingsOverlay.classList.add("is-hidden");
-  if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "false");
-  notifyUi();
-}
-
-function toggleSettings() {
-  if (settingsAreOpen()) closeSettings();
-  else openSettings();
-}
-
-function notifyUi() {
-  window.dispatchEvent(new Event("gtn:ui"));
-}
-
 function startGame() {
   if (state.running) return;
   closeSettings();
@@ -1738,378 +1340,103 @@ function previewClef() {
   return state.clefs.length === 1 && state.clefs[0] === "bass" ? "bass" : "treble";
 }
 
-function parseStoredList(raw, allowed, fallback) {
-  if (raw === "both" && allowed.includes("treble") && allowed.includes("bass")) {
-    return ["treble", "bass"];
-  }
-  const parts = String(raw || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter((item) => allowed.includes(item));
-  return parts.length ? parts : fallback.slice();
-}
-
-function parseStoredShapes(raw) {
-  const legacyHarmony = new Set(["dyads", "sevenths", "ninths"]);
-  const selected = new Set();
-  String(raw || "")
-    .split(",")
-    .map((item) => item.trim())
-    .filter(Boolean)
-    .forEach((item) => {
-      if (item === "notes") selected.add("notes");
-      else if (item === "chords" || legacyHarmony.has(item)) selected.add("chords");
-    });
-  return selected.size ? [...selected] : ["notes"];
-}
-
-function toggleListed(list, value, allowed) {
-  if (!allowed.includes(value)) return list;
-  if (list.includes(value)) {
-    if (list.length === 1) return list;
-    return list.filter((item) => item !== value);
-  }
-  return allowed.filter((item) => item === value || list.includes(item));
-}
-
-function syncToggleButtons(selector, active) {
-  document.querySelectorAll(selector).forEach((btn) => {
-    const key = selector.includes("clef") ? btn.dataset.clef : btn.dataset.shape;
-    const on = active.includes(key);
-    btn.classList.toggle("is-active", on);
-    btn.setAttribute("aria-pressed", String(on));
-  });
-}
-
-function syncClefButtons() {
-  syncToggleButtons("[data-clef]", state.clefs);
-}
-
-function syncShapeButtons() {
-  syncToggleButtons("[data-shape]", state.shapes);
-}
-
-function setClefs(clefs) {
-  state.clefs = clefs.length ? clefs : ["treble"];
-  storageSet(SETTINGS_CLEF, state.clefs.join(","));
-  syncClefButtons();
-  if (!state.running) drawStaff(previewClef(), null);
-}
-
-function setShapes(shapes) {
-  state.shapes = shapes.length ? shapes : ["notes"];
-  storageSet(SETTINGS_SHAPES, state.shapes.join(","));
-  syncShapeButtons();
-}
-
-function parseStoredValue(raw, allowed, fallback) {
-  return allowed.includes(raw) ? raw : fallback;
-}
-
-function syncExclusiveButtons(selector, attr, value) {
-  document.querySelectorAll(selector).forEach((btn) => {
-    const on = btn.getAttribute(attr) === value;
-    btn.classList.toggle("is-active", on);
-    btn.setAttribute("aria-pressed", String(on));
-  });
-}
-
-function syncAnswerModeButtons() {
-  syncExclusiveButtons("[data-answer-mode]", "data-answer-mode", state.answerMode);
-  document.body.dataset.answerMode = state.answerMode;
-  const box = document.getElementById("choiceOptions");
-  if (!box) return;
-  const hide = state.answerMode !== "choices";
-  box.classList.toggle("is-hidden", hide);
-  box.hidden = hide;
-  box.setAttribute("aria-hidden", String(hide));
-}
-
-function syncChoiceKindButtons() {
-  syncExclusiveButtons("[data-choice-kind]", "data-choice-kind", state.choiceKind);
-}
-
-function parseDifficulty(raw) {
-  if (raw === "easy") return 2;
-  if (raw === "medium") return 5;
-  if (raw === "hard") return 9;
-  const level = Number(raw);
-  if (Number.isFinite(level)) return level;
-  return 5;
-}
-
-function setDifficulty(level) {
-  if (!difficultyInput) return;
-  const next = Math.min(
-    DIFFICULTY_MAX,
-    Math.max(DIFFICULTY_MIN, Math.round(Number(level)))
-  );
-  difficultyInput.value = String(next);
-  state.difficulty = next;
-  if (difficultyLabel) difficultyLabel.textContent = String(next);
-  storageSet(SETTINGS_DIFFICULTY, String(next));
-  notifyUi();
-}
-
-function setAnswerMode(mode) {
-  state.answerMode = parseStoredValue(mode, ANSWER_MODES, "choices");
-  storageSet(SETTINGS_ANSWER_MODE, state.answerMode);
-  syncAnswerModeButtons();
-  syncChoicesAria();
-  syncQualityHint();
-  applyChoiceLayout();
-  notifyUi();
-}
-
-function setChoiceKind(kind) {
-  state.choiceKind = parseStoredValue(kind, CHOICE_KINDS, "single");
-  storageSet(SETTINGS_CHOICE_KIND, state.choiceKind);
-  syncChoiceKindButtons();
-  syncChoicesAria();
-  applyChoiceLayout();
-  notifyUi();
-}
-
-function setChoiceCount(count) {
-  if (!choiceCountInput) return;
-  const min = Number(choiceCountInput.min) || CHOICE_COUNT_MIN;
-  const max = Number(choiceCountInput.max) || CHOICE_COUNT_MAX;
-  const next = Math.min(max, Math.max(min, Math.round(Number(count))));
-  choiceCountInput.value = String(next);
-  state.choiceCount = next;
-  if (choiceCountLabel) choiceCountLabel.textContent = String(next);
-  storageSet(SETTINGS_CHOICE_COUNT, String(next));
-  if (!isNotesMode()) applyChoiceLayout();
-  notifyUi();
-}
-
-document.querySelectorAll("[data-clef]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setClefs(toggleListed(state.clefs, btn.dataset.clef, CLEFS));
-  });
-});
-
-document.querySelectorAll("[data-shape]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setShapes(toggleListed(state.shapes, btn.dataset.shape, SHAPES));
-  });
-});
-
-document.querySelectorAll("[data-answer-mode]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setAnswerMode(btn.dataset.answerMode);
-  });
-});
-
-document.querySelectorAll("[data-choice-kind]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    setChoiceKind(btn.dataset.choiceKind);
-  });
-});
-
-function setTempo(seconds) {
-  const min = Number(tempo.min);
-  const max = Number(tempo.max);
-  const next = Math.min(max, Math.max(min, seconds));
-  tempo.value = String(next);
-  state.seconds = next;
-  tempoLabel.textContent = `${next.toFixed(1)} ${t("tempoUnit")}`;
-  storageSet(SETTINGS_TEMPO, String(next));
-}
-
-function updateOverlayHint() {
-  if (!overlayHint) return;
-  overlayHint.textContent = formatMessage("overlayHint", { count: state.rounds });
-}
-
-function setRounds(count) {
-  if (!roundsInput) return;
-  const min = Number(roundsInput.min);
-  const max = Number(roundsInput.max);
-  const step = Number(roundsInput.step) || 5;
-  const snapped = Math.round(count / step) * step;
-  const next = Math.min(max, Math.max(min, snapped));
-  roundsInput.value = String(next);
-  state.rounds = next;
-  if (roundsLabel) roundsLabel.textContent = String(next);
-  storageSet(SETTINGS_ROUNDS, String(next));
-  updateStats();
-  updateOverlayHint();
-}
-
-function loadSettings() {
-  state.clefs = parseStoredList(storageGet(SETTINGS_CLEF), CLEFS, ["treble", "bass"]);
-  syncClefButtons();
-  state.shapes = parseStoredShapes(storageGet(SETTINGS_SHAPES));
-  syncShapeButtons();
-  setAnswerMode(parseStoredValue(storageGet(SETTINGS_ANSWER_MODE), ANSWER_MODES, "choices"));
-  setChoiceKind(parseStoredValue(storageGet(SETTINGS_CHOICE_KIND), CHOICE_KINDS, "single"));
-  setDifficulty(parseDifficulty(storageGet(SETTINGS_DIFFICULTY)));
-  const savedChoices = Number(storageGet(SETTINGS_CHOICE_COUNT));
-  if (Number.isFinite(savedChoices) && savedChoices > 0) setChoiceCount(savedChoices);
-  else setChoiceCount(state.choiceCount);
-  const savedTempo = Number(storageGet(SETTINGS_TEMPO));
-  if (Number.isFinite(savedTempo) && savedTempo > 0) setTempo(savedTempo);
-  const savedRounds = Number(storageGet(SETTINGS_ROUNDS));
-  if (Number.isFinite(savedRounds) && savedRounds > 0) setRounds(savedRounds);
-  else setRounds(state.rounds);
-  const savedSound = storageGet(SETTINGS_SOUND);
-  if (savedSound === "0" || savedSound === "1") setSound(savedSound === "1");
-  else syncSoundButton();
-}
-
-function syncSoundButton() {
-  const soundBtn = document.getElementById("soundBtn");
-  const soundLabel = document.getElementById("soundLabel");
-  if (!soundBtn || !soundLabel) return;
-  soundBtn.classList.toggle("is-active", state.sound);
-  soundBtn.setAttribute("aria-pressed", String(state.sound));
-  soundLabel.textContent = state.sound ? t("soundOn") : t("soundOff");
-}
-
-function setSound(on) {
-  state.sound = Boolean(on);
-  storageSet(SETTINGS_SOUND, state.sound ? "1" : "0");
-  syncSoundButton();
-  if (!state.sound) stopTone();
-}
-
-tempo.addEventListener("input", () => {
-  setTempo(Number(tempo.value));
-});
-
-roundsInput?.addEventListener("input", () => {
-  setRounds(Number(roundsInput.value));
-});
-
-difficultyInput?.addEventListener("input", () => {
-  setDifficulty(Number(difficultyInput.value));
-});
-
-choiceCountInput?.addEventListener("input", () => {
-  setChoiceCount(Number(choiceCountInput.value));
-});
-
-document.getElementById("soundBtn").addEventListener("click", () => {
-  if (!state.sound) unlockAudio();
-  setSound(!state.sound);
-});
-
-document.getElementById("choices")?.addEventListener("click", (event) => {
-  const btn = event.target.closest(".note-btn");
-  if (!btn) return;
-  handleChoiceClick(btn);
-});
-
-document.getElementById("playBtn").addEventListener("click", toggleGame);
-document.getElementById("pauseBtn").addEventListener("click", togglePause);
-document.getElementById("playAgainBtn")?.addEventListener("click", startGame);
-resultOverlay?.addEventListener("click", (event) => {
-  if (event.target !== resultOverlay) return;
-  showIdleOverlay();
-  notifyUi();
-});
-
-if (settingsBtn) {
-  settingsBtn.addEventListener("click", toggleSettings);
-}
-document.getElementById("settingsClose")?.addEventListener("click", closeSettings);
-settingsOverlay?.addEventListener("click", (event) => {
-  if (event.target === settingsOverlay) closeSettings();
-});
-
-document.addEventListener("keydown", (event) => {
-  if (settingsAreOpen()) return;
-  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) return;
-  const index = Number(event.key) - 1;
-  const buttons = choiceButtons();
-  if (index >= 0 && index < buttons.length) {
-    buttons[index].click();
-  }
-});
-
-function refreshLabels() {
-  syncPlayButton();
-  syncSoundButton();
-  setTempo(state.seconds);
-  setRounds(state.rounds);
-  setChoiceCount(state.choiceCount);
-  setDifficulty(state.difficulty);
-  syncAnswerModeButtons();
-  syncChoiceKindButtons();
-  updateStats();
-  relabelChoices();
-  syncQualityHint();
-  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) renderResults();
-}
-
-document.querySelectorAll("[data-lang]").forEach((btn) => {
-  btn.addEventListener("click", () => {
-    window.I18n.setLocale(btn.dataset.lang);
-    window.I18n.apply();
-    refreshLabels();
-    notifyUi();
-  });
-});
-
-window.addEventListener("gtn:i18n", refreshLabels);
-
-window.GuessTheNote = {
-  startGame,
-  stopGame,
-  toggleGame,
+export {
+  noteFromStep,
+  yForStep,
+  ledgerSteps,
+  svgEl,
+  drawSharp,
+  drawFlat,
+  drawDoubleSharp,
+  drawDoubleFlat,
+  drawAccidental,
+  drawClef,
+  drawStaff,
+  unlockAudio,
+  stopTone,
+  midiForNote,
+  freqForNote,
+  playNoteSound,
+  startTones,
+  playFeedback,
+  beep,
+  startFeedback,
+  pickClef,
+  challengeFrom,
+  noteAtInterval,
+  raiseOctave,
+  invertNotes,
+  playRange,
+  notesInRange,
+  difficultyQualities,
+  qualitiesForKind,
+  poolAccidentals,
+  pickAccidental,
+  specFor,
+  tonesForQuality,
+  pickVoicing,
+  pickHarmony,
+  pickNote,
+  pickDyad,
+  pickChord,
+  pickSeventh,
+  pickNinth,
+  chordKindsForDifficulty,
+  pickHarmonyByKind,
+  pickChallenge,
+  accidentalMark,
+  noteLabel,
+  answerLabel,
+  answerKey,
+  candidateAnswers,
+  qualitiesForChallenge,
+  notePitchClass,
+  challengePitchClasses,
+  pitchClassesEqual,
+  allSpellings,
+  kindForNoteCount,
+  interpretationQualities,
+  pitchClassesForRootQuality,
+  noteInterpretations,
+  chordInterpretations,
+  choiceFrom,
+  syncQualityHint,
+  pickAriaKey,
+  syncChoicesAria,
+  buildChoices,
+  choiceButtons,
+  desiredButtonCount,
+  ensureChoiceButtons,
+  paintChoices,
+  renderChoices,
+  choiceLabel,
+  relabelChoices,
+  idleChoices,
+  applyChoiceLayout,
+  resetButtons,
+  correctChoiceKeys,
+  selectionIsCorrect,
+  handleChoiceClick,
+  remainingMs,
+  elapsedMs,
+  updateStats,
+  reveal,
+  freezeTimerBar,
+  startTimer,
+  nextRound,
+  showIdleOverlay,
+  renderResults,
+  showResultOverlay,
+  finishSession,
+  hidePauseOverlay,
+  showPauseOverlay,
+  syncPauseButton,
+  syncPlayButton,
   pauseGame,
   resumeGame,
   togglePause,
-  finishSession,
-  unlockAudio,
-  openSettings,
-  closeSettings,
-  settingsAreOpen,
-  getState: () => state,
-  getLastResult: () => state.lastResult,
-  formatUniversalScore,
-  showingResults: () => resultOverlay && !resultOverlay.classList.contains("is-hidden"),
-  refreshLabels,
+  startGame,
+  stopGame,
+  toggleGame,
+  previewClef,
 };
-
-loadSettings();
-if (window.I18n) window.I18n.apply();
-drawStaff(previewClef(), null);
-idleChoices();
-refreshLabels();
-updateStats();
-
-function isPhoneLandscape() {
-  return window.matchMedia("(orientation: landscape) and (max-height: 520px)").matches;
-}
-
-function scrollToStaffIfLandscape() {
-  if (document.documentElement.classList.contains("is-tv")) return;
-  if (!isPhoneLandscape()) return;
-  if (settingsAreOpen()) return;
-  if (resultOverlay && !resultOverlay.classList.contains("is-hidden")) return;
-  const target = document.querySelector(".manuscript");
-  if (!target) return;
-  const top = Math.round(target.getBoundingClientRect().top + window.scrollY);
-  window.scrollTo(0, Math.max(0, top));
-}
-
-function scheduleScrollToStaff() {
-  requestAnimationFrame(() => {
-    setTimeout(scrollToStaffIfLandscape, 200);
-  });
-}
-
-const phoneLandscapeMq = window.matchMedia("(orientation: landscape) and (max-height: 520px)");
-const onLandscapeChange = (event) => {
-  if (event.matches) scheduleScrollToStaff();
-};
-if (phoneLandscapeMq.addEventListener) {
-  phoneLandscapeMq.addEventListener("change", onLandscapeChange);
-} else if (phoneLandscapeMq.addListener) {
-  phoneLandscapeMq.addListener(onLandscapeChange);
-}
-window.addEventListener("orientationchange", scheduleScrollToStaff);
-window.addEventListener("load", scheduleScrollToStaff);
-if (isPhoneLandscape()) scheduleScrollToStaff();
