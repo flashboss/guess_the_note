@@ -539,6 +539,84 @@ input[type="range"] {
   background: var(--gold-bright);
 }
 
+.result-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 18px;
+  align-items: center;
+  justify-content: center;
+  margin-top: 8px;
+}
+
+.result-hof-link {
+  color: var(--gold);
+  font-size: 0.95rem;
+  text-decoration: none;
+}
+
+.result-hof-link:hover {
+  color: var(--gold-bright);
+}
+
+.hof-celebration {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(8, 6, 4, 0.82);
+}
+
+.hof-celebration.is-hidden {
+  display: none;
+}
+
+.hof-celebration-dialog {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 32px 36px;
+  border-radius: 22px;
+  border: 1px solid rgba(196, 163, 90, 0.35);
+  background: var(--walnut-mid);
+  box-shadow: var(--shadow);
+  animation: hof-pop 0.45s ease;
+}
+
+.hof-celebration-cup {
+  margin: 0;
+  font-size: 4rem;
+  animation: hof-bounce 0.9s ease infinite alternate;
+}
+
+.hof-celebration-title {
+  margin: 0;
+  font-family: "Cormorant Garamond", serif;
+  font-size: 2rem;
+  color: var(--gold-bright);
+}
+
+@keyframes hof-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.92);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes hof-bounce {
+  from {
+    transform: translateY(0);
+  }
+  to {
+    transform: translateY(-8px);
+  }
+}
+
 .pause-overlay {
   position: absolute;
   inset: 0;

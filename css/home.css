@@ -33,6 +33,102 @@
   text-decoration: none;
 }
 
+.home-cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 16px;
+  align-items: center;
+}
+
+.home-cta-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  height: 56px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 163, 90, 0.45);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--gold-bright);
+  font-size: 1.05rem;
+  text-decoration: none;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.home-cta-secondary:hover {
+  background: rgba(196, 163, 90, 0.12);
+  color: var(--paper);
+}
+
+.hof-page .home-topbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.hof-play-link {
+  margin-top: 4px;
+}
+
+.hof-main {
+  margin-bottom: 36px;
+}
+
+.hof-status {
+  min-height: 1.4em;
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.hof-table-host {
+  overflow-x: auto;
+}
+
+.hof-table {
+  width: 100%;
+  min-width: 520px;
+  border-collapse: collapse;
+  border: 1px solid rgba(196, 163, 90, 0.22);
+  border-radius: 16px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.hof-table th,
+.hof-table td {
+  padding: 12px 14px;
+  text-align: left;
+  border-bottom: 1px solid rgba(196, 163, 90, 0.12);
+}
+
+.hof-table th {
+  color: var(--gold-bright);
+  font-weight: 600;
+  background: rgba(0, 0, 0, 0.18);
+}
+
+.hof-table tr:last-child td {
+  border-bottom: none;
+}
+
+.hof-table td:first-child,
+.hof-table th:first-child {
+  width: 4rem;
+}
+
+.hof-empty {
+  margin: 0;
+  padding: 28px 18px;
+  border: 1px dashed rgba(196, 163, 90, 0.28);
+  border-radius: 16px;
+  color: #d8c7a4;
+  text-align: center;
+}
+
 .home-features {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

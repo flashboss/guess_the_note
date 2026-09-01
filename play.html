@@ -290,9 +290,20 @@
             <p class="result-universal" id="resultUniversal" aria-live="polite">0</p>
           </div>
           <p class="result-summary" id="resultSummary"></p>
-          <button type="button" class="start-btn" id="playAgainBtn" data-i18n="playAgain">
-            Play again
-          </button>
+          <div class="result-actions">
+            <button type="button" class="start-btn" id="playAgainBtn" data-i18n="playAgain">
+              Play again
+            </button>
+            <a class="result-hof-link" href="hall-of-fame.html" data-i18n="hallOfFameViewLink">Hall of fame</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="hof-celebration is-hidden" id="hallOfFameCelebration" role="dialog" aria-modal="true">
+        <div class="hof-celebration-dialog">
+          <p class="hof-celebration-cup" aria-hidden="true">🏆</p>
+          <p class="hof-celebration-title" data-i18n="hallOfFameNewRecord">New high score!</p>
+          <button type="button" class="start-btn" id="hofCelebrationClose" data-i18n="close">Close</button>
         </div>
       </div>
 
@@ -325,7 +336,7 @@
     </div>
 
     <script src="js/i18n.js?v=20250901"></script>
-    <script type="module" src="js/index.js?v=20250901"></script>
+    <script type="module" src="js/index.js?v=20250901b"></script>
     <script src="js/tv.js"></script>
   </body>
 </html>

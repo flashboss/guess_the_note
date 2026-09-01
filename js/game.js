@@ -19,6 +19,7 @@ const {
 import { t, notifyUi, shuffle, difficultyLevel, difficultyT, isNotesMode, isMultiple, formatMessage } from "./util.js";
 import { universalRoundPoints, fullRoundWeight, sessionGradeQuality, applyPausePenalty, sessionDifficultyIndex, formatUniversalScore, sessionSettingsSnapshot } from "./scoring.js";
 import { closeSettings } from "./settings.js";
+import { processSessionResult, hideCelebration } from "./hall-of-fame.js";
 
 let audioCtx = null;
 let activeOscs = [];
@@ -1116,6 +1117,7 @@ function nextRound() {
 }
 
 function showIdleOverlay() {
+  hideCelebration();
   if (resultOverlay) resultOverlay.classList.add("is-hidden");
   startOverlay.classList.remove("is-hidden");
   syncQualityHint();
@@ -1190,6 +1192,7 @@ function finishSession() {
   showResultOverlay();
   syncPlayButton();
   notifyUi();
+  processSessionResult(state.lastResult);
 }
 
 function hidePauseOverlay() {

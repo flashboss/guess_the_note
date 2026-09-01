@@ -120,6 +120,11 @@ const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
 const SETTINGS_PLAYER_NAME = "gtn-player-name";
+const SETTINGS_HALL_OF_FAME_CACHE = "gtn-hall-of-fame-cache";
+const SETTINGS_HALL_OF_FAME_LOCAL = "gtn-hall-of-fame-local";
+const HALL_OF_FAME_API_URL = "https://script.google.com/macros/s/AKfycbxpbuFqT5ykDa86hJvGqSO13Detfv7O0Pq_7sGkvF3AL13TnYKa8GQ1MSFZmy7hB56jew/exec";
+const HALL_OF_FAME_SUBMIT_TOKEN = "";
+const HALL_OF_FAME_MAX_DISPLAY = 10;
 const PLAYER_NAME_MAX = 24;
 const RANDOM_NAME_ADJECTIVES = [
   "Swift", "Clever", "Lucky", "Bold", "Grand", "Sharp", "Quick", "Noble",
@@ -214,6 +219,11 @@ export {
   SETTINGS_ROUNDS,
   SETTINGS_SOUND,
   SETTINGS_PLAYER_NAME,
+  SETTINGS_HALL_OF_FAME_CACHE,
+  SETTINGS_HALL_OF_FAME_LOCAL,
+  HALL_OF_FAME_API_URL,
+  HALL_OF_FAME_SUBMIT_TOKEN,
+  HALL_OF_FAME_MAX_DISPLAY,
   PLAYER_NAME_MAX,
   RANDOM_NAME_ADJECTIVES,
   RANDOM_NAME_NOUNS,

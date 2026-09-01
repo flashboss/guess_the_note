@@ -46,6 +46,7 @@ import {
   syncQualityHint,
 } from "./game.js";
 import { formatUniversalScore } from "./scoring.js";
+import { hideCelebration } from "./hall-of-fame.js";
 
 const {
   tempo,
@@ -123,7 +124,14 @@ document.getElementById("choices")?.addEventListener("click", (event) => {
 
 document.getElementById("playBtn")?.addEventListener("click", toggleGame);
 document.getElementById("pauseBtn")?.addEventListener("click", togglePause);
-document.getElementById("playAgainBtn")?.addEventListener("click", startGame);
+document.getElementById("playAgainBtn")?.addEventListener("click", () => {
+  hideCelebration();
+  startGame();
+});
+document.getElementById("hofCelebrationClose")?.addEventListener("click", hideCelebration);
+document.getElementById("hallOfFameCelebration")?.addEventListener("click", (event) => {
+  if (event.target.id === "hallOfFameCelebration") hideCelebration();
+});
 resultOverlay?.addEventListener("click", (event) => {
   if (event.target !== resultOverlay) return;
   showIdleOverlay();
