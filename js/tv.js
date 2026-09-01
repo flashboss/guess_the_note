@@ -252,13 +252,18 @@
       focusEl(document.getElementById("playAgainBtn"));
       return;
     }
-    if (items.includes(document.activeElement)) return;
+    if (game && game.settingsAreOpen()) {
+      if (items.includes(active)) return;
+      focusEl(items.find((el) => el.dataset.lang) || items[0]);
+      return;
+    }
+    if (items.includes(active)) return;
     const preferred =
       items.find((el) => el.classList.contains("note-btn")) ||
       items.find((el) => el.id === "pauseBtn") ||
       items.find((el) => el.id === "playBtn") ||
-      items.find((el) => el.dataset.lang) ||
       items.find((el) => el.id === "settingsBtn") ||
+      items.find((el) => el.dataset.lang) ||
       items[0];
     focusEl(preferred);
   });
