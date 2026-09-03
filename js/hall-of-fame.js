@@ -17,14 +17,18 @@ import { formatUniversalScore } from "./scoring.js";
 const LOCAL_MAX_RECORDS = 50;
 
 function getHallOfFameDisplayLimit() {
-  const saved = Number(storageGet(SETTINGS_HALL_OF_FAME_DISPLAY));
-  if (Number.isFinite(saved)) {
-    return Math.min(
-      HALL_OF_FAME_DISPLAY_MAX,
-      Math.max(HALL_OF_FAME_DISPLAY_MIN, Math.round(saved))
-    );
+  const raw = storageGet(SETTINGS_HALL_OF_FAME_DISPLAY);
+  if (raw === null || raw === "") {
+    return HALL_OF_FAME_DISPLAY_DEFAULT;
   }
-  return HALL_OF_FAME_DISPLAY_DEFAULT;
+  const saved = Number(raw);
+  if (!Number.isFinite(saved)) {
+    return HALL_OF_FAME_DISPLAY_DEFAULT;
+  }
+  return Math.min(
+    HALL_OF_FAME_DISPLAY_MAX,
+    Math.max(HALL_OF_FAME_DISPLAY_MIN, Math.round(saved))
+  );
 }
 
 function setHallOfFameDisplayLimit(count) {

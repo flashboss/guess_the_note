@@ -157,6 +157,7 @@ function setDifficulty(level) {
   state.difficulty = next;
   if (difficultyLabel) difficultyLabel.textContent = String(next);
   storageSet(SETTINGS_DIFFICULTY, String(next));
+  updateOverlayHint();
   notifyUi();
 }
 
@@ -204,7 +205,10 @@ function setTempo(seconds) {
 
 function updateOverlayHint() {
   if (!overlayHint) return;
-  overlayHint.textContent = formatMessage("overlayHint", { count: state.rounds });
+  overlayHint.textContent = formatMessage("overlayHint", {
+    count: state.rounds,
+    difficulty: state.difficulty,
+  });
 }
 
 function setRounds(count) {
