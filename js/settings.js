@@ -208,6 +208,7 @@ function updateOverlayHint() {
   overlayHint.textContent = formatMessage("overlayHint", {
     count: state.rounds,
     difficulty: state.difficulty,
+    difficultyMax: DIFFICULTY_MAX,
   });
 }
 
