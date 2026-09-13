@@ -12,9 +12,19 @@ The presentation homepage and the game are published from `main`:
 
 Enable **GitHub Pages** on the repository with source **GitHub Actions**. The workflow in `.github/workflows/pages.yml` deploys the static site on every push to `main`.
 
+## Local development
+
+Serve the project folder with a static file server so modules, relative URLs, and APIs behave like production (avoid opening HTML via `file://`):
+
+```bash
+python3 -m http.server 8765
+```
+
+Then open http://localhost:8765/ (homepage), http://localhost:8765/play.html, or http://localhost:8765/hall-of-fame.html. Any other static server on this folder works the same way.
+
 ## How to play
 
-Open `index.html` for the homepage, or `play.html` for the game (or serve the folder with any static file server).
+Open the homepage (`index.html`) or the game (`play.html`) from the deployed site or from a local server (see **Local development**).
 
 1. Open settings and choose the clef, exercise type (notes and/or chords), difficulty, how to answer, tempo, and number of rounds.
 2. Set **difficulty** from 1 (simplest notes) to 10 (full range, inversions, accidentals, and richer chords). With **Chords** enabled, lower levels use triads only; mid levels add dyads and sevenths; high levels add ninths. Set **time between notes** — a shorter interval is also harder.
@@ -38,11 +48,11 @@ The same project is a Tizen web app (`config.xml`) that can be sideloaded on a S
 
 ### Browser preview (`?tv=1`)
 
-On a desktop browser you can force the TV UI and D-pad behavior without installing on a device. Append `?tv=1` (any value works; presence of the `tv` query param is enough) to a page URL, for example:
+On a desktop browser you can force the TV UI and D-pad behavior without installing on a device. With a local server running (see **Local development**), append `?tv=1` (any value works; presence of the `tv` query param is enough) to a page URL, for example:
 
-- `play.html?tv=1`
-- `hall-of-fame.html?tv=1`
-- `index.html?tv=1`
+- http://localhost:8765/play.html?tv=1
+- http://localhost:8765/hall-of-fame.html?tv=1
+- http://localhost:8765/index.html?tv=1
 
 That adds the `is-tv` class (same as on Tizen / Smart TV user agents): TV layout, remote-style focus navigation (arrows / Enter), and TV-only focus rules such as landing on the answer pad after Play. Use the keyboard arrows and Enter to emulate the remote.
 
