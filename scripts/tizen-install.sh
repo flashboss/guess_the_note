@@ -16,6 +16,8 @@ fi
 rm -rf "$BUILD"
 mkdir -p "$BUILD"
 cp "$ROOT/play.html" "$BUILD/index.html"
+cp "$ROOT/play.html" "$BUILD/play.html"
+cp "$ROOT/hall-of-fame.html" "$BUILD/hall-of-fame.html"
 cp "$ROOT/config.xml" "$BUILD/"
 cp -R "$ROOT/css" "$ROOT/js" "$ROOT/img" "$BUILD/"
 

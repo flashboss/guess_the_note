@@ -1161,6 +1161,24 @@ html.is-tv .result-summary {
   font-size: 1.35rem !important;
 }
 
+html.is-tv .result-actions {
+  flex-wrap: nowrap;
+  flex-direction: row;
+  gap: 20px 28px;
+}
+
+html.is-tv .result-hof-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 56px;
+  padding: 0 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(196, 163, 90, 0.45);
+  white-space: nowrap;
+  font-size: 1.15rem;
+}
+
 html.is-tv button:focus,
 html.is-tv input:focus,
 html.is-tv a:focus {

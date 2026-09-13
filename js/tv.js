@@ -53,6 +53,24 @@
       return settingsFocusables();
     }
 
+    if (!game) {
+      const settingsOverlay = document.getElementById("settingsOverlay");
+      const settingsOpen =
+        settingsOverlay && !settingsOverlay.classList.contains("is-hidden");
+      if (settingsOpen) {
+        return focusable([
+          ...document.querySelectorAll("#settingsOverlay [data-lang]"),
+          document.getElementById("hofDisplayCount"),
+          document.getElementById("settingsClose"),
+        ]);
+      }
+      return focusable([
+        document.querySelector(".hof-play-link"),
+        document.getElementById("settingsBtn"),
+        ...document.querySelectorAll(".home-footer a"),
+      ]);
+    }
+
     const running = game && game.getState().running;
     const paused = game && game.getState().paused;
     if (running && paused) {
@@ -104,7 +122,9 @@
   function focusRows(items) {
     const rows = [];
     items.forEach((el) => {
-      const top = Math.round(el.getBoundingClientRect().top / 24);
+      const box = el.getBoundingClientRect();
+      // Use vertical center so flex-aligned items on one visual row share a bucket.
+      const top = Math.round((box.top + box.height / 2) / 40);
       let row = rows.find((entry) => entry.top === top);
       if (!row) {
         row = { top, els: [] };
@@ -288,6 +308,8 @@
       items.find((el) => el.classList.contains("note-btn")) ||
       items.find((el) => el.id === "pauseBtn") ||
       items.find((el) => el.id === "playBtn") ||
+      items.find((el) => el.id === "playAgainBtn") ||
+      items.find((el) => el.classList.contains("hof-play-link")) ||
       items.find((el) => el.id === "settingsBtn") ||
       items.find((el) => el.dataset.lang) ||
       items[0];
