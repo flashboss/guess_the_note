@@ -36,6 +36,16 @@ In **Notes** answer mode, written accidentals on the root are not used. In **Cho
 
 The same project is a Tizen web app (`config.xml`) that can be sideloaded on a Samsung Smart TV.
 
+### Browser preview (`?tv=1`)
+
+On a desktop browser you can force the TV UI and D-pad behavior without installing on a device. Append `?tv=1` (any value works; presence of the `tv` query param is enough) to a page URL, for example:
+
+- `play.html?tv=1`
+- `hall-of-fame.html?tv=1`
+- `index.html?tv=1`
+
+That adds the `is-tv` class (same as on Tizen / Smart TV user agents): TV layout, remote-style focus navigation (arrows / Enter), and TV-only focus rules such as landing on the answer pad after Play. Use the keyboard arrows and Enter to emulate the remote.
+
 ### Remote
 
 - Arrows: move between settings, Start/Stop, and answer buttons

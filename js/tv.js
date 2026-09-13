@@ -67,7 +67,6 @@
       return focusable([
         document.querySelector(".hof-play-link"),
         document.getElementById("settingsBtn"),
-        ...document.querySelectorAll(".home-footer a"),
       ]);
     }
 
@@ -303,6 +302,19 @@
       focusEl(items.find((el) => el.dataset.lang) || document.getElementById("settingsClose") || items[0]);
       return;
     }
+
+    const running = game && game.getState().running;
+    const paused = game && game.getState().paused;
+    if (running && !paused) {
+      const notes = items.filter((el) => el.classList.contains("note-btn"));
+      // After Play, land on the answer pad — not Pause / Stop.
+      if (notes.length && (!active || !notes.includes(active))) {
+        focusEl(notes[0]);
+        return;
+      }
+      if (notes.includes(active)) return;
+    }
+
     if (items.includes(active)) return;
     const preferred =
       items.find((el) => el.classList.contains("note-btn")) ||
