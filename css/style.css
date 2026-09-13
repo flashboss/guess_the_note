@@ -1162,7 +1162,8 @@ html.is-tv .result-summary {
 }
 
 html.is-tv button:focus,
-html.is-tv input:focus {
+html.is-tv input:focus,
+html.is-tv a:focus {
   outline: 3px solid var(--gold-bright);
   outline-offset: 4px;
   box-shadow: 0 0 0 6px rgba(230, 199, 120, 0.2);

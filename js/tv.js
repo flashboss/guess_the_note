@@ -72,7 +72,10 @@
     }
 
     if (game && game.showingResults()) {
-      return focusable([document.getElementById("playAgainBtn")]);
+      return focusable([
+        document.getElementById("playAgainBtn"),
+        document.getElementById("resultHofLink"),
+      ]);
     }
 
     return focusable([
@@ -98,10 +101,24 @@
     return true;
   }
 
-  function currentIndex(items) {
-    const active = document.activeElement;
-    const index = items.indexOf(active);
-    return index >= 0 ? index : 0;
+  function focusRows(items) {
+    const rows = [];
+    items.forEach((el) => {
+      const top = Math.round(el.getBoundingClientRect().top / 24);
+      let row = rows.find((entry) => entry.top === top);
+      if (!row) {
+        row = { top, els: [] };
+        rows.push(row);
+      }
+      row.els.push(el);
+    });
+    rows.sort((a, b) => a.top - b.top);
+    rows.forEach((row) => {
+      row.els.sort(
+        (a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left
+      );
+    });
+    return rows;
   }
 
   function moveFocus(dx, dy) {
@@ -109,34 +126,28 @@
     if (!items.length) return;
 
     const active = document.activeElement;
+    const rows = focusRows(items);
+    const rowIndex = rows.findIndex((row) => row.els.includes(active));
+    const from = rowIndex >= 0 ? rowIndex : 0;
+    const currentRow = rows[from];
+    const col = Math.max(0, currentRow.els.indexOf(active));
+
     if (dy !== 0) {
-      const rows = [];
-      items.forEach((el) => {
-        const top = Math.round(el.getBoundingClientRect().top / 24);
-        let row = rows.find((entry) => entry.top === top);
-        if (!row) {
-          row = { top, els: [] };
-          rows.push(row);
-        }
-        row.els.push(el);
-      });
-      rows.sort((a, b) => a.top - b.top);
-      const rowIndex = rows.findIndex((row) => row.els.includes(active));
-      const from = rowIndex >= 0 ? rowIndex : 0;
       const target = rows[Math.max(0, Math.min(rows.length - 1, from + dy))];
-      const col = rowIndex >= 0 ? rows[from].els.indexOf(active) : 0;
       focusEl(target.els[Math.min(col, target.els.length - 1)]);
       return;
     }
 
-    const index = currentIndex(items);
-    const next = (index + dx + items.length) % items.length;
-    focusEl(items[next]);
+    // Horizontal moves stay on the current row so toolbar controls
+    // (e.g. Pause) are only reached with Up, not by wrapping Left.
+    const next = (col + dx + currentRow.els.length) % currentRow.els.length;
+    focusEl(currentRow.els[next]);
   }
 
   function activate() {
     const el = document.activeElement;
-    if (el && (el.tagName === "BUTTON" || el.tagName === "INPUT")) {
+    if (!el) return;
+    if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.tagName === "A") {
       el.click();
     }
   }
