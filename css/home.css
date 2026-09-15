@@ -187,6 +187,30 @@ html.is-tv .hof-page .home-footer {
   display: none;
 }
 
+html.is-tv .hof-status {
+  font-size: 1.35rem;
+}
+
+html.is-tv .hof-table {
+  min-width: 0;
+  font-size: 1.55rem;
+}
+
+html.is-tv .hof-table th,
+html.is-tv .hof-table td {
+  padding: 18px 22px;
+}
+
+html.is-tv .hof-table td:first-child,
+html.is-tv .hof-table th:first-child {
+  width: 5.5rem;
+}
+
+html.is-tv .hof-empty {
+  font-size: 1.45rem;
+  padding: 36px 24px;
+}
+
 @media (max-width: 720px) {
   .home-features {
     grid-template-columns: 1fr;

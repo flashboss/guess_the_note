@@ -246,6 +246,18 @@ function celebrationBadgeText() {
   return document.getElementById("resultHofBadgeText");
 }
 
+function resultHofLink() {
+  return document.getElementById("resultHofLink");
+}
+
+function hideResultHofLink() {
+  resultHofLink()?.classList.add("is-hidden");
+}
+
+function showResultHofLink() {
+  resultHofLink()?.classList.remove("is-hidden");
+}
+
 function playCelebrationTone() {
   if (storageGet(SETTINGS_SOUND) === "0") return;
   try {
@@ -297,6 +309,11 @@ function hideHofStatus() {
   if (badge) delete badge.dataset.newHigh;
 }
 
+function resetResultHofUi() {
+  hideHofStatus();
+  hideResultHofLink();
+}
+
 function showHallOfFameCelebration(isNewHigh) {
   const pending = celebrationPending();
   const badge = celebrationBadge();
@@ -315,7 +332,7 @@ function showHallOfFameCelebration(isNewHigh) {
 }
 
 function hideCelebration() {
-  hideHofStatus();
+  resetResultHofUi();
   stopFireworks();
 }
 
@@ -324,38 +341,49 @@ function showCelebration() {
 }
 
 async function processSessionResult(result) {
-  if (!result) return null;
+  hideResultHofLink();
+  if (!result) {
+    showResultHofLink();
+    return null;
+  }
 
   const entry = {
     name: normalizeName(result.playerName),
     score: Math.round(Number(result.universalScore)),
     grade: Math.round(Number(result.grade)),
   };
-  if (!entry.name || entry.score <= 0) return null;
+  if (!entry.name || entry.score <= 0) {
+    showResultHofLink();
+    return null;
+  }
 
   showHofPending();
 
-  let board;
   try {
-    board = await loadRecords();
-  } catch {
-    hideHofStatus();
-    return null;
-  }
+    let board;
+    try {
+      board = await loadRecords();
+    } catch {
+      hideHofStatus();
+      return null;
+    }
 
-  const records = Array.isArray(board.records) ? board.records : [];
-  if (!qualifiesForBoard(entry.score, records)) {
-    hideHofStatus();
-    return null;
-  }
+    const records = Array.isArray(board.records) ? board.records : [];
+    if (!qualifiesForBoard(entry.score, records)) {
+      hideHofStatus();
+      return null;
+    }
 
-  const response = await submitRecord(entry);
-  if (response?.ok && response.added) {
-    showHallOfFameCelebration(Boolean(response.isNewHigh));
-  } else {
-    hideHofStatus();
+    const response = await submitRecord(entry);
+    if (response?.ok && response.added) {
+      showHallOfFameCelebration(Boolean(response.isNewHigh));
+    } else {
+      hideHofStatus();
+    }
+    return response;
+  } finally {
+    showResultHofLink();
   }
-  return response;
 }
 
 function formatRecordDate(iso) {

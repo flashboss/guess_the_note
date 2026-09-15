@@ -560,6 +560,10 @@ input[type="range"] {
   text-decoration: none;
 }
 
+.result-hof-link.is-hidden {
+  display: none;
+}
+
 .result-hof-link:hover {
   color: var(--gold-bright);
 }
