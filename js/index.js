@@ -109,7 +109,7 @@ playerNameInput?.addEventListener("input", () => {
 });
 
 playerNameInput?.addEventListener("blur", () => {
-  setPlayerName(playerNameInput.value);
+  setPlayerName(playerNameInput.value, { notify: false });
 });
 
 document.getElementById("keepPlayerName")?.addEventListener("change", (event) => {

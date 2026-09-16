@@ -418,7 +418,7 @@
   window.addEventListener("gtn:ui", () => {
     const game = api();
     const active = document.activeElement;
-    if (isTextField(active)) return;
+    if (isTextField(active) || isNameField(active)) return;
     const items = visibleFocusables();
     if (game && game.showingResults()) {
       focusEl(document.getElementById("playAgainBtn"));
@@ -426,6 +426,11 @@
     }
     if (game && game.settingsAreOpen()) {
       if (items.includes(active)) return;
+      // Blur/focus handoff can leave body active briefly — do not yank to the top.
+      if (active?.closest?.("#settingsOverlay")) return;
+      if (!active || active === document.body || active === document.documentElement) {
+        return;
+      }
       focusEl(items.find((el) => el.dataset.lang) || document.getElementById("settingsClose") || items[0]);
       return;
     }
