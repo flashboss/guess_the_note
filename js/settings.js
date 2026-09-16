@@ -3,7 +3,7 @@ import {
   CLEFS, SHAPES,
   SETTINGS_CLEF, SETTINGS_SHAPES, SETTINGS_ANSWER_MODE, SETTINGS_CHOICE_COUNT,
   SETTINGS_CHOICE_KIND, SETTINGS_DIFFICULTY, SETTINGS_TEMPO, SETTINGS_ROUNDS, SETTINGS_SOUND,
-  SETTINGS_PLAYER_NAME, PLAYER_NAME_MAX, RANDOM_NAME_ADJECTIVES, RANDOM_NAME_NOUNS,
+  SETTINGS_PLAYER_NAME, SETTINGS_PLAYER_NAME_KEEP, PLAYER_NAME_MAX, RANDOM_NAME_ADJECTIVES, RANDOM_NAME_NOUNS,
   DIFFICULTY_MIN, DIFFICULTY_MAX,
 } from "./constants.js";
 import { state, dom } from "./state.js";
@@ -250,6 +250,31 @@ function syncPlayerNameInput() {
   }
 }
 
+function keepPlayerNameInput() {
+  return document.getElementById("keepPlayerName");
+}
+
+function syncKeepPlayerNameInput() {
+  const input = keepPlayerNameInput();
+  if (input) input.checked = Boolean(state.keepPlayerName);
+}
+
+function setKeepPlayerName(keep, { notify = true } = {}) {
+  state.keepPlayerName = Boolean(keep);
+  storageSet(SETTINGS_PLAYER_NAME_KEEP, state.keepPlayerName ? "1" : "0");
+  syncKeepPlayerNameInput();
+  if (state.keepPlayerName && state.playerName) {
+    storageSet(SETTINGS_PLAYER_NAME, state.playerName);
+  }
+  if (notify) notifyUi();
+}
+
+function loadKeepPlayerName() {
+  const raw = storageGet(SETTINGS_PLAYER_NAME_KEEP);
+  state.keepPlayerName = raw === "1";
+  syncKeepPlayerNameInput();
+}
+
 function translatedLabel(key, fallback) {
   if (!window.I18n) return fallback;
   const value = window.I18n.t(key);
@@ -270,19 +295,38 @@ function syncHallOfFameFieldLabels() {
       translatedLabel("hallOfFameNameAria", "Player name")
     );
   }
+  const keep = keepPlayerNameInput();
+  if (keep) {
+    keep.setAttribute(
+      "aria-label",
+      translatedLabel("keepPlayerNameAria", "Keep this name for the next game")
+    );
+  }
 }
 
 function setPlayerName(name, { persist = true, fallbackRandom = true, notify = true, syncInput = true } = {}) {
   const next = normalizePlayerName(name);
   state.playerName = next || (fallbackRandom ? generateRandomPlayerName() : "");
   if (syncInput) syncPlayerNameInput();
-  if (persist && state.playerName) storageSet(SETTINGS_PLAYER_NAME, state.playerName);
+  if (persist && state.keepPlayerName && state.playerName) {
+    storageSet(SETTINGS_PLAYER_NAME, state.playerName);
+  }
   if (notify) notifyUi();
 }
 
 function loadPlayerName() {
-  const saved = normalizePlayerName(storageGet(SETTINGS_PLAYER_NAME));
-  setPlayerName(saved || generateRandomPlayerName(), { persist: !saved });
+  loadKeepPlayerName();
+  if (state.keepPlayerName) {
+    const saved = normalizePlayerName(storageGet(SETTINGS_PLAYER_NAME));
+    setPlayerName(saved || generateRandomPlayerName(), { persist: !saved });
+    return;
+  }
+  setPlayerName(generateRandomPlayerName(), { persist: false });
+}
+
+function preparePlayerNameForSession() {
+  if (state.keepPlayerName) return;
+  setPlayerName(generateRandomPlayerName(), { persist: false });
 }
 
 function loadSettings() {
@@ -357,4 +401,7 @@ export {
   syncHallOfFameFieldLabels,
   setPlayerName,
   loadPlayerName,
+  setKeepPlayerName,
+  syncKeepPlayerNameInput,
+  preparePlayerNameForSession,
 };

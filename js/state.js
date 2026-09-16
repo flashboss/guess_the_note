@@ -27,6 +27,7 @@ const state = {
   nextTimer: null,
   sound: true,
   playerName: "",
+  keepPlayerName: false,
   paused: false,
   pauseCount: 0,
   pauseKind: null,

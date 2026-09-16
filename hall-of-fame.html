@@ -20,8 +20,8 @@
       href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=Outfit:wght@400;500;600&display=swap"
       rel="stylesheet"
     />
-    <link rel="stylesheet" href="css/style.css?v=20250915b" />
-    <link rel="stylesheet" href="css/home.css?v=20250915b" />
+    <link rel="stylesheet" href="css/style.css?v=20250916c" />
+    <link rel="stylesheet" href="css/home.css?v=20250916c" />
   </head>
   <body>
     <div class="app home hof-page">
@@ -104,7 +104,14 @@
 
       <main class="hof-main">
         <p class="hof-status" id="hofStatus" aria-live="polite"></p>
-        <div id="hofTable" class="hof-table-host"></div>
+        <div
+          id="hofTable"
+          class="hof-table-host"
+          tabindex="0"
+          role="region"
+          data-i18n-aria="hallOfFameTitle"
+          aria-label="Hall of fame"
+        ></div>
       </main>
 
       <footer class="home-footer">
@@ -113,9 +120,9 @@
       </footer>
     </div>
 
-    <script src="js/i18n.js?v=20250913a"></script>
+    <script src="js/i18n.js?v=20250916a"></script>
     <script src="js/page-settings.js?v=20250901h"></script>
-    <script type="module" src="js/hall-of-fame-page.js?v=20250901i"></script>
-    <script src="js/tv.js?v=20250913g"></script>
+    <script type="module" src="js/hall-of-fame-page.js?v=20250916c"></script>
+    <script src="js/tv.js?v=20250916b"></script>
   </body>
 </html>

@@ -120,6 +120,7 @@ const SETTINGS_TEMPO = "gtn-tempo";
 const SETTINGS_ROUNDS = "gtn-rounds";
 const SETTINGS_SOUND = "gtn-sound";
 const SETTINGS_PLAYER_NAME = "gtn-player-name";
+const SETTINGS_PLAYER_NAME_KEEP = "gtn-player-name-keep";
 const SETTINGS_HALL_OF_FAME_CACHE = "gtn-hall-of-fame-cache";
 const SETTINGS_HALL_OF_FAME_LOCAL = "gtn-hall-of-fame-local";
 const HALL_OF_FAME_API_URL = "https://script.google.com/macros/s/AKfycbxpbuFqT5ykDa86hJvGqSO13Detfv7O0Pq_7sGkvF3AL13TnYKa8GQ1MSFZmy7hB56jew/exec";
@@ -222,6 +223,7 @@ export {
   SETTINGS_ROUNDS,
   SETTINGS_SOUND,
   SETTINGS_PLAYER_NAME,
+  SETTINGS_PLAYER_NAME_KEEP,
   SETTINGS_HALL_OF_FAME_CACHE,
   SETTINGS_HALL_OF_FAME_LOCAL,
   HALL_OF_FAME_API_URL,

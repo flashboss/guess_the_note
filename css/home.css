@@ -123,6 +123,12 @@
   border-bottom: none;
 }
 
+.hof-table tr.hof-row-self td {
+  background: rgba(196, 163, 90, 0.2);
+  color: var(--gold-bright);
+  font-weight: 600;
+}
+
 .hof-table td:first-child,
 .hof-table th:first-child {
   width: 4rem;
@@ -187,18 +193,61 @@ html.is-tv .hof-page .home-footer {
   display: none;
 }
 
+html.is-tv .hof-page.app {
+  overflow: hidden;
+}
+
+html.is-tv .hof-page .home-topbar {
+  flex-shrink: 0;
+}
+
+html.is-tv .hof-main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 0;
+  overflow: hidden;
+}
+
 html.is-tv .hof-status {
+  flex-shrink: 0;
   font-size: 1.35rem;
+}
+
+html.is-tv .hof-table-host {
+  flex: 1;
+  min-height: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border-radius: 16px;
+}
+
+html.is-tv .hof-table-host:focus {
+  outline: 3px solid var(--gold-bright);
+  outline-offset: 4px;
 }
 
 html.is-tv .hof-table {
   min-width: 0;
   font-size: 1.55rem;
+  overflow: visible;
 }
 
 html.is-tv .hof-table th,
 html.is-tv .hof-table td {
   padding: 18px 22px;
+}
+
+html.is-tv .hof-table tr.hof-row-self td {
+  background: rgba(196, 163, 90, 0.28);
+  box-shadow: inset 0 0 0 2px rgba(230, 199, 120, 0.85);
+}
+
+html.is-tv .hof-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
 }
 
 html.is-tv .hof-table td:first-child,

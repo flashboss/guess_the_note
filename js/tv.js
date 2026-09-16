@@ -17,6 +17,34 @@
     return el?.tagName === "INPUT" && (el.type === "text" || el.type === "search");
   }
 
+  function hofScrollHost() {
+    return document.getElementById("hofTable");
+  }
+
+  function isHofScrollTarget(el) {
+    const host = hofScrollHost();
+    return Boolean(host && el && (el === host || host.contains(el)));
+  }
+
+  function hofScrollStep(host) {
+    const row = host.querySelector(".hof-table tbody tr");
+    const rowHeight = row ? Math.ceil(row.getBoundingClientRect().height) : 0;
+    return Math.max(rowHeight || 64, Math.round(host.clientHeight * 0.35));
+  }
+
+  function tryScrollHof(dir) {
+    if (!document.documentElement.classList.contains("is-tv")) return false;
+    const host = hofScrollHost();
+    if (!host || !isHofScrollTarget(document.activeElement)) return false;
+    const max = Math.max(0, host.scrollHeight - host.clientHeight);
+    if (max <= 1) return false;
+    const before = host.scrollTop;
+    if (dir < 0 && before <= 0) return false;
+    if (dir > 0 && before >= max - 1) return false;
+    host.scrollTop = Math.max(0, Math.min(max, before + dir * hofScrollStep(host)));
+    return true;
+  }
+
   function isFocusable(el) {
     return Boolean(
       el &&
@@ -43,6 +71,7 @@
       document.getElementById("tempo"),
       document.getElementById("soundBtn"),
       document.getElementById("playerName"),
+      document.getElementById("keepPlayerName"),
       document.getElementById("settingsClose"),
     ]);
   }
@@ -67,6 +96,7 @@
       return focusable([
         document.querySelector(".hof-play-link"),
         document.getElementById("settingsBtn"),
+        document.getElementById("hofTable"),
       ]);
     }
 
@@ -221,11 +251,13 @@
     }
     if (key === "ArrowUp" || code === 38) {
       event.preventDefault();
+      if (tryScrollHof(-1)) return;
       moveFocus(0, -1);
       return;
     }
     if (key === "ArrowDown" || code === 40) {
       event.preventDefault();
+      if (tryScrollHof(1)) return;
       moveFocus(0, 1);
       return;
     }

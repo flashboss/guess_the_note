@@ -18,7 +18,7 @@ const {
 } = dom;
 import { t, notifyUi, shuffle, difficultyLevel, difficultyT, isNotesMode, isMultiple, formatMessage } from "./util.js";
 import { universalRoundPoints, fullRoundWeight, sessionGradeQuality, applyPausePenalty, sessionDifficultyIndex, formatUniversalScore, sessionSettingsSnapshot } from "./scoring.js";
-import { closeSettings } from "./settings.js";
+import { closeSettings, preparePlayerNameForSession } from "./settings.js";
 import { processSessionResult, hideCelebration } from "./hall-of-fame.js";
 
 let audioCtx = null;
@@ -1291,6 +1291,7 @@ function togglePause() {
 
 function startGame() {
   if (state.running) return;
+  preparePlayerNameForSession();
   closeSettings();
   unlockAudio();
   state.running = true;

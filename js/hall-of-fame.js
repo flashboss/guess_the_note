@@ -251,11 +251,37 @@ function resultHofLink() {
 }
 
 function hideResultHofLink() {
+  resetResultHofLinkHref();
   resultHofLink()?.classList.add("is-hidden");
 }
 
 function showResultHofLink() {
   resultHofLink()?.classList.remove("is-hidden");
+}
+
+function resultHofBaseParams() {
+  const params = new URLSearchParams();
+  if (new URLSearchParams(location.search).has("tv")) params.set("tv", "1");
+  return params;
+}
+
+function setResultHofLinkHref(entry) {
+  const link = resultHofLink();
+  if (!link) return;
+  const params = resultHofBaseParams();
+  const name = normalizeName(entry?.name);
+  const score = Math.round(Number(entry?.score));
+  if (name) params.set("player", name);
+  if (Number.isFinite(score) && score > 0) params.set("score", String(score));
+  const qs = params.toString();
+  link.href = qs ? `hall-of-fame.html?${qs}` : "hall-of-fame.html";
+}
+
+function resetResultHofLinkHref() {
+  const link = resultHofLink();
+  if (!link) return;
+  const qs = resultHofBaseParams().toString();
+  link.href = qs ? `hall-of-fame.html?${qs}` : "hall-of-fame.html";
 }
 
 function playCelebrationTone() {
@@ -377,6 +403,7 @@ async function processSessionResult(result) {
     const response = await submitRecord(entry);
     if (response?.ok && response.added) {
       showHallOfFameCelebration(Boolean(response.isNewHigh));
+      setResultHofLinkHref(entry);
     } else {
       hideHofStatus();
     }
@@ -401,6 +428,11 @@ function renderRecordsTable(container, records, options = {}) {
   if (!container) return;
   const limit = options.limit ?? getHallOfFameDisplayLimit();
   const rows = sortedRecords(records).slice(0, limit);
+  const highlightName = normalizeName(options.highlightName);
+  const highlightScoreRaw = Number(options.highlightScore);
+  const highlightScore = Number.isFinite(highlightScoreRaw)
+    ? Math.round(highlightScoreRaw)
+    : null;
 
   if (!rows.length) {
     container.innerHTML = `<p class="hof-empty">${t("hallOfFameEmpty")}</p>`;
@@ -418,20 +450,38 @@ function renderRecordsTable(container, records, options = {}) {
     </thead>
   `;
 
+  let highlighted = false;
   const body = rows
-    .map(
-      (row, index) => `
-      <tr>
+    .map((row, index) => {
+      const sameName = highlightName && normalizeName(row.name) === highlightName;
+      const sameScore =
+        highlightScore == null || Math.round(Number(row.score)) === highlightScore;
+      const isSelf = !highlighted && sameName && sameScore;
+      if (isSelf) highlighted = true;
+      return `
+      <tr class="${isSelf ? "hof-row-self" : ""}"${isSelf ? ' data-hof-self="1"' : ""}>
         <td>${index + 1}</td>
         <td>${escapeHtml(row.name)}</td>
         <td>${escapeHtml(formatUniversalScore(row.score))}</td>
         <td>${escapeHtml(formatRecordDate(row.at))}</td>
       </tr>
-    `
-    )
+    `;
+    })
     .join("");
 
   container.innerHTML = `<table class="hof-table">${head}<tbody>${body}</tbody></table>`;
+  scrollHighlightedHofRow(container);
+}
+
+function scrollHighlightedHofRow(container) {
+  const row = container?.querySelector("tr.hof-row-self");
+  if (!row) return;
+  requestAnimationFrame(() => {
+    row.scrollIntoView({ block: "center", inline: "nearest" });
+    if (document.documentElement.classList.contains("is-tv")) {
+      container.focus?.({ preventScroll: true });
+    }
+  });
 }
 
 function escapeHtml(value) {
@@ -448,6 +498,7 @@ export {
   submitRecord,
   processSessionResult,
   renderRecordsTable,
+  scrollHighlightedHofRow,
   showCelebration,
   hideCelebration,
   showHallOfFameCelebration,

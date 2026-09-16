@@ -452,6 +452,24 @@ input[type="range"] {
   color: rgba(243, 230, 201, 0.45);
 }
 
+.name-keep {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  color: #d8c7a4;
+  font-size: 0.9rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.name-keep input[type="checkbox"] {
+  width: 1.15rem;
+  height: 1.15rem;
+  accent-color: var(--gold);
+  flex-shrink: 0;
+}
+
 .stage {
   display: grid;
   gap: 18px;
@@ -1077,6 +1095,16 @@ html.is-tv .text-field input[type="text"] {
   min-height: 52px;
   font-size: 1.25rem;
   padding: 12px 16px;
+}
+
+html.is-tv .name-keep {
+  font-size: 1.15rem;
+  gap: 14px;
+}
+
+html.is-tv .name-keep input[type="checkbox"] {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 html.is-tv .stage {

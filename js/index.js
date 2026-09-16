@@ -19,6 +19,7 @@ import {
   setPlayerName,
   syncPlayerNameInput,
   syncHallOfFameFieldLabels,
+  setKeepPlayerName,
   settingsAreOpen,
   openSettings,
   closeSettings,
@@ -109,6 +110,10 @@ playerNameInput?.addEventListener("input", () => {
 
 playerNameInput?.addEventListener("blur", () => {
   setPlayerName(playerNameInput.value);
+});
+
+document.getElementById("keepPlayerName")?.addEventListener("change", (event) => {
+  setKeepPlayerName(event.target.checked);
 });
 
 document.getElementById("soundBtn")?.addEventListener("click", () => {

@@ -23,8 +23,16 @@ function syncDisplayControl() {
   if (displayLabel) displayLabel.textContent = String(limit);
 }
 
+function highlightFromQuery() {
+  const params = new URLSearchParams(location.search);
+  return {
+    highlightName: params.get("player") || "",
+    highlightScore: params.get("score"),
+  };
+}
+
 function rerenderBoard() {
-  renderRecordsTable(tableHost, lastRecords);
+  renderRecordsTable(tableHost, lastRecords, highlightFromQuery());
 }
 
 async function refreshBoard() {
