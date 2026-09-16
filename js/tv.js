@@ -178,19 +178,32 @@
   }
 
   function focusRows(items) {
-    const rows = [];
-    items.forEach((el) => {
-      const box = el.getBoundingClientRect();
-      // Use vertical center so flex-aligned items on one visual row share a bucket.
-      const top = Math.round((box.top + box.height / 2) / 40);
-      let row = rows.find((entry) => entry.top === top);
-      if (!row) {
-        row = { top, els: [] };
-        rows.push(row);
-      }
-      row.els.push(el);
+    const sorted = [...items].sort((a, b) => {
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      return ra.top + ra.height / 2 - (rb.top + rb.height / 2);
     });
-    rows.sort((a, b) => a.top - b.top);
+
+    const rows = [];
+    sorted.forEach((el) => {
+      const box = el.getBoundingClientRect();
+      const center = box.top + box.height / 2;
+      const last = rows[rows.length - 1];
+      if (last) {
+        const prev = last.els[0].getBoundingClientRect();
+        const prevCenter = prev.top + prev.height / 2;
+        const close = Math.abs(center - prevCenter) < 28;
+        // Stacked controls (name above checkbox) must not share a row.
+        const overlaps =
+          box.top < prev.bottom - 10 && box.bottom > prev.top + 10;
+        if (close && overlaps) {
+          last.els.push(el);
+          return;
+        }
+      }
+      rows.push({ top: center, els: [el] });
+    });
+
     rows.forEach((row) => {
       row.els.sort(
         (a, b) => a.getBoundingClientRect().left - b.getBoundingClientRect().left
@@ -204,6 +217,23 @@
     if (!items.length) return;
 
     const active = document.activeElement;
+
+    // Name field and keep-checkbox are stacked; always step between them.
+    if (dy > 0 && active?.id === "playerName") {
+      const keep = items.find((el) => el.id === "keepPlayerName");
+      if (keep) {
+        focusEl(keep);
+        return;
+      }
+    }
+    if (dy < 0 && active?.id === "keepPlayerName") {
+      const name = items.find((el) => el.id === "playerName");
+      if (name) {
+        focusEl(name);
+        return;
+      }
+    }
+
     const rows = focusRows(items);
     const rowIndex = rows.findIndex((row) => row.els.includes(active));
     const from = rowIndex >= 0 ? rowIndex : 0;
