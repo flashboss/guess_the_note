@@ -477,7 +477,22 @@ function scrollHighlightedHofRow(container) {
   const row = container?.querySelector("tr.hof-row-self");
   if (!row) return;
   requestAnimationFrame(() => {
-    row.scrollIntoView({ block: "center", inline: "nearest" });
+    const rows = [...container.querySelectorAll(".hof-table tbody tr")];
+    const index = rows.indexOf(row);
+    if (index < 0) return;
+    const step =
+      Math.round(rows[0].getBoundingClientRect().height) || rows[0].offsetHeight || 0;
+    if (!step) {
+      row.scrollIntoView({ block: "center", inline: "nearest" });
+    } else {
+      const header = container.querySelector(".hof-table thead");
+      const headerH = header ? header.getBoundingClientRect().height : 0;
+      const visibleRows = Math.max(1, Math.floor((container.clientHeight - headerH) / step));
+      const max = Math.max(0, container.scrollHeight - container.clientHeight);
+      const targetIndex = Math.max(0, index - Math.floor(visibleRows / 2));
+      // Snap to whole rows so the sticky header covers records cleanly.
+      container.scrollTop = Math.min(max, targetIndex * step);
+    }
     if (document.documentElement.classList.contains("is-tv")) {
       container.focus?.({ preventScroll: true });
     }
