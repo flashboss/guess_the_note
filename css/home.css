@@ -232,6 +232,9 @@ html.is-tv .hof-table {
   min-width: 0;
   font-size: 1.55rem;
   overflow: visible;
+  /* collapse breaks position:sticky on thead in Chromium/Tizen */
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 html.is-tv .hof-table th,
@@ -247,7 +250,9 @@ html.is-tv .hof-table tr.hof-row-self td {
 html.is-tv .hof-table thead th {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 3;
+  background: #1c1612;
+  box-shadow: 0 1px 0 rgba(196, 163, 90, 0.28);
 }
 
 html.is-tv .hof-table td:first-child,
