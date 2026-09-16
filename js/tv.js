@@ -13,8 +13,37 @@
     return [...document.querySelectorAll(".note-btn")];
   }
 
+  function isTv() {
+    return document.documentElement.classList.contains("is-tv");
+  }
+
   function isTextField(el) {
+    return (
+      el?.tagName === "INPUT" &&
+      (el.type === "text" || el.type === "search") &&
+      !el.readOnly
+    );
+  }
+
+  function isNameField(el) {
     return el?.tagName === "INPUT" && (el.type === "text" || el.type === "search");
+  }
+
+  function lockTvTextFields() {
+    if (!isTv()) return;
+    document.querySelectorAll('#settingsOverlay input[type="text"]').forEach((el) => {
+      el.readOnly = true;
+    });
+  }
+
+  function unlockTvTextField(el) {
+    if (!isTv() || !isNameField(el)) return;
+    el.readOnly = false;
+    try {
+      el.setSelectionRange(el.value.length, el.value.length);
+    } catch {
+      /* ignore */
+    }
   }
 
   function hofScrollHost() {
@@ -196,6 +225,10 @@
   function activate() {
     const el = document.activeElement;
     if (!el) return;
+    if (isNameField(el) && el.readOnly) {
+      unlockTvTextField(el);
+      return;
+    }
     if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.tagName === "A") {
       el.click();
     }
@@ -233,6 +266,38 @@
       if (code === 10009 || key === "XF86Back" || key === "Escape") {
         event.preventDefault();
         active.blur();
+        lockTvTextFields();
+        return;
+      }
+      // While the on-screen keyboard is open, leave other keys to the IME.
+      // Arrow keys still escape so the keep-name checkbox stays reachable.
+      if (key === "ArrowLeft" || code === 37) {
+        event.preventDefault();
+        active.blur();
+        lockTvTextFields();
+        moveFocus(-1, 0);
+        return;
+      }
+      if (key === "ArrowRight" || code === 39) {
+        event.preventDefault();
+        active.blur();
+        lockTvTextFields();
+        moveFocus(1, 0);
+        return;
+      }
+      if (key === "ArrowUp" || code === 38) {
+        event.preventDefault();
+        active.blur();
+        lockTvTextFields();
+        moveFocus(0, -1);
+        return;
+      }
+      if (key === "ArrowDown" || code === 40) {
+        event.preventDefault();
+        active.blur();
+        lockTvTextFields();
+        moveFocus(0, 1);
+        return;
       }
       return;
     }
@@ -361,7 +426,16 @@
   });
 
   registerTvKeys();
+  lockTvTextFields();
+  document.addEventListener(
+    "blur",
+    (event) => {
+      if (isNameField(event.target)) lockTvTextFields();
+    },
+    true
+  );
   window.addEventListener("load", () => {
+    lockTvTextFields();
     const game = api();
     if (document.documentElement.classList.contains("is-tv") && game) {
       game.startGame();
