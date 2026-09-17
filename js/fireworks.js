@@ -4,8 +4,9 @@ let frameId = 0;
 let rockets = [];
 let particles = [];
 let running = false;
+let dpr = 1;
 
-const COLORS = ["#f5d67b", "#e8c468", "#ff6b6b", "#ffd93d", "#6bcb77", "#4d96ff", "#ff85c0"];
+const COLORS = ["#ffe566", "#ff6b6b", "#6bffb8", "#6bcbff", "#ff85c0", "#ffffff", "#ffd93d"];
 
 function rand(min, max) {
   return min + Math.random() * (max - min);
@@ -16,83 +17,89 @@ function pickColor() {
 }
 
 function launchRocket() {
-  const width = canvas.width;
-  const height = canvas.height;
+  if (!canvas) return;
+  const w = canvas.width;
+  const h = canvas.height;
   rockets.push({
-    x: rand(width * 0.12, width * 0.88),
-    y: height + 8,
-    vx: rand(-1.2, 1.2),
-    vy: rand(-11, -8),
+    x: rand(w * 0.15, w * 0.85),
+    y: h + 10 * dpr,
+    vx: rand(-1.4, 1.4) * dpr,
+    vy: rand(-13, -9) * dpr,
     color: pickColor(),
     trail: [],
   });
 }
 
 function explode(x, y, color) {
-  const count = Math.floor(rand(28, 42));
+  const count = Math.floor(rand(48, 72));
   for (let i = 0; i < count; i += 1) {
-    const angle = (Math.PI * 2 * i) / count + rand(-0.2, 0.2);
-    const speed = rand(2.5, 6.5);
+    const angle = (Math.PI * 2 * i) / count + rand(-0.25, 0.25);
+    const speed = rand(3.5, 9) * dpr;
     particles.push({
       x,
       y,
       vx: Math.cos(angle) * speed,
       vy: Math.sin(angle) * speed,
-      life: rand(45, 75),
-      maxLife: 75,
+      life: rand(55, 100),
+      maxLife: 100,
       color,
-      size: rand(1.6, 3.2),
+      size: rand(2.5, 5.5) * dpr,
     });
   }
 }
 
 function resizeCanvas() {
-  if (!canvas) return;
-  const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  canvas.width = Math.floor(window.innerWidth * dpr);
-  canvas.height = Math.floor(window.innerHeight * dpr);
-  canvas.style.width = `${window.innerWidth}px`;
-  canvas.style.height = `${window.innerHeight}px`;
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (!canvas || !ctx) return;
+  dpr = Math.min(window.devicePixelRatio || 1, 2);
+  const cssW = Math.max(1, window.innerWidth);
+  const cssH = Math.max(1, window.innerHeight);
+  canvas.width = Math.floor(cssW * dpr);
+  canvas.height = Math.floor(cssH * dpr);
+  canvas.style.width = `${cssW}px`;
+  canvas.style.height = `${cssH}px`;
+  // Identity transform — all physics use device pixels.
+  ctx.setTransform(1, 0, 0, 1, 0, 0);
 }
 
 function tick() {
   if (!running || !ctx || !canvas) return;
 
-  const width = window.innerWidth;
-  const height = window.innerHeight;
-  ctx.clearRect(0, 0, width, height);
+  const w = canvas.width;
+  const h = canvas.height;
+  ctx.globalCompositeOperation = "source-over";
+  ctx.clearRect(0, 0, w, h);
   ctx.globalCompositeOperation = "lighter";
 
-  if (Math.random() < 0.08) launchRocket();
+  if (Math.random() < 0.14) launchRocket();
 
   rockets = rockets.filter((rocket) => {
     rocket.trail.push({ x: rocket.x, y: rocket.y });
-    if (rocket.trail.length > 8) rocket.trail.shift();
+    if (rocket.trail.length > 12) rocket.trail.shift();
     rocket.x += rocket.vx;
     rocket.y += rocket.vy;
-    rocket.vy += 0.18;
+    rocket.vy += 0.22 * dpr;
 
     rocket.trail.forEach((point, index) => {
       const alpha = (index + 1) / rocket.trail.length;
       ctx.beginPath();
       ctx.fillStyle = rocket.color;
-      ctx.globalAlpha = alpha * 0.55;
-      ctx.arc(point.x, point.y, 2, 0, Math.PI * 2);
+      ctx.globalAlpha = alpha * 0.85;
+      ctx.arc(point.x, point.y, 3 * dpr, 0, Math.PI * 2);
       ctx.fill();
     });
 
-    if (rocket.vy >= -1.5) {
+    // Burst near upper third of the screen.
+    if (rocket.vy >= -1.2 * dpr || rocket.y <= h * 0.28) {
       explode(rocket.x, rocket.y, rocket.color);
       return false;
     }
-    return rocket.y < height + 20;
+    return rocket.y < h + 40 * dpr;
   });
 
   particles = particles.filter((particle) => {
     particle.x += particle.vx;
     particle.y += particle.vy;
-    particle.vy += 0.06;
+    particle.vy += 0.08 * dpr;
     particle.vx *= 0.985;
     particle.life -= 1;
 
@@ -114,22 +121,35 @@ function onResize() {
 }
 
 function startFireworks(target = document.getElementById("hofFireworks")) {
-  if (!target || running) return;
+  if (!target) return;
+  if (running) stopFireworks();
+
   canvas = target;
-  ctx = canvas.getContext("2d");
-  if (!ctx) return;
+  ctx = canvas.getContext("2d", { alpha: true });
+  if (!ctx) {
+    canvas = null;
+    return;
+  }
 
   running = true;
   rockets = [];
   particles = [];
   canvas.classList.remove("is-hidden");
+  canvas.setAttribute("aria-hidden", "true");
   resizeCanvas();
   window.addEventListener("resize", onResize);
 
-  for (let i = 0; i < 4; i += 1) {
-    window.setTimeout(launchRocket, i * 180);
-  }
-  frameId = window.requestAnimationFrame(tick);
+  // Ensure layout is applied before the first launches (display:none → block).
+  requestAnimationFrame(() => {
+    if (!running) return;
+    resizeCanvas();
+    for (let i = 0; i < 8; i += 1) {
+      window.setTimeout(() => {
+        if (running) launchRocket();
+      }, i * 140);
+    }
+    frameId = window.requestAnimationFrame(tick);
+  });
 }
 
 function stopFireworks() {
@@ -139,6 +159,7 @@ function stopFireworks() {
   rockets = [];
   particles = [];
   if (canvas) {
+    ctx?.setTransform(1, 0, 0, 1, 0, 0);
     ctx?.clearRect(0, 0, canvas.width, canvas.height);
     canvas.classList.add("is-hidden");
   }

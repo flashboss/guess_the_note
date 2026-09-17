@@ -49,6 +49,7 @@ import {
 } from "./game.js";
 import { formatUniversalScore } from "./scoring.js";
 import { hideCelebration } from "./hall-of-fame.js";
+import { startFireworks, stopFireworks } from "./fireworks.js";
 
 const {
   tempo,
@@ -220,6 +221,8 @@ window.GuessTheNote = {
   formatUniversalScore,
   showingResults: () => resultOverlay && !resultOverlay.classList.contains("is-hidden"),
   refreshLabels,
+  startFireworks,
+  stopFireworks,
 };
 
 loadSettings();
