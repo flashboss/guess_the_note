@@ -18,11 +18,20 @@ const {
 } = dom;
 import { t, notifyUi, shuffle, difficultyLevel, difficultyT, isNotesMode, isMultiple, formatMessage } from "./util.js";
 import { universalRoundPoints, fullRoundWeight, sessionGradeQuality, applyPausePenalty, sessionDifficultyIndex, formatUniversalScore, sessionSettingsSnapshot } from "./scoring.js";
-import { closeSettings, preparePlayerNameForSession } from "./settings.js";
+import { closeSettings } from "./settings.js";
+import {
+  commitPlayerNameFromInput,
+  rotatePlayerNameAfterSession,
+  clearPlayerNameUserEdited,
+  markPlayerNameUserEdited,
+  normalizePlayerName,
+} from "./player-name.js";
 import { processSessionResult, hideCelebration } from "./hall-of-fame.js";
 
 let audioCtx = null;
 let activeOscs = [];
+/** Name locked at Play for this session's hall-of-fame submit. */
+let activeSessionPlayerName = "";
 
 // Bravura (SMuFL) outlines — origin on the G / F line, 250 units = 1 staff space.
 const CLEF_PATHS = {
@@ -1172,10 +1181,20 @@ function finishSession() {
     btn.disabled = true;
     btn.classList.remove("is-picked");
   });
+
+  // Only the name frozen at Play counts — not the live input (may already be next-game).
+  const nameForResult = String(activeSessionPlayerName || "").trim();
+  if (!nameForResult) {
+    showResultOverlay();
+    syncPlayButton();
+    notifyUi();
+    return;
+  }
+
   const penalized = applyPausePenalty(sessionGradeQuality(), state.universalScore);
   const percent = Math.round(penalized.quality * 100);
   const grade = Math.max(0, Math.min(10, Math.round(penalized.quality * 10)));
-  state.lastResult = {
+  const resultPayload = {
     grade,
     percent,
     score: state.score,
@@ -1185,15 +1204,25 @@ function finishSession() {
     pauseCount: penalized.pauseCount,
     pausePenaltyPercent: penalized.pausePenaltyPercent,
     sessionDifficulty: Math.round(sessionDifficultyIndex() * 100) / 100,
-    playerName: state.playerName,
+    playerName: nameForResult,
     settings: sessionSettingsSnapshot(),
   };
+  state.lastResult = resultPayload;
   drawStaff(previewClef(), null);
   syncQualityHint();
   showResultOverlay();
   syncPlayButton();
   notifyUi();
-  processSessionResult(state.lastResult);
+
+  activeSessionPlayerName = "";
+  state.sessionPlayerName = "";
+
+  const liveName = normalizePlayerName(document.getElementById("playerName")?.value);
+  if (liveName && liveName !== nameForResult) {
+    markPlayerNameUserEdited();
+  }
+  rotatePlayerNameAfterSession();
+  void processSessionResult({ ...resultPayload, playerName: nameForResult });
 }
 
 function hidePauseOverlay() {
@@ -1291,7 +1320,10 @@ function togglePause() {
 
 function startGame() {
   if (state.running) return;
-  preparePlayerNameForSession();
+  const lockedName = commitPlayerNameFromInput();
+  activeSessionPlayerName = lockedName;
+  state.sessionPlayerName = lockedName;
+  clearPlayerNameUserEdited();
   closeSettings();
   unlockAudio();
   state.running = true;

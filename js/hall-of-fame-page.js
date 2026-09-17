@@ -1,6 +1,7 @@
 import {
   loadRecords,
   renderRecordsTable,
+  scrollHighlightedHofRow,
   getHallOfFameDisplayLimit,
   setHallOfFameDisplayLimit,
 } from "./hall-of-fame.js";
@@ -35,6 +36,13 @@ function rerenderBoard() {
   renderRecordsTable(tableHost, lastRecords, highlightFromQuery());
 }
 
+function revealHighlightedPlayer() {
+  if (!highlightFromQuery().highlightName) return;
+  scrollHighlightedHofRow(tableHost);
+  window.setTimeout(() => scrollHighlightedHofRow(tableHost), 120);
+  window.setTimeout(() => scrollHighlightedHofRow(tableHost), 350);
+}
+
 async function refreshBoard() {
   setStatus(t("hallOfFameLoading"));
   const data = await loadRecords();
@@ -54,6 +62,7 @@ async function refreshBoard() {
   } else {
     setStatus("");
   }
+  revealHighlightedPlayer();
 }
 
 function applyPageCopy() {
@@ -66,12 +75,15 @@ displayInput?.addEventListener("input", () => {
   if (displayInput) displayInput.value = String(next);
   if (displayLabel) displayLabel.textContent = String(next);
   rerenderBoard();
+  revealHighlightedPlayer();
 });
 
 window.addEventListener("gtn:i18n", () => {
   applyPageCopy();
   refreshBoard();
 });
+
+window.addEventListener("load", revealHighlightedPlayer);
 
 if (window.I18n) window.I18n.apply();
 applyPageCopy();

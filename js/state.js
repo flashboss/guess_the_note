@@ -28,6 +28,7 @@ const state = {
   sound: true,
   playerName: "",
   keepPlayerName: false,
+  sessionPlayerName: "",
   paused: false,
   pauseCount: 0,
   pauseKind: null,

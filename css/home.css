@@ -96,6 +96,11 @@
   overflow-x: auto;
 }
 
+.hof-table-host:focus,
+.hof-table-host:focus-visible {
+  outline: none;
+}
+
 .hof-table {
   width: 100%;
   min-width: 520px;

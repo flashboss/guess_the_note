@@ -3,7 +3,6 @@ import {
   CLEFS, SHAPES,
   SETTINGS_CLEF, SETTINGS_SHAPES, SETTINGS_ANSWER_MODE, SETTINGS_CHOICE_COUNT,
   SETTINGS_CHOICE_KIND, SETTINGS_DIFFICULTY, SETTINGS_TEMPO, SETTINGS_ROUNDS, SETTINGS_SOUND,
-  SETTINGS_PLAYER_NAME, SETTINGS_PLAYER_NAME_KEEP, PLAYER_NAME_MAX, RANDOM_NAME_ADJECTIVES, RANDOM_NAME_NOUNS,
   DIFFICULTY_MIN, DIFFICULTY_MAX,
 } from "./constants.js";
 import { state, dom } from "./state.js";
@@ -14,6 +13,18 @@ const {
 } = dom;
 import { t, storageGet, storageSet, notifyUi, isNotesMode, formatMessage } from "./util.js";
 import { applyChoiceLayout, syncChoicesAria, syncQualityHint, drawStaff, previewClef, updateStats, stopTone } from "./game.js";
+import {
+  normalizePlayerName,
+  generateRandomPlayerName,
+  syncPlayerNameInput,
+  syncKeepPlayerNameInput,
+  setKeepPlayerName,
+  setPlayerName,
+  loadPlayerName,
+  commitPlayerNameFromInput,
+  rotatePlayerNameAfterSession,
+  keepPlayerNameInput,
+} from "./player-name.js";
 
 function settingsAreOpen() {
   return settingsOverlay && !settingsOverlay.classList.contains("is-hidden");
@@ -31,12 +42,14 @@ function openSettings() {
   settingsOverlay.classList.remove("is-hidden");
   if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "true");
   syncHallOfFameFieldLabels();
+  syncPlayerNameInput();
   notifyUi();
   requestAnimationFrame(focusSettingsDialog);
 }
 
 function closeSettings() {
   if (!settingsOverlay) return;
+  commitPlayerNameFromInput();
   settingsOverlay.classList.add("is-hidden");
   if (settingsBtn) settingsBtn.setAttribute("aria-expanded", "false");
   notifyUi();
@@ -227,54 +240,6 @@ function setRounds(count) {
   updateOverlayHint();
 }
 
-function normalizePlayerName(raw) {
-  return String(raw || "")
-    .replace(/[\u0000-\u001f\u007f]/g, "")
-    .replace(/\s+/g, " ")
-    .trim()
-    .slice(0, PLAYER_NAME_MAX);
-}
-
-function generateRandomPlayerName() {
-  const adj =
-    RANDOM_NAME_ADJECTIVES[Math.floor(Math.random() * RANDOM_NAME_ADJECTIVES.length)];
-  const noun = RANDOM_NAME_NOUNS[Math.floor(Math.random() * RANDOM_NAME_NOUNS.length)];
-  const suffix = Math.random() < 0.35 ? ` ${Math.floor(Math.random() * 90) + 10}` : "";
-  return normalizePlayerName(`${adj} ${noun}${suffix}`);
-}
-
-function syncPlayerNameInput() {
-  if (!playerNameInput) return;
-  if (playerNameInput.value !== state.playerName) {
-    playerNameInput.value = state.playerName;
-  }
-}
-
-function keepPlayerNameInput() {
-  return document.getElementById("keepPlayerName");
-}
-
-function syncKeepPlayerNameInput() {
-  const input = keepPlayerNameInput();
-  if (input) input.checked = Boolean(state.keepPlayerName);
-}
-
-function setKeepPlayerName(keep, { notify = true } = {}) {
-  state.keepPlayerName = Boolean(keep);
-  storageSet(SETTINGS_PLAYER_NAME_KEEP, state.keepPlayerName ? "1" : "0");
-  syncKeepPlayerNameInput();
-  if (state.keepPlayerName && state.playerName) {
-    storageSet(SETTINGS_PLAYER_NAME, state.playerName);
-  }
-  if (notify) notifyUi();
-}
-
-function loadKeepPlayerName() {
-  const raw = storageGet(SETTINGS_PLAYER_NAME_KEEP);
-  state.keepPlayerName = raw === "1";
-  syncKeepPlayerNameInput();
-}
-
 function translatedLabel(key, fallback) {
   if (!window.I18n) return fallback;
   const value = window.I18n.t(key);
@@ -302,31 +267,6 @@ function syncHallOfFameFieldLabels() {
       translatedLabel("keepPlayerNameAria", "Keep this name for the next game")
     );
   }
-}
-
-function setPlayerName(name, { persist = true, fallbackRandom = true, notify = true, syncInput = true } = {}) {
-  const next = normalizePlayerName(name);
-  state.playerName = next || (fallbackRandom ? generateRandomPlayerName() : "");
-  if (syncInput) syncPlayerNameInput();
-  if (persist && state.keepPlayerName && state.playerName) {
-    storageSet(SETTINGS_PLAYER_NAME, state.playerName);
-  }
-  if (notify) notifyUi();
-}
-
-function loadPlayerName() {
-  loadKeepPlayerName();
-  if (state.keepPlayerName) {
-    const saved = normalizePlayerName(storageGet(SETTINGS_PLAYER_NAME));
-    setPlayerName(saved || generateRandomPlayerName(), { persist: !saved });
-    return;
-  }
-  setPlayerName(generateRandomPlayerName(), { persist: false });
-}
-
-function preparePlayerNameForSession() {
-  if (state.keepPlayerName) return;
-  setPlayerName(generateRandomPlayerName(), { persist: false });
 }
 
 function loadSettings() {
@@ -400,8 +340,8 @@ export {
   syncPlayerNameInput,
   syncHallOfFameFieldLabels,
   setPlayerName,
-  loadPlayerName,
   setKeepPlayerName,
-  syncKeepPlayerNameInput,
-  preparePlayerNameForSession,
+  loadPlayerName,
+  commitPlayerNameFromInput,
+  rotatePlayerNameAfterSession,
 };

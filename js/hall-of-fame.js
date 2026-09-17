@@ -373,6 +373,7 @@ async function processSessionResult(result) {
     return null;
   }
 
+  // Copy immediately — never read state.playerName after this (it may rotate).
   const entry = {
     name: normalizeName(result.playerName),
     score: Math.round(Number(result.universalScore)),
@@ -400,7 +401,11 @@ async function processSessionResult(result) {
       return null;
     }
 
-    const response = await submitRecord(entry);
+    const response = await submitRecord({
+      name: entry.name,
+      score: entry.score,
+      grade: entry.grade,
+    });
     if (response?.ok && response.added) {
       showHallOfFameCelebration(Boolean(response.isNewHigh));
       setResultHofLinkHref(entry);
@@ -451,13 +456,19 @@ function renderRecordsTable(container, records, options = {}) {
   `;
 
   let highlighted = false;
-  const body = rows
+  const markSelf = (row) => {
+    const sameName = highlightName && normalizeName(row.name) === highlightName;
+    if (!sameName || highlighted) return false;
+    const sameScore =
+      highlightScore == null || Math.round(Number(row.score)) === highlightScore;
+    if (!sameScore) return false;
+    highlighted = true;
+    return true;
+  };
+
+  let body = rows
     .map((row, index) => {
-      const sameName = highlightName && normalizeName(row.name) === highlightName;
-      const sameScore =
-        highlightScore == null || Math.round(Number(row.score)) === highlightScore;
-      const isSelf = !highlighted && sameName && sameScore;
-      if (isSelf) highlighted = true;
+      const isSelf = markSelf(row);
       return `
       <tr class="${isSelf ? "hof-row-self" : ""}"${isSelf ? ' data-hof-self="1"' : ""}>
         <td>${index + 1}</td>
@@ -469,34 +480,80 @@ function renderRecordsTable(container, records, options = {}) {
     })
     .join("");
 
+  // If score drifted slightly, still highlight the first matching name.
+  if (highlightName && !highlighted) {
+    highlighted = false;
+    body = rows
+      .map((row, index) => {
+        const isSelf =
+          !highlighted && normalizeName(row.name) === highlightName;
+        if (isSelf) highlighted = true;
+        return `
+      <tr class="${isSelf ? "hof-row-self" : ""}"${isSelf ? ' data-hof-self="1"' : ""}>
+        <td>${index + 1}</td>
+        <td>${escapeHtml(row.name)}</td>
+        <td>${escapeHtml(formatUniversalScore(row.score))}</td>
+        <td>${escapeHtml(formatRecordDate(row.at))}</td>
+      </tr>
+    `;
+      })
+      .join("");
+  }
+
   container.innerHTML = `<table class="hof-table">${head}<tbody>${body}</tbody></table>`;
   scrollHighlightedHofRow(container);
 }
 
 function scrollHighlightedHofRow(container) {
   const row = container?.querySelector("tr.hof-row-self");
-  if (!row) return;
-  requestAnimationFrame(() => {
+  if (!row || !container) return;
+
+  const apply = () => {
+    const current = container.querySelector("tr.hof-row-self");
+    if (!current) return false;
+
     const rows = [...container.querySelectorAll(".hof-table tbody tr")];
-    const index = rows.indexOf(row);
-    if (index < 0) return;
+    const index = rows.indexOf(current);
+    if (index < 0) return false;
+
+    const max = Math.max(0, container.scrollHeight - container.clientHeight);
+    const hostScrolls = max > 1 && container.clientHeight >= 48;
+
+    // Browser: the table host usually grows with content, so the window scrolls.
+    if (!hostScrolls) {
+      current.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+      return true;
+    }
+
     const step =
       Math.round(rows[0].getBoundingClientRect().height) || rows[0].offsetHeight || 0;
     if (!step) {
-      row.scrollIntoView({ block: "center", inline: "nearest" });
-    } else {
-      const header = container.querySelector(".hof-table thead");
-      const headerH = header ? header.getBoundingClientRect().height : 0;
-      const visibleRows = Math.max(1, Math.floor((container.clientHeight - headerH) / step));
-      const max = Math.max(0, container.scrollHeight - container.clientHeight);
-      const targetIndex = Math.max(0, index - Math.floor(visibleRows / 2));
-      // Snap to whole rows so the sticky header covers records cleanly.
-      container.scrollTop = Math.min(max, targetIndex * step);
+      current.scrollIntoView({ block: "center", inline: "nearest", behavior: "auto" });
+      return true;
     }
+
+    const header = container.querySelector(".hof-table thead");
+    const headerH = header ? Math.round(header.getBoundingClientRect().height) : 0;
+    const bodyView = Math.max(step, container.clientHeight - headerH);
+    // Put the highlighted row in the vertical middle of the scroll viewport
+    // (below the sticky header), snapped to whole row steps (TV).
+    const ideal = index * step - (bodyView - step) / 2;
+    const snapped = Math.round(ideal / step) * step;
+    container.scrollTop = Math.max(0, Math.min(max, snapped));
+
     if (document.documentElement.classList.contains("is-tv")) {
       container.focus?.({ preventScroll: true });
     }
-  });
+    return true;
+  };
+
+  let tries = 0;
+  const attempt = () => {
+    if (apply()) return;
+    if (tries++ >= 12) return;
+    window.setTimeout(() => requestAnimationFrame(attempt), 40);
+  };
+  requestAnimationFrame(attempt);
 }
 
 function escapeHtml(value) {

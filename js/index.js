@@ -25,6 +25,7 @@ import {
   closeSettings,
   toggleSettings,
 } from "./settings.js";
+import { commitPlayerNameFromInput, markPlayerNameUserEdited } from "./player-name.js";
 import {
   startGame,
   stopGame,
@@ -101,6 +102,7 @@ choiceCountInput?.addEventListener("input", () => {
 });
 
 playerNameInput?.addEventListener("input", () => {
+  markPlayerNameUserEdited();
   setPlayerName(playerNameInput.value, {
     fallbackRandom: false,
     notify: false,
@@ -109,7 +111,12 @@ playerNameInput?.addEventListener("input", () => {
 });
 
 playerNameInput?.addEventListener("blur", () => {
-  setPlayerName(playerNameInput.value, { notify: false });
+  // Never invent a random name on blur (empty IME dismiss used to replace the typed name).
+  markPlayerNameUserEdited();
+  setPlayerName(playerNameInput.value, { notify: false, fallbackRandom: false });
+  if (!playerNameInput.value.trim() && state.playerName) {
+    playerNameInput.value = state.playerName;
+  }
 });
 
 document.getElementById("keepPlayerName")?.addEventListener("change", (event) => {
@@ -205,6 +212,11 @@ window.GuessTheNote = {
   getState: () => state,
   getLastResult: () => state.lastResult,
   getPlayerName: () => state.playerName,
+  setPlayerName: (name) => {
+    markPlayerNameUserEdited();
+    setPlayerName(name, { notify: false, fallbackRandom: false });
+  },
+  commitPlayerNameFromInput,
   formatUniversalScore,
   showingResults: () => resultOverlay && !resultOverlay.classList.contains("is-hidden"),
   refreshLabels,

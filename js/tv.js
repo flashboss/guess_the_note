@@ -261,8 +261,24 @@
   function activate() {
     const el = document.activeElement;
     if (!el) return;
-    if (isNameField(el) && el.readOnly) {
-      unlockTvTextField(el);
+    // On TV, the system keyboard often dismisses without writing into the input.
+    // Use prompt so the chosen name is always committed to game state.
+    if (isNameField(el) && el.id === "playerName") {
+      const label =
+        window.I18n?.t?.("hallOfFameName") ||
+        el.getAttribute("aria-label") ||
+        "Player name";
+      const next = window.prompt(label, el.value || "");
+      if (next !== null) {
+        el.value = next;
+        const game = api();
+        if (game?.setPlayerName) {
+          game.setPlayerName(next);
+        } else {
+          el.dispatchEvent(new Event("input", { bubbles: true }));
+        }
+      }
+      lockTvTextFields();
       return;
     }
     if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.tagName === "A") {
@@ -459,6 +475,8 @@
       items.find((el) => el.id === "pauseBtn") ||
       items.find((el) => el.id === "playBtn") ||
       items.find((el) => el.id === "playAgainBtn") ||
+      (document.querySelector("tr.hof-row-self") &&
+        items.find((el) => el.id === "hofTable")) ||
       items.find((el) => el.classList.contains("hof-play-link")) ||
       items.find((el) => el.id === "settingsBtn") ||
       items.find((el) => el.dataset.lang) ||
