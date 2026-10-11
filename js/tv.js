@@ -46,6 +46,40 @@
     }
   }
 
+  /** Samsung IME "Done" / Confirm — must blur or the keyboard stays up. */
+  function isImeDoneKey(key, code) {
+    if (code === 65376 || code === 29443 || key === "Go" || key === "Done") {
+      return true;
+    }
+    // Enter closes an open IME only while the field is editable; on a locked
+    // name field Enter must still open the prompt via activate().
+    const active = document.activeElement;
+    return (key === "Enter" || code === 13) && isTextField(active);
+  }
+
+  function dismissNameIme({ refocus = true } = {}) {
+    const name = document.getElementById("playerName");
+    const active = document.activeElement;
+    if (name && (active === name || isNameField(active))) {
+      const game = api();
+      if (name.value != null) {
+        if (game?.setPlayerName) game.setPlayerName(name.value);
+        else if (game?.commitPlayerNameFromInput) game.commitPlayerNameFromInput();
+      }
+    }
+    if (name) name.blur();
+    else if (active && isNameField(active)) active.blur();
+    lockTvTextFields();
+    if (!refocus) return;
+    // Next frame: land on another control so Tizen closes the system keyboard.
+    window.requestAnimationFrame(() => {
+      const keep = document.getElementById("keepPlayerName");
+      const close = document.getElementById("settingsClose");
+      const next = [keep, close].find(isFocusable);
+      if (next) focusEl(next);
+    });
+  }
+
   function hofScrollHost() {
     return document.getElementById("hofTable");
   }
@@ -278,7 +312,8 @@
           el.dispatchEvent(new Event("input", { bubbles: true }));
         }
       }
-      lockTvTextFields();
+      // Prompt/IME "Done" leaves focus on the field → keyboard stays open on Tizen.
+      dismissNameIme();
       return;
     }
     if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.tagName === "A") {
@@ -314,44 +349,46 @@
     const code = event.keyCode;
     const active = document.activeElement;
 
-    if (isTextField(active)) {
+    // Name field may be readOnly (locked) while the system IME/prompt is still up.
+    if (isNameField(active) && isImeDoneKey(key, code)) {
+      event.preventDefault();
+      dismissNameIme();
+      return;
+    }
+
+    if (isTextField(active) || (isNameField(active) && active.id === "playerName")) {
       if (code === 10009 || key === "XF86Back" || key === "Escape") {
         event.preventDefault();
-        active.blur();
-        lockTvTextFields();
+        dismissNameIme();
         return;
       }
       // While the on-screen keyboard is open, leave other keys to the IME.
       // Arrow keys still escape so the keep-name checkbox stays reachable.
       if (key === "ArrowLeft" || code === 37) {
         event.preventDefault();
-        active.blur();
-        lockTvTextFields();
+        dismissNameIme({ refocus: false });
         moveFocus(-1, 0);
         return;
       }
       if (key === "ArrowRight" || code === 39) {
         event.preventDefault();
-        active.blur();
-        lockTvTextFields();
+        dismissNameIme({ refocus: false });
         moveFocus(1, 0);
         return;
       }
       if (key === "ArrowUp" || code === 38) {
         event.preventDefault();
-        active.blur();
-        lockTvTextFields();
+        dismissNameIme({ refocus: false });
         moveFocus(0, -1);
         return;
       }
       if (key === "ArrowDown" || code === 40) {
         event.preventDefault();
-        active.blur();
-        lockTvTextFields();
+        dismissNameIme({ refocus: false });
         moveFocus(0, 1);
         return;
       }
-      return;
+      if (isTextField(active)) return;
     }
 
     if (key === "ArrowLeft" || code === 37) {
