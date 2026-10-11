@@ -29,8 +29,11 @@
     return el?.tagName === "INPUT" && (el.type === "text" || el.type === "search");
   }
 
+  /** Suppress blur→lock while we intentionally open the name IME. */
+  let openingNameIme = false;
+
   function lockTvTextFields() {
-    if (!isTv()) return;
+    if (!isTv() || openingNameIme) return;
     document.querySelectorAll('#settingsOverlay input[type="text"]').forEach((el) => {
       el.readOnly = true;
     });
@@ -92,11 +95,19 @@
   function openNameIme() {
     const name = document.getElementById("playerName");
     if (!name || !isTv()) return;
+    // Do not blur first: the blur listener would re-lock readOnly and IME never opens.
+    openingNameIme = true;
     unlockTvTextField(name);
-    // Blur/focus so Tizen opens the IME after clearing readOnly.
-    name.blur();
+    name.focus();
+    try {
+      name.click();
+    } catch {
+      /* ignore */
+    }
     window.requestAnimationFrame(() => {
-      name.focus();
+      unlockTvTextField(name);
+      if (document.activeElement !== name) name.focus();
+      openingNameIme = false;
     });
   }
 
@@ -564,6 +575,7 @@
   document.addEventListener(
     "blur",
     (event) => {
+      if (openingNameIme) return;
       if (isNameField(event.target)) lockTvTextFields();
     },
     true
