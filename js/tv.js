@@ -46,37 +46,57 @@
     }
   }
 
-  /** Samsung IME "Done" / Confirm — must blur or the keyboard stays up. */
-  function isImeDoneKey(key, code) {
-    if (code === 65376 || code === 29443 || key === "Go" || key === "Done") {
-      return true;
-    }
-    // Enter closes an open IME only while the field is editable; on a locked
-    // name field Enter must still open the prompt via activate().
-    const active = document.activeElement;
-    return (key === "Enter" || code === 13) && isTextField(active);
+  /** Samsung IME Done / Cancel (see SamsungDForum SampleWebApps-IME). */
+  function isImeDoneKey(code) {
+    return code === 65376 || code === 29443; // Done
   }
 
-  function dismissNameIme({ refocus = true } = {}) {
+  function isImeCancelKey(code, key) {
+    return code === 65385 || code === 10009 || key === "XF86Back" || key === "Escape";
+  }
+
+  /**
+   * Close the system keyboard the Samsung-recommended way:
+   * blur the input, then focus document.body (do not preventDefault on Done).
+   */
+  function dismissNameIme({ refocus = true, clear = false } = {}) {
     const name = document.getElementById("playerName");
-    const active = document.activeElement;
-    if (name && (active === name || isNameField(active))) {
-      const game = api();
-      if (name.value != null) {
+    if (name) {
+      if (!clear) {
+        const game = api();
         if (game?.setPlayerName) game.setPlayerName(name.value);
         else if (game?.commitPlayerNameFromInput) game.commitPlayerNameFromInput();
       }
+      name.blur();
+    } else if (document.activeElement && isNameField(document.activeElement)) {
+      document.activeElement.blur();
     }
-    if (name) name.blur();
-    else if (active && isNameField(active)) active.blur();
     lockTvTextFields();
+    try {
+      if (!document.body.hasAttribute("tabindex")) {
+        document.body.setAttribute("tabindex", "-1");
+      }
+      document.body.focus();
+    } catch {
+      /* ignore */
+    }
     if (!refocus) return;
-    // Next frame: land on another control so Tizen closes the system keyboard.
     window.requestAnimationFrame(() => {
       const keep = document.getElementById("keepPlayerName");
       const close = document.getElementById("settingsClose");
       const next = [keep, close].find(isFocusable);
       if (next) focusEl(next);
+    });
+  }
+
+  function openNameIme() {
+    const name = document.getElementById("playerName");
+    if (!name || !isTv()) return;
+    unlockTvTextField(name);
+    // Blur/focus so Tizen opens the IME after clearing readOnly.
+    name.blur();
+    window.requestAnimationFrame(() => {
+      name.focus();
     });
   }
 
@@ -308,25 +328,9 @@
   function activate() {
     const el = document.activeElement;
     if (!el) return;
-    // On TV, the system keyboard often dismisses without writing into the input.
-    // Use prompt so the chosen name is always committed to game state.
+    // Native IME (not prompt): Done/Cancel must blur + body.focus() to dismiss.
     if (isNameField(el) && el.id === "playerName") {
-      const label =
-        window.I18n?.t?.("hallOfFameName") ||
-        el.getAttribute("aria-label") ||
-        "Player name";
-      const next = window.prompt(label, el.value || "");
-      if (next !== null) {
-        el.value = next;
-        const game = api();
-        if (game?.setPlayerName) {
-          game.setPlayerName(next);
-        } else {
-          el.dispatchEvent(new Event("input", { bubbles: true }));
-        }
-      }
-      // Prompt/IME "Done" leaves focus on the field → keyboard stays open on Tizen.
-      dismissNameIme();
+      openNameIme();
       return;
     }
     if (el.tagName === "BUTTON" || el.tagName === "INPUT" || el.tagName === "A") {
@@ -356,21 +360,39 @@
     }
   }
 
+  // IME Done/Cancel — do NOT preventDefault (Samsung docs: it breaks IME dismiss).
+  document.addEventListener(
+    "keydown",
+    (event) => {
+      if (!isTv()) return;
+      const code = event.keyCode;
+      const name = document.getElementById("playerName");
+      const active = document.activeElement;
+      const editingName =
+        name && (active === name || (isTextField(active) && active.id === "playerName"));
+      if (!editingName) return;
+      if (isImeDoneKey(code)) {
+        dismissNameIme();
+        return;
+      }
+      if (code === 65385) {
+        dismissNameIme();
+      }
+    },
+    true
+  );
+
   document.addEventListener("keydown", (event) => {
     api()?.unlockAudio?.();
     const key = event.key;
     const code = event.keyCode;
     const active = document.activeElement;
 
-    // Name field may be readOnly (locked) while the system IME/prompt is still up.
-    if (isNameField(active) && isImeDoneKey(key, code)) {
-      event.preventDefault();
-      dismissNameIme();
-      return;
-    }
+    // Let the capture listener above handle Done; never steal it here.
+    if (isImeDoneKey(code) || code === 65385) return;
 
     if (isTextField(active) || (isNameField(active) && active.id === "playerName")) {
-      if (code === 10009 || key === "XF86Back" || key === "Escape") {
+      if (isImeCancelKey(code, key)) {
         event.preventDefault();
         dismissNameIme();
         return;
@@ -536,6 +558,9 @@
 
   registerTvKeys();
   lockTvTextFields();
+  if (isTv()) {
+    document.body.setAttribute("tabindex", "-1");
+  }
   document.addEventListener(
     "blur",
     (event) => {
@@ -545,6 +570,14 @@
   );
   window.addEventListener("load", () => {
     lockTvTextFields();
+    if (isTv()) {
+      document.body.setAttribute("tabindex", "-1");
+      try {
+        document.body.focus();
+      } catch {
+        /* ignore */
+      }
+    }
     const game = api();
     if (document.documentElement.classList.contains("is-tv") && game) {
       game.startGame();
