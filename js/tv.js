@@ -281,7 +281,20 @@
     const col = Math.max(0, currentRow.els.indexOf(active));
 
     if (dy !== 0) {
-      const target = rows[Math.max(0, Math.min(rows.length - 1, from + dy))];
+      let nextIndex = from + dy;
+      // In settings, wrap top↔bottom so Up from the first row reaches the last.
+      const settingsOverlay = document.getElementById("settingsOverlay");
+      const wrapVertical =
+        Boolean(api()?.settingsAreOpen?.()) ||
+        Boolean(
+          settingsOverlay && !settingsOverlay.classList.contains("is-hidden")
+        );
+      if (wrapVertical) {
+        nextIndex = ((nextIndex % rows.length) + rows.length) % rows.length;
+      } else {
+        nextIndex = Math.max(0, Math.min(rows.length - 1, nextIndex));
+      }
+      const target = rows[nextIndex];
       focusEl(target.els[Math.min(col, target.els.length - 1)]);
       return;
     }
